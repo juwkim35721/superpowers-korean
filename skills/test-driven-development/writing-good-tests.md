@@ -1,198 +1,145 @@
-# Writing Good Tests
+# 좋은 테스트 작성하기 (Writing Good Tests)
 
-**Load this reference when:** writing or changing tests, adding mocks, or
-adding cleanup/helper methods for tests.
+**이 레퍼런스를 로드해야 할 때:** 테스트를 작성하거나 변경할 때, 모의 객체(mock)를 추가할 때, 또는 테스트용 정리(cleanup)/헬퍼 메서드를 추가할 때.
 
-## Overview
+## 개요
 
-A test exists to catch a specific break. Two principles govern everything
-here:
+테스트는 특정 파손(break)을 잡아내기 위해 존재합니다. 이곳의 모든 규칙은 다음 두 가지 원칙을 따릅니다:
 
 ```
-1. Every test names the break it catches
-2. Every test exercises the real thing
+1. 모든 테스트는 자신이 잡아내는 파손(break)이 무엇인지 명시한다
+2. 모든 테스트는 실제 대상(real thing)을 실행한다
 ```
 
-Strict TDD produces both naturally: a test written first and watched
-failing against real code has already proven it can fail, and only earns
-a mock when the real dependency proves slow or external.
+엄격한 TDD는 이 두 가지를 자연스럽게 만들어냅니다. 먼저 작성되어 실제 코드에 대해 실패하는 것을 직접 확인한 테스트는 이미 실패할 수 있음을 증명한 것이며, 실제 의존성이 느리거나 외부 시스템임이 드러났을 때만 비로소 모의 객체(mock)를 사용할 자격을 얻습니다.
 
-## Principle 1: Name the Break
+## 원칙 1: 잡아낼 파손을 명시하라 (Name the Break)
 
-Before writing the test body, answer: **what production change should
-make this test fail — and is that change a bug or a decision?** A test
-earns its place by catching a wrong branch, missing side effect, wrong
-argument, boundary case, or broken contract.
+테스트 본문을 작성하기 전에 다음 질문에 답하세요: **어떠한 프로덕션 변경이 이 테스트를 실패하게 만들어야 하는가 — 그리고 그 변경은 버그인가, 아니면 의도적인 결정인가?** 테스트는 잘못된 분기, 누락된 부수 효과(side effect), 잘못된 인자, 경계 조건(boundary case), 또는 깨진 계약을 잡아냄으로써 자신의 존재 가치를 증명합니다.
 
-**Derive expectations independently.** Use literals and hand-checked
-fixtures; table-driven tests with literal `want` values are the preferred
-shape. An expectation computed by the code under test — or its helpers —
-passes no matter what that code does:
+**기댓값을 독립적으로 도출하세요.** 리터럴과 직접 확인한 픽스처(fixture)를 사용하세요. 리터럴 `want` 값을 가진 테이블 주도 테스트(table-driven tests)가 권장되는 형태입니다. 테스트 대상 코드(또는 그 헬퍼)가 계산해 낸 기댓값은 그 코드가 무슨 짓을 하든 항상 통과합니다:
 
 ```typescript
-// ❌ Mirror assertion: the same builder computes both sides — always true
+// ❌ 거울 단언(Mirror assertion): 동일한 빌더가 양쪽을 모두 계산함 — 항상 참(true)
 const expected = buildSearchQuery({ tag: 'urgent' });
 expect(buildSearchQuery({ tag: 'urgent' })).toBe(expected);
 
-// ✅ Hand-derived literal
+// ✅ 직접 도출한 리터럴
 expect(buildSearchQuery({ tag: 'urgent' })).toBe('tag:"urgent"');
 ```
 
-**No change detectors.** If only intentional decisions can fail a test —
-a constant's value, exact message wording, private structure — it fires
-on redesign and sleeps through bugs. Test the behavior that depends on
-the decision: not `expect(MAX_RETRIES).toBe(5)` but "a failing call is
-retried 5 times and the 6th attempt never happens."
+**변경 탐지기(change detector)를 만들지 마세요.** 상수의 값, 정확한 메시지 문구, 비공개 내부 구조처럼 오직 의도적인 결정만이 테스트를 실패하게 만들 수 있다면, 그 테스트는 설계를 변경할 때마다 시끄럽게 울리면서 정작 버그가 발생했을 때는 침묵합니다. 결정 그 자체가 아니라 그 결정에 의존하는 동작을 테스트하세요: `expect(MAX_RETRIES).toBe(5)`가 아니라 "실패한 호출은 5번 재시도되며 6번째 시도는 절대 일어나지 않는다"를 테스트해야 합니다.
 
-**Behavior, not text.** Asserting that a script, skill, or config
-contains an exact line proves only that the source is the source. Run
-scripts against controlled inputs and assert outputs, side effects, or
-exit codes. Documents that instruct agents are tested by the consuming
-agent's behavior (superpowers:writing-skills); prose for humans earns no
-test at all.
+**텍스트가 아니라 동작을 검증하세요.** 스크립트, 스킬, 또는 설정 파일이 특정 문자열 라인을 정확히 포함하는지 단언(assert)하는 것은 소스가 곧 소스임을 증명할 뿐입니다. 통제된 입력으로 스크립트를 직접 실행하고 그 출력, 부수 효과, 또는 종료 코드(exit code)를 단언하세요. 에이전트를 지시하는 문서는 그 문서를 소비하는 에이전트의 동작(`superpowers:writing-skills`)으로 테스트하며, 인간을 위한 산문(prose)은 아예 테스트 대상이 아닙니다.
 
-**Your code, not the framework.** Test the contract your code makes at
-its boundaries — the route you register, the query you emit, the payload
-you produce. Upstream mechanics are their maintainers' tests to write
-(the classic: asserting your router invokes a registered handler — that
-is the framework's test, not yours). When upstream behavior genuinely
-surprised you, write one narrow characterization test naming the
-assumption. The same boundary applies inside your code: constructors,
-getters, constants, and trivial forwarding earn tests only when they
-validate, normalize, default, derive, enforce, or cause side effects —
-otherwise assert the first consumer-visible result that depends on them.
+**프레임워크가 아니라 당신의 코드를 테스트하세요.** 당신이 등록한 라우트, 생성한 쿼리, 만들어낸 페이로드 등 당신의 코드가 경계(boundary)에서 맺는 계약을 테스트하세요. 업스트림(upstream)의 내부 동작 원리는 해당 라이브러리 메인테이너가 테스트할 몫입니다(대표적인 예: 라우터가 등록된 핸들러를 호출하는지 단언하는 것 — 그것은 프레임워크의 테스트이지 당신의 테스트가 아닙니다). 업스트림의 동작이 정말로 예상 밖이어서 놀랐던 경우에만, 그 가정을 명시하는 좁은 범위의 특성화 테스트(characterization test)를 하나 작성하세요. 동일한 경계 원칙이 당신의 코드 내부에도 적용됩니다: 생성자, 게터(getter), 상수, 단순 전달(trivial forwarding)은 유효성 검사, 정규화, 기본값 설정, 값 도출, 규칙 강제, 또는 부수 효과를 유발할 때만 테스트할 가치가 있습니다. 그렇지 않다면 그것들에 의존하는 첫 번째 소비자 가시적(consumer-visible) 결과를 단언하세요.
 
-### Gate Function
+### 게이트 함수 (Gate Function)
 
 ```
-BEFORE writing the test body:
-  Name the production change that would make this test fail.
+테스트 본문을 작성하기 전에(BEFORE):
+  이 테스트를 실패하게 만들 프로덕션 변경이 무엇인지 이름을 붙이세요.
 
-  Cannot name one            → redesign around an observable behavior
-  "The source text changed"  → run the artifact and assert its effects
-  Only intentional decisions → change detector; test the behavior
-                               that depends on the decision
+  이름을 붙일 수 없다          → 관찰 가능한 동작을 중심으로 재설계하세요
+  "소스 텍스트가 바뀌었다"     → 결과물을 직접 실행하고 그 효과를 단언하세요
+  오직 의도적인 결정뿐이다     → 변경 탐지기입니다; 그 결정에 의존하는
+                                동작을 테스트하세요
 
-  Confirm the expected value is derived without the code under test.
-  IF it reuses the code's logic or helpers:
-    Replace it with a literal or hand-checked fixture
+  기댓값이 테스트 대상 코드 없이 도출되었는지 확인하세요.
+  만약 테스트 대상 코드의 로직이나 헬퍼를 재사용한다면:
+    리터럴이나 직접 검증한 픽스처로 교체하세요
 ```
 
-## Principle 2: Exercise the Real Thing
+## 원칙 2: 실제 대상을 실행하라 (Exercise the Real Thing)
 
-**The mock earns no assertions.** A mock assertion passes when the mock
-is present and fails when it is absent — it says nothing about the
-component. Assert the real component's behavior; if the mock is what you
-are checking, unmock it or delete the assertion.
+**모의 객체(mock)는 단언(assertion)의 대상이 될 수 없습니다.** 모의 객체에 대한 단언은 모의 객체가 존재하면 통과하고 없으면 실패할 뿐, 실제 컴포넌트에 대해서는 아무것도 말해주지 않습니다. 실제 컴포넌트의 동작을 단언하세요. 만약 당신이 확인하고 있는 것이 모의 객체 자체라면, 모킹을 해제(unmock)하거나 단언문을 삭제하세요.
 
 ```typescript
-// ✅ Real behavior
+// ✅ 실제 동작
 expect(screen.getByRole('navigation')).toBeInTheDocument();
 
-// ❌ Mock existence
+// ❌ 모의 객체의 존재 여부
 expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
 ```
 
-**your human partner's correction:** "Are we testing the behavior of a
-mock?"
+**인간 파트너(human partner)의 교정:** "우리가 지금 모의 객체(mock)의 동작을 테스트하고 있는 건가요?"
 
-**Mock at the right level.** Learn every side effect of the real method
-before replacing it; mock the slow or external operation and keep what
-the test depends on real. When unsure, run the test against the real
-implementation first and observe what actually needs to happen.
+**올바른 계층에서 모킹하세요.** 실제 메서드를 대체하기 전에 그 메서드의 모든 부수 효과(side effect)를 파악하세요. 느리거나 외부와 통신하는 작업만 모킹하고, 테스트가 의존하는 핵심 동작은 실제 코드로 유지하세요. 확신이 서지 않는다면 먼저 실제 구현체로 테스트를 실행해 보고 실제로 무엇이 일어나야 하는지 관찰하세요.
 
 ```typescript
-// ❌ The mock swallows the config write that duplicate detection reads
+// ❌ 중복 감지가 읽어야 할 설정 파일 쓰기 작업까지 모의 객체가 삼켜버림
 vi.mock('ToolCatalog', () => ({
   discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
 }));
 
-// ✅ Mock only the slow server startup; the config write stays real
+// ✅ 느린 서버 시작만 모킹함; 설정 파일 쓰기 작업은 실제로 수행됨
 vi.mock('MCPServerManager');
 ```
 
-**Make doubles specific.** When arguments, call counts, or ordering are
-part of the contract, assert them — a fake that accepts anything verifies
-nothing. Give each branch (success, error, malformed) its own fixture or
-spy, so the wrong branch cannot satisfy the expectation.
+**테스트 대역(test double)을 구체적으로 만드세요.** 인자, 호출 횟수, 또는 호출 순서가 계약의 일부라면 그것들을 단언하세요. 아무 값이나 다 받아주는 가짜 객체(fake)는 아무것도 검증하지 못합니다. 성공, 에러, 잘못된 형식 등 각 분기마다 고유한 픽스처나 스파이(spy)를 부여하여, 잘못된 분기가 기댓값을 충족시키는 일이 없도록 하세요.
 
-**Mirror real data completely.** Mock the complete structure as it exists
-in reality — all documented fields — not just the ones your test reads.
-Partial mocks fail silently when downstream code reads an omitted field:
-the test passes while integration breaks.
+**실제 데이터를 완전하게 반영하세요.** 테스트가 읽는 필드만 부분적으로 모킹하지 말고, 문서화된 모든 필드를 포함해 실제로 존재하는 완전한 구조를 모킹하세요. 부분적인 모의 객체(partial mock)는 하위 코드가 생략된 필드를 읽을 때 조용히 실패합니다. 그 결과 테스트는 통과하지만 실제 통합 환경에서는 깨지게 됩니다.
 
-**Production classes carry production methods only.** Cleanup that only
-tests need lives in test utilities, never as a `destroy()` on the
-production class. Ask: is this method called only from tests? Does this
-class own this resource's lifecycle? Wrong answers → test utility.
+**프로덕션 클래스에는 프로덕션 메서드만 두세요.** 오직 테스트에서만 필요한 정리(cleanup) 로직은 프로덕션 클래스의 `destroy()`가 아니라 테스트 유틸리티에 위치해야 합니다. 자문해 보세요: 이 메서드는 테스트에서만 호출되는가? 이 클래스가 해당 리소스의 생명주기를 소유하는가? 답이 '아니오'라면 → 테스트 유틸리티로 옮기세요.
 
-**Prefer real components over complex mocks.** When mock setup outgrows
-the test logic, mocks miss methods the real components have, or tests
-break when the mock changes, switch to an integration test with real
-components. **your human partner's question:** "Do we need to be using a
-mock here?"
+**복잡한 모의 객체보다 실제 컴포넌트를 선호하세요.** 모의 객체 설정이 테스트 로직보다 커지거나, 실제 컴포넌트가 가진 메서드를 모의 객체가 놓치거나, 모의 객체가 바뀔 때마다 테스트가 깨진다면 실제 컴포넌트를 사용하는 통합 테스트로 전환하세요. **인간 파트너(human partner)의 질문:** "여기서 꼭 모의 객체(mock)를 써야 하나요?"
 
-### Gate Function
+### 게이트 함수 (Gate Function)
 
 ```
-BEFORE adding a mock or test helper:
-  List the real method's side effects; keep the ones the test
-  depends on real — mock the slow/external level below them.
+모의 객체(mock)나 테스트 헬퍼를 추가하기 전에(BEFORE):
+  실제 메서드의 부수 효과(side effects)를 나열하세요; 테스트가 의존하는
+  부수 효과는 실제로 유지하고 — 그 아래의 느리거나 외부적인 계층만 모킹하세요.
 
-  Mock responses mirror the complete real structure.
+  모의 응답(mock response)은 실제 구조를 완전하게 반영해야 합니다.
 
-  A method only tests call lives in test utilities, not production.
+  오직 테스트만 호출하는 메서드는 프로덕션이 아니라 테스트 유틸리티에 둡니다.
 
-  About to assert on the mock itself?
-    Unmock it or delete the assertion.
+  모의 객체 자체를 단언(assert)하려 하고 있나요?
+    모킹을 해제(unmock)하거나 단언문을 삭제하세요.
 ```
 
-## Tests Ship With the Implementation
+## 테스트는 구현과 함께 배포됩니다
 
-The TDD cycle — failing test, minimal implementation, refactor — is what
-"complete" means. Ship the tests the behavior needs and only those:
-trivial code and human prose earn none, and a test written to satisfy
-process costs maintenance forever.
+실패하는 테스트, 최소한의 구현, 리팩터링으로 이어지는 TDD 사이클이 곧 "완료(complete)"의 의미입니다. 동작에 필요한 테스트만 작성하여 함께 배포하고 그 외의 테스트는 만들지 마세요. 자명한 코드나 인간을 위한 산문에는 테스트가 필요 없으며, 단지 프로세스를 충족하기 위해 작성된 테스트는 영구적인 유지보수 비용을 초래합니다.
 
-## The Mutation Check
+## 뮤테이션 체크 (The Mutation Check)
 
-Before finishing, mentally mutate the production code; at least one test
-should fail for each realistic mutation:
+작업을 마치고 끝내기 전에, 머릿속으로 프로덕션 코드를 변형(mutate)해 보세요. 현실적인 각각의 변형에 대해 최소한 하나의 테스트가 실패해야 합니다:
 
-- Wrong constant or argument
-- Wrong branch handler
-- Missing state change or side effect
-- Empty or default return
-- Missing validation for zero, empty, nil, unauthorized, or malformed input
+- 잘못된 상수 또는 인자
+- 잘못된 분기 핸들러
+- 상태 변경이나 부수 효과(side effect)의 누락
+- 빈 값이나 기본값 반환
+- 0, 빈 값, nil, 권한 없음, 또는 잘못된 형식의 입력에 대한 유효성 검사 누락
 
-A mutation nothing catches marks the behavior as unprotected — or the
-test as tautological.
+아무 테스트도 잡아내지 못하는 변형이 있다면 그 동작이 보호받지 못하고 있거나, 테스트가 동어반복(tautological)이라는 뜻입니다.
 
-## Quick Reference
+## 빠른 참조 (Quick Reference)
 
-| When you... | Do |
+| 이럴 때... | 이렇게 하세요 |
 |-------------|-----|
-| Write any test | Name the break it catches — a bug, not a decision |
-| Build an expected value | Derive it by hand; never with the code under test |
-| Test a script or document | Run it / pressure-test its consumer; never grep its text |
-| Reach for a dependency test | Test your boundary contract, not their documented mechanics |
-| Want to assert on a mocked element | Test the real component, or unmock it |
-| Are about to mock a method | Learn its side effects; mock the slow/external level |
-| Build a mock response | Mirror the real structure completely |
-| Need cleanup only tests use | Put it in test utilities |
-| Watch mock setup balloon | Switch to an integration test with real components |
-| Finish a test file | Run the mutation check |
+| 어떤 테스트든 작성할 때 | 잡아낼 파손(결정이 아닌 버그)이 무엇인지 명시하세요 |
+| 기댓값을 만들 때 | 수작업으로 도출하세요; 절대 테스트 대상 코드로 계산하지 마세요 |
+| 스크립트나 문서를 테스트할 때 | 직접 실행하거나 소비자를 압박 테스트하세요; 절대 텍스트를 grep하지 마세요 |
+| 의존성 테스트에 손이 갈 때 | 그들의 문서화된 내부 동작이 아니라 당신의 경계 계약을 테스트하세요 |
+| 모킹된 요소를 단언하고 싶을 때 | 실제 컴포넌트를 테스트하거나 모킹을 해제하세요 |
+| 메서드를 모킹하려 할 때 | 부수 효과를 먼저 파악하고 느리거나 외부적인 계층만 모킹하세요 |
+| 모의 응답을 만들 때 | 실제 구조를 완전하게 반영하세요 |
+| 테스트만 쓰는 정리 로직이 필요할 때 | 테스트 유틸리티에 넣으세요 |
+| 모의 객체 설정이 비대해질 때 | 실제 컴포넌트를 사용하는 통합 테스트로 전환하세요 |
+| 테스트 파일 작성을 마칠 때 | 뮤테이션 체크를 수행하세요 |
 
-## Warning Signs
+## 경고 신호 (Warning Signs)
 
-- Setup and assertion share the same object, guaranteeing equality
-- The test can fail only through a panic, crash, or missing selector
-- The test fails on every intentional change, never on accidental breakage
-- Expected values are hidden behind loops, builders, or helpers
-- The test greps source text, or asserts a removed symbol stays removed
-- The test would still matter if only the framework remained
-- The test exists for coverage, checking no side effect or outcome
-- An assertion checks a `*-mock` test ID, or fails if you remove the mock
-- A method is called only from test files
-- Mock setup is more than half the test, or you can't explain why the mock is needed
-- Mocking "just to be safe"
+- 설정(setup)과 단언(assertion)이 동일한 객체를 공유하여 동등성이 무조건 보장됨
+- 패닉, 크래시, 또는 셀렉터 누락이 발생해야만 테스트가 실패할 수 있음
+- 의도적인 변경마다 테스트가 실패하고, 우발적인 파손에는 절대 실패하지 않음
+- 기댓값이 루프, 빌더, 또는 헬퍼 뒤에 숨겨져 있음
+- 테스트가 소스 텍스트를 grep하거나, 삭제된 심볼이 계속 삭제된 상태인지 단언함
+- 내 코드를 다 지우고 프레임워크만 남겨두어도 테스트가 여전히 의미를 가짐
+- 부수 효과나 결과는 전혀 확인하지 않고 오직 커버리지 수치를 위해 테스트가 존재함
+- 단언문이 `*-mock` 테스트 ID를 확인하거나, 모의 객체를 제거하면 테스트가 실패함
+- 특정 메서드가 오직 테스트 파일에서만 호출됨
+- 모의 객체 설정이 테스트의 절반 이상을 차지하거나, 왜 모의 객체가 필요한지 설명할 수 없음
+- "그냥 안전을 위해서" 모킹함

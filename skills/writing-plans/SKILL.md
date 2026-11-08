@@ -1,98 +1,81 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: 다단계 태스크에 대한 명세(spec)나 요구사항이 있을 때, 코드를 건드리기 전에 사용 (Use when you have a spec or requirements for a multi-step task, before touching code)
 ---
 
-# Writing Plans
+# 계획 작성하기 (Writing Plans)
 
-## Overview
+## 개요 (Overview)
 
-Write implementation plans for an engineer who has not seen this codebase or this spec. Assume they write idiomatic code in the project's language once they know the exact interface and the exact test, and that they will make a reasonable choice wherever the plan leaves one open. What they cannot know is what you decided: which files, which names and signatures, which values from the spec, which tests prove each task. Document those. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+이 코드베이스나 이 명세서(spec)를 본 적이 없는 엔지니어를 위해 구현 계획(implementation plan)을 작성하세요. 그 엔지니어는 정확한 인터페이스와 정확한 테스트만 알면 프로젝트의 언어로 관용적인(idiomatic) 코드를 작성할 줄 알며, 계획에서 열어둔 부분에 대해서는 합리적인 선택을 내릴 것이라고 가정하세요. 반대로 그들이 스스로 알 수 없는 것은 당신이 내린 결정들입니다: 어떤 파일인지, 어떤 이름과 시그니처인지, 명세서에서 가져온 어떤 값인지, 어떤 테스트가 각 태스크를 증명하는지입니다. 바로 그것들을 문서화하세요. 전체 계획을 한 입 크기(bite-sized)의 태스크들로 나누어 제공하세요. DRY. YAGNI. TDD. 빈번한 커밋.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+**시작할 때 선언하기:** "`writing-plans` 스킬을 사용하여 구현 계획을 작성하겠습니다. (I'm using the writing-plans skill to create the implementation plan.)"
 
-**Context:** If working in an isolated worktree, it should have been created via the `superpowers:using-git-worktrees` skill at execution time.
+**컨텍스트:** 격리된 워크트리(worktree)에서 작업하는 경우, 실행 시점에 `superpowers:using-git-worktrees` 스킬을 통해 생성되어 있어야 합니다.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**계획 저장 위치:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- (계획 저장 위치에 대한 사용자의 선호가 있다면 이 기본값보다 우선합니다)
 
-## Scope Check
+## 범위 확인 (Scope Check)
 
-If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+명세서가 여러 개의 독립적인 서브시스템을 다루고 있다면, 브레인스토밍 단계에서 이미 하위 프로젝트 명세서들로 쪼개졌어야 합니다. 만약 그렇지 않았다면 서브시스템별로 하나씩 별도의 계획으로 나누자고 제안하세요. 각 계획은 그 자체로 작동하고 테스트 가능한 소프트웨어를 만들어내야 합니다.
 
-## File Structure
+## 파일 구조 (File Structure)
 
-Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
+태스크를 정의하기 전에, 어떤 파일들을 생성하거나 수정할 것인지, 그리고 각 파일이 무엇을 책임지는지 먼저 매핑하세요. 이곳에서 모듈 분해(decomposition)에 관한 결정들이 확정됩니다.
 
-- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
-- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
-- Files that change together should live together. Split by responsibility, not by technical layer.
-- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+- 명확한 경계와 잘 정의된 인터페이스를 가진 단위로 설계하세요. 각 파일은 하나의 명확한 책임만 가져야 합니다.
+- 한 번에 컨텍스트에 담아둘 수 있는 코드일수록 추론이 가장 잘 되며, 파일이 한 가지에 집중되어 있을수록 편집의 신뢰도가 높아집니다. 너무 많은 일을 하는 거대한 파일보다는 작고 집중된 파일들을 선호하세요.
+- 함께 변경되는 파일들은 함께 위치해야 합니다. 기술적 계층(layer)이 아니라 책임(responsibility)을 기준으로 분리하세요.
+- 기존 코드베이스에서는 이미 확립된 패턴을 따르세요. 코드베이스가 큰 파일들을 사용하고 있다면 일방적으로 구조를 재편하지 마세요. 단, 수정하려는 파일이 감당하기 힘들 만큼 비대해졌다면 계획에 파일 분리를 포함하는 것이 합리적입니다.
 
-This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+이 파일 구조가 태스크 분해의 바탕이 됩니다. 각 태스크는 독립적으로도 의미가 통하는 완결된(self-contained) 변경 사항을 만들어내야 합니다.
 
-## Task Right-Sizing
+## 태스크 적정 규모 산정 (Task Right-Sizing)
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
-configuration, scaffolding, and documentation steps into the task whose
-deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
-independently testable deliverable.
+하나의 태스크는 자체적인 테스트 사이클을 가지며 새로운 리뷰어의 검증 게이트를 거칠 만한 가치가 있는 가장 작은 단위입니다. 태스크 경계를 그을 때는 초기 설정(setup), 환경 구성(configuration), 스캐폴딩(scaffolding), 문서화 단계들을 그 결과물을 필요로 하는 태스크 안으로 흡수(fold)하세요. 리뷰어가 인접한 태스크는 승인하면서 특정 태스크만 유의미하게 거절할 수 있는 지점에서만 태스크를 분리하세요. 모든 태스크는 독립적으로 테스트 가능한 결과물(deliverable)로 끝맺어야 합니다.
 
-## Step Granularity
+## 단계의 세분화 수준 (Step Granularity)
 
-**Each step is one action with a checkable result:**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+**각 단계(step)는 확인 가능한 결과를 갖는 하나의 행동입니다:**
+- "실패하는 테스트 작성하기 (Write the failing test)" - 단계
+- "실행하여 실패하는지 확인하기 (Run it to make sure it fails)" - 단계
+- "테스트를 통과시키기 위한 최소한의 코드 구현하기 (Implement the minimal code to make the test pass)" - 단계
+- "테스트를 실행하여 통과하는지 확인하기 (Run the tests and make sure they pass)" - 단계
+- "커밋하기 (Commit)" - 단계
 
-## Plan Document Header
+## 계획 문서 헤더 (Plan Document Header)
 
-**Every plan MUST start with this header:**
+**모든 계획은 반드시 다음 헤더로 시작해야 합니다:**
 
 ```markdown
-# [Feature Name] Implementation Plan
+# [기능 이름 (Feature Name)] 구현 계획 (Implementation Plan)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **에이전트 작업자용 (For agentic workers):** 필수 하위 스킬(REQUIRED SUB-SKILL): 이 계획을 태스크별로 구현하려면 `superpowers:subagent-driven-development`(권장) 또는 `superpowers:executing-plans`를 사용하세요. 각 단계는 추적을 위해 체크박스(`- [ ]`) 문법을 사용합니다.
 
-**Goal:** [One sentence describing what this builds]
+**목표 (Goal):** [이 계획이 무엇을 구축하는지 설명하는 한 문장]
 
-**Architecture:** [2-3 sentences about approach]
+**아키텍처 (Architecture):** [접근 방식에 대한 2~3문장]
 
-**Tech Stack:** [Key technologies/libraries]
+**기술 스택 (Tech Stack):** [핵심 기술/라이브러리]
 
-**Spec:** [path to the spec/design doc this plan implements — the plan
-argues from the spec, so the spec travels with it; executors read both]
+**명세서 (Spec):** [이 계획이 구현하는 명세서/설계 문서의 경로 — 계획은 명세서를 근거로 삼으므로 명세서가 항상 함께 따라다녀야 하며, 실행자(executors)는 두 문서를 모두 읽습니다]
 
-## Global Constraints
+## 전역 제약 사항 (Global Constraints)
 
-[The spec's project-wide requirements — version floors, dependency limits,
-naming and copy rules, platform requirements — one line each, with exact
-values copied verbatim from the spec. Every task's requirements implicitly
-include this section.]
+[명세서의 프로젝트 전반 요구사항 — 최소 버전(version floors), 의존성 제한, 명명 및 문구(copy) 규칙, 플랫폼 요구사항 — 명세서의 정확한 값을 그대로 복사하여 한 줄에 하나씩 작성합니다. 모든 태스크의 요구사항에는 이 섹션이 암묵적으로 포함됩니다.]
 
-## Review Focus
+## 리뷰 중점 사항 (Review Focus)
 
-[The five input classes or failure modes the spec implies but no task's
-tests exercise that are most likely to bite a person using this software
-— one line each, naming the input or condition and the behavior a
-reasonable person would expect, most likely first. The spec is a vision
-document: it says what the software must do, not everything it will
-meet, and its silence on an input is not permission for that input to
-break the program. Write the list here, once, with the spec in front of
-you. Then, for each line, add the test that pins it to the task that
-owns the code, in that task's own step style.]
+[명세서가 암시하고 있으나 어느 태스크의 테스트에서도 다루지 않으며, 실제 이 소프트웨어를 사용하는 사람에게 문제를 일으킬 가능성이 가장 높은 5가지 입력 클래스(input classes) 또는 실패 모드(failure modes) — 가장 발생 가능성이 높은 것부터 순서대로, 입력이나 조건의 이름과 합리적인 사람이라면 기대할 동작을 한 줄에 하나씩 적습니다. 명세서는 비전 문서입니다: 소프트웨어가 무엇을 해야 하는지를 말할 뿐 마주칠 모든 상황을 다 적지는 않으며, 특정 입력에 대해 침묵했다고 해서 그 입력이 프로그램을 망가뜨려도 된다는 허락은 아닙니다. 명세서를 앞에 두고 이곳에 목록을 한 번 작성하세요. 그런 다음 각 줄에 대해, 해당 코드를 소유한 태스크에 그 입력을 검증하는 테스트를 그 태스크의 단계 스타일에 맞춰 추가하세요.]
 
 ---
 ```
 
-## Task Structure
+## 태스크 구조 (Task Structure)
 
 ````markdown
-### Task N: [Component Name]
+### Task N: [컴포넌트 이름 (Component Name)]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -100,12 +83,10 @@ owns the code, in that task's own step style.]
 - Test: `tests/exact/path/to/test.py`
 
 **Interfaces:**
-- Consumes: [what this task uses from earlier tasks — exact signatures]
-- Produces: [what later tasks rely on — exact function names, parameter
-  and return types. A task's implementer sees only their own task; this
-  block is how they learn the names and types neighboring tasks use.]
+- Consumes: [이 태스크가 이전 태스크들로부터 가져다 쓰는 것 — 정확한 시그니처]
+- Produces: [이후 태스크들이 의존하는 것 — 정확한 함수 이름, 파라미터 및 반환 타입. 각 태스크의 구현자는 오직 자신의 태스크만 보게 되므로, 인접한 태스크들이 사용하는 이름과 타입을 이 블록을 통해 파악합니다.]
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: 실패하는 테스트 작성 (Write the failing test)**
 
 ```python
 def test_specific_behavior():
@@ -113,23 +94,21 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: 테스트를 실행하여 실패하는지 확인 (Run test to verify it fails)**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`**
+- [ ] **Step 3: `exact/path/to/file.py`에 `function(input: InputType) -> ResultType` 구현 (Implement `function(input: InputType) -> ResultType` in `exact/path/to/file.py`)**
 
-One line on the approach when the signature and the test leave a choice
-(which library call, which data structure); a code block only for an
-algorithm they do not determine.
+시그니처와 테스트만으로는 선택이 남는 경우(어떤 라이브러리를 호출할지, 어떤 자료구조를 쓸지)에는 접근 방식에 대한 설명 한 줄을 적고, 시그니처와 테스트만으로 결정되지 않는 알고리즘에 대해서만 코드 블록을 포함합니다.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: 테스트를 실행하여 통과하는지 확인 (Run test to verify it passes)**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: 커밋 (Commit)**
 
 ```bash
 git add tests/path/test.py src/path/file.py
@@ -137,68 +116,52 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
-## What a Step Contains
+## 단계에 포함되는 내용 (What a Step Contains)
 
-A step is done when the implementer can write exactly one reasonable thing
-from it. That is the whole requirement: unambiguous, not complete. Each kind
-of step carries what makes it unambiguous and nothing more:
+구현자가 그 단계를 보고 합리적인 결과물을 단 한 가지로만 작성할 수 있을 때 그 단계는 완성된 것입니다. 요구사항은 그것이 전부입니다: 완전함(complete)이 아니라 모호하지 않음(unambiguous)입니다. 각 종류의 단계는 모호함을 없애는 데 필요한 것만 담고 그 외에는 아무것도 담지 않습니다:
 
-- **A test step:** the test's name and its assertions, as code, with the
-  spec's exact values in them.
-- **A code step:** the exact signature (name, parameters, return type), the
-  file it lives in, and the specific values the spec pins. The implementer
-  writes the body. A body appears only for an algorithm the signature and
-  tests do not determine, or for exact copy the spec fixes.
-- **A verification step:** the command to run and the output that means it
-  passed.
-- **A reference to another task:** that task's Interfaces block says what
-  to use; the plan does not repeat that task's code.
+- **테스트 단계 (A test step):** 테스트의 이름과 단언문(assertions)을 명세서의 정확한 값들을 넣은 코드로 작성합니다.
+- **코드 단계 (A code step):** 정확한 시그니처(이름, 파라미터, 반환 타입), 해당 코드가 위치할 파일, 그리고 명세서가 고정한 구체적인 값들을 적습니다. 본문(body)은 구현자가 작성합니다. 본문 코드는 시그니처와 테스트만으로는 결정되지 않는 알고리즘이거나 명세서가 고정한 정확한 문구(copy)일 때만 등장합니다.
+- **검증 단계 (A verification step):** 실행할 명령어와 통과를 의미하는 출력 결과입니다.
+- **다른 태스크에 대한 참조 (A reference to another task):** 해당 태스크의 `Interfaces` 블록이 무엇을 사용할지 알려주므로, 계획에서 그 태스크의 코드를 반복해 적지 않습니다.
 
-A plan is the set of decisions the implementer cannot make alone. A plan
-longer than the code it describes has written the code instead. Lines that
-decide nothing ("TBD", "handle edge cases", "add appropriate validation",
-"write tests for the above", a type or function no task defines) are the
-opposite failure, and the self-review catches both.
+계획이란 구현자가 혼자서는 내릴 수 없는 결정들의 집합입니다. 설명하려는 코드보다 더 긴 계획은 계획을 세운 것이 아니라 코드를 미리 다 써버린 것입니다. 반대로 아무것도 결정하지 않는 문장들("추후 결정(TBD)", "엣지 케이스 처리", "적절한 유효성 검사 추가", "위 내용에 대한 테스트 작성", 어느 태스크에서도 정의하지 않는 타입이나 함수)은 정반대의 실패 사례이며, 자체 검토(self-review)를 통해 이 두 가지 문제를 모두 잡아냅니다.
 
-## Self-Review
+## 자체 검토 (Self-Review)
 
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
+전체 계획을 작성한 후에는 새로운 시선으로 명세서를 다시 보고 계획을 명세서와 대조해 점검하세요. 이것은 서브에이전트를 디스패치하는 것이 아니라 당신이 직접 수행하는 체크리스트입니다.
 
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
+**1. 명세 커버리지 (Spec coverage):** 명세서의 각 섹션과 요구사항을 훑어보세요. 각 요구사항을 구현하는 태스크를 가리킬 수 있나요? 누락된 부분(gaps)이 있다면 나열하세요.
 
-**2. Step scan:** Every step must let the implementer write exactly one reasonable thing, and no step may carry more than that: a line that decides nothing is a gap, a function body the signature and tests already determine is a transcript. Fix both.
+**2. 단계 스캔 (Step scan):** 모든 단계는 구현자가 합리적인 코드를 단 한 가지로만 작성할 수 있게 해야 하며, 그 이상의 불필요한 내용을 담아서는 안 됩니다. 아무것도 결정하지 않는 줄은 누락(gap)이고, 시그니처와 테스트가 이미 결정해 주는 함수 본문을 일일이 다 적어놓은 것은 받아쓰기(transcript)입니다. 두 가지 모두 수정하세요.
 
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+**3. 타입 일관성 (Type consistency):** 뒤쪽 태스크에서 사용한 타입, 메서드 시그니처, 프로퍼티 이름이 앞쪽 태스크에서 정의한 것과 일치하나요? Task 3에서는 `clearLayers()`라고 불렀는데 Task 7에서 `clearFullLayers()`라고 불렀다면 그것은 버그입니다.
 
-**4. Review Focus:** For each input class or failure mode the spec implies, is there a task whose tests exercise it? The five uncovered ones most likely to bite a person go in the Review Focus section, and each line there gets its test added to the owning task. An empty section means you checked and found none, not that you skipped the check.
+**4. 리뷰 중점 사항 (Review Focus):** 명세서가 암시하는 각 입력 클래스나 실패 모드에 대해 이를 검증하는 테스트를 가진 태스크가 있나요? 다루어지지 않은 것들 중 실제 사용자에게 문제를 일으킬 가능성이 가장 높은 5가지는 `Review Focus` 섹션에 들어가며, 거기에 적힌 각 줄은 해당 코드를 소유한 태스크에 테스트로 추가되어야 합니다. 이 섹션이 비어 있다는 것은 점검을 건너뛰었다는 뜻이 아니라, 철저히 확인했으나 해당 사항이 없었다는 뜻이어야 합니다.
 
-**5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
+**5. 비율 (Proportion):** 계획의 길이를 명세서의 길이와 비교하세요. 구현하려는 명세서보다 몇 배나 더 긴 계획은 계획이 아니라 프로그램의 전사본(transcript)입니다. 문서의 대부분이 코드 블록이라면 함수 본문을 시그니처, 테스트 이름, 단언문으로 대체하고 각 단계가 여전히 모호하지 않은지 확인하세요.
 
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+문제를 발견하면 그 자리에서 즉시(inline) 수정하세요. 다시 리뷰할 필요 없이 수정하고 넘어가면 됩니다. 태스크가 없는 명세 요구사항을 발견하면 해당 태스크를 추가하세요.
 
-## Execution Handoff
+## 실행 인계 (Execution Handoff)
 
-After saving and self-reviewing the plan, link it for your human partner
-to read. If they have already explicitly supplied an execution method, ask
-them to review the plan and confirm it captures what they want; wait for that
-review before implementation, then use the preserved method. Otherwise, ask
-them to review the plan and choose an execution method before implementation.
+계획을 저장하고 자체 검토를 마친 후에는 인간 파트너가 읽을 수 있도록 링크를 제공하세요. 만약 파트너가 이미 실행 방식을 명시적으로 지정했다면, 계획을 검토하고 원하는 바가 잘 담겼는지 확인해 달라고 요청하세요. 구현에 들어가기 전에 그 검토를 기다렸다가 지정된 방식을 사용하세요. 실행 방식이 아직 지정되지 않았다면, 구현 전에 계획을 검토하고 실행 방식을 선택해 달라고 요청하세요.
 
-**When no execution method has already been supplied:**
+**실행 방식이 아직 지정되지 않은 경우:**
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Which execution approach would you prefer?**
+**"계획 작성이 완료되어 `docs/superpowers/plans/<filename>.md`에 저장되었습니다. 계획을 검토해 주세요. 어떤 실행 접근 방식을 선호하시나요?**
 
-- **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
-- **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+- **서브에이전트 기반 (Subagent-driven)** - 태스크마다 새로운 서브에이전트가 구현하고 다음 태스크가 시작되기 전에 새로운 리뷰어가 이를 점검하며, 마지막에 전체 브랜치 리뷰를 수행합니다. 가장 철저한 방식이지만 태스크마다, 그리고 리뷰마다 새로운 컨텍스트 비용이 듭니다.
+- **네이티브 (Native)** - 이 하네스가 작업을 실행하는 기본 방식대로 제가 이 세션에서 모든 태스크를 직접 구현한 뒤, 마지막에 가장 뛰어난 모델을 사용하는 새로운 리뷰어가 전체 브랜치를 한 번 점검합니다. 가장 저렴하고 빠르지만 마지막 전까지는 독립적인 리뷰가 없습니다. 계획에 설계가 모두 담겨 있으므로 중간 등급(mid-tier) 세션 모델로도 잘 작동합니다.
 
-**For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
+**이번 계획에는 <두 방식 중 하나>를 추천합니다. 왜냐하면 <계획에 기반한 한 문장 이유: 태스크들이 서로의 인터페이스에 얼마나 의존하는지, 태스크가 총 몇 개인지, 실수가 배포되었을 때의 비용이 얼마인지> 때문입니다. 계획이 원하시는 바를 잘 담고 있나요? 그리고 어떤 방식으로 진행할까요?"**
 
-**When an execution method has already been supplied:**
+**실행 방식이 이미 지정된 경우:**
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Does it capture what you want?"**
+**"계획 작성이 완료되어 `docs/superpowers/plans/<filename>.md`에 저장되었습니다. 계획을 검토해 주세요. 원하시는 바를 잘 담고 있나요?"**
 
-**If Subagent-driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+**서브에이전트 기반(Subagent-driven)이 선택된 경우:**
+- **필수 하위 스킬 (REQUIRED SUB-SKILL):** `superpowers:subagent-driven-development` 사용
 
-**If Native chosen:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+**네이티브(Native)가 선택된 경우:**
+- **필수 하위 스킬 (REQUIRED SUB-SKILL):** `superpowers:executing-plans` 사용

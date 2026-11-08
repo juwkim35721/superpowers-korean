@@ -1,178 +1,96 @@
-# Positive-Instruction Redesign of Skill Guidance — Design Spec
+# 스킬 가이드의 긍정형 지침(Positive-Instruction) 재설계 — 설계 스펙
 
-**Status:** Proposed (follow-up to the 2026-06-09 SDD review-dispatch work; separate PR per the one-problem-per-PR rule)
-**Driver:** Measured evidence (2026-06-10) that some negative instructions in skill prose backfire, while others work — and that the difference is predictable.
+**상태:** 제안됨 (2026-06-09 SDD 리뷰 디스패치 작업의 후속 작업; PR당 하나의 문제만 다룬다는(one-problem-per-PR) 규칙에 따라 별도 PR로 진행)
+**추진 배경(Driver):** 스킬 문구 내의 일부 부정형 지침(negative instructions)은 역효과를 내는 반면 다른 일부는 잘 작동하며, 그 차이가 예측 가능하다는 측정된 증거(2026-06-10).
 
-## The measured finding this spec generalizes
+## 이 스펙이 일반화하는 측정 결과
 
-Micro-tests on 2026-06-10 (opus, 5 reps per phrasing, programmatic scoring;
-harness described below) measured how guidance phrasing changes what a
-controller composes:
+2026-06-10에 수행된 마이크로 테스트(Opus, 문구당 5회 반복, 프로그래밍 방식 채점; 하네스는 아래에 설명됨)는 가이드 문구 표현 방식이 컨트롤러(controller)가 작성하는 결과물을 어떻게 변화시키는지 측정했습니다:
 
-| Case | Phrasing | Result |
+| 케이스 | 문구 표현 방식 (Phrasing) | 결과 |
 |---|---|---|
-| Dispatch composition ("don't restate the brief") | prohibition | **4.4** spec values re-typed — *worse than no guidance* (3.6) |
-| Dispatch composition | positive recipe ("your dispatch should contain: (1)…(5)") | **3.0, zero variance** — adopted |
-| Dispatch composition | recipe + nuance clause ("quote only the fragment…") | 3.8, noisy — nuance dilutes recipes |
-| Test-rerun directive ("do not ask reviewer to re-run tests") | prohibition | **0/5 violations** — works fine (control: 3/5) |
-| Test-rerun directive | positive recipe | 0/5 — equal, but longer |
+| 디스패치 작성 ("브리핑을 다시 서술하지 마세요(don't restate the brief)") | 금지형 (prohibition) | **4.4개**의 스펙 값을 다시 타이핑함 — *가이드가 전혀 없을 때(3.6)보다 더 나쁨* |
+| 디스패치 작성 | 긍정형 레시피 ("디스패치에는 다음이 포함되어야 합니다: (1)…(5)") | **3.0, 분산 0(zero variance)** — 채택됨 |
+| 디스패치 작성 | 레시피 + 뉘앙스 단서 조항 ("일부 단편만 인용하세요…") | 3.8, 노이즈 발생 — 뉘앙스 조항이 레시피의 효과를 희석시킴 |
+| 테스트 재실행 지시어 ("리뷰어에게 테스트를 다시 실행하라고 요청하지 마세요") | 금지형 (prohibition) | **0/5 위반** — 잘 작동함 (대조군: 3/5) |
+| 테스트 재실행 지시어 | 긍정형 레시피 | 0/5 — 동일하지만 문구가 더 김 |
 
-**The doctrine** (use this to classify any negative instruction):
+**원칙(The doctrine)** (모든 부정형 지침을 분류할 때 이 기준을 사용하세요):
 
-1. **Tripwires work.** Phrase-level self-checks on concrete tokens ("if the
-   prompt you are writing contains 'do not flag' … stop") fire reliably.
-2. **Recognition tables work.** Red-Flags/rationalization tables read at
-   decision time, not composition time.
-3. **Discrete-directive prohibitions work.** "Do not ask X to do Y" holds
-   when the model has no competing incentive to do Y.
-4. **Composition prohibitions backfire** when the model has its own agenda
-   for the output (e.g., restating specs feels like helpful curation).
-   Only a positive composition recipe moves these — and adding nuance
-   clauses to a winning recipe makes it worse, not better.
-5. **Ties go to the shorter phrasing.** Codex re-reads SKILL.md ~500× per
-   long session (measured 2026-06-10); prose length is a real cost.
+1. **인계철선(Tripwires)은 작동합니다.** 구체적인 토큰에 대한 구절 단위의 자체 점검("작성 중인 프롬프트에 'do not flag'가 포함되어 있다면 … 멈추세요")은 신뢰성 있게 작동합니다.
+2. **인식 테이블(Recognition tables)은 작동합니다.** 위험 신호(`Red Flags`)/합리화 테이블은 작성 시점(composition time)이 아니라 의사결정 시점(decision time)에 읽힙니다.
+3. **개별 지시어 금지(Discrete-directive prohibitions)는 작동합니다.** 모델이 Y를 수행하려는 경쟁적인 유인(incentive)을 가지고 있지 않을 때 "X에게 Y를 하라고 요청하지 마세요"는 유효하게 지켜집니다.
+4. **작성 금지(Composition prohibitions)는 역효과를 냅니다.** 모델이 출력물에 대해 자체적인 아젠다를 가지고 있을 때(예: 스펙을 다시 서술하는 것이 친절한 큐레이션처럼 느껴질 때) 금지형 지침은 오히려 역효과를 냅니다. 오직 긍정형 작성 레시피(positive composition recipe)만이 이를 변화시킬 수 있으며, 성공적인 레시피에 뉘앙스 단서 조항을 덧붙이는 것은 결과를 더 좋게 만드는 것이 아니라 더 나쁘게 만듭니다.
+5. **동점일 때는 더 짧은 문구가 이깁니다.** Codex는 긴 세션당 SKILL.md를 약 500회 다시 읽습니다(2026-06-10 측정). 문구 길이는 실제 비용입니다.
 
-## Audit results (2026-06-10, all ~30 skills + prompt templates)
+## 감사(Audit) 결과 (2026-06-10, 전체 약 30개 스킬 + 프롬프트 템플릿)
 
-Counts: 3 tripwires (keep), 14 recognition tables (keep), ~20 policy gates
-(keep — "never push without permission" is policy, not composition
-shaping), 5 composition-prohibitions:
+집계: 인계철선 3개 (유지), 인식 테이블 14개 (유지), 정책 게이트 약 20개 (유지 — "허락 없이 절대 푸시하지 마세요"는 작성 형태 조정이 아니라 정책임), 작성 금지(composition-prohibitions) 5개:
 
-| # | Location | Disposition |
+| # | 위치 | 처리 방침 (Disposition) |
 |---|---|---|
-| 1 | `subagent-driven-development/task-reviewer-prompt.md` — "Cite, don't narrate" | **Queued in PR #1717 batch**: lead with the positive half ("Your report should point at evidence: file:line for every finding…"), drop the prohibition half (dead weight — the positive half already exists and carries the load) |
-| 2 | `subagent-driven-development/SKILL.md` — "Do not add open-ended directives" | **Keep as-is**: micro-test could not elicit the failure in 15 samples; no evidence either way; shorter wins |
-| 3 | `subagent-driven-development/SKILL.md` — "Do not ask a reviewer to re-run tests" | **Keep as-is**: measured 0/5 violations; the prohibition also usefully propagates itself into dispatches |
-| 4 | `subagent-driven-development/SKILL.md` — "do not re-review on top of it" | **Queued in PR #1717 batch**: replace with the three-element checklist ("Before re-dispatching the reviewer, confirm the fix report contains: the covering tests, the command run, and the output") |
-| 5 | `writing-plans/SKILL.md` — the "No Placeholders" banned-patterns list | **This spec's main subject** — see below |
+| 1 | `subagent-driven-development/task-reviewer-prompt.md` — "서술하지 말고 인용하세요(Cite, don't narrate)" | **PR #1717 배치에 대기열 등록됨**: 긍정형 절반("리포트는 근거를 가리켜야 합니다: 모든 발견 사항에 대해 file:line…")을 앞세우고, 금지형 절반은 제거함(불필요한 군더더기 — 긍정형 절반이 이미 존재하며 핵심 역할을 다하고 있음) |
+| 2 | `subagent-driven-development/SKILL.md` — "개방형 지시어를 추가하지 마세요(Do not add open-ended directives)" | **현재 상태 유지**: 마이크로 테스트에서 15개 샘플 동안 실패를 유도할 수 없었음; 어느 쪽이든 증거가 없으므로 더 짧은 쪽이 승리함 |
+| 3 | `subagent-driven-development/SKILL.md` — "리뷰어에게 테스트를 다시 실행하라고 요청하지 마세요(Do not ask a reviewer to re-run tests)" | **현재 상태 유지**: 0/5 위반 측정됨; 이 금지 문구는 또한 디스패치 내부로 유용하게 전파됨 |
+| 4 | `subagent-driven-development/SKILL.md` — "그 위에서 다시 리뷰하지 마세요(do not re-review on top of it)" | **PR #1717 배치에 대기열 등록됨**: 3요소 체크리스트("리뷰어를 다시 디스패치하기 전에 수정 리포트에 다음이 포함되어 있는지 확인하세요: 관련 테스트, 실행한 명령어, 그리고 출력 결과")로 교체 |
+| 5 | `writing-plans/SKILL.md` — "플레이스홀더 금지(No Placeholders)" 금지 패턴 목록 | **이 스펙의 주요 주제** — 아래 참조 |
 
-Borderline, deferred with #5: `task-reviewer-prompt.md` "Don't flag
-pre-existing file sizes — focus on what this change contributed" (positive
-half present and load-bearing; low impact; test alongside #5 if convenient).
+경계선에 있어 #5와 함께 보류된 항목: `task-reviewer-prompt.md`의 "기존 파일 크기를 지적하지 마세요 — 이번 변경 사항이 기여한 부분에 집중하세요(Don't flag pre-existing file sizes — focus on what this change contributed)" (긍정형 절반이 존재하며 핵심 역할을 수행 중; 영향도 낮음; 편리할 경우 #5와 함께 테스트).
 
-## The writing-plans change (deferred item #5)
+## writing-plans 변경 사항 (보류된 항목 #5)
 
-### Current state
+### 현재 상태
 
-`skills/writing-plans/SKILL.md`, "No Placeholders": one positive sentence
-("Every step must contain the actual content an engineer needs") followed
-by a six-bullet banned-patterns list ("never write them: 'TBD', 'TODO',
-'Add appropriate error handling', 'Write tests for the above', 'Similar to
-Task N', …").
+`skills/writing-plans/SKILL.md`의 "No Placeholders": 긍정형 문장 하나("Every step must contain the actual content an engineer needs(모든 단계는 엔지니어가 필요로 하는 실제 내용을 포함해야 합니다)") 뒤에 6개 항목의 금지 패턴 목록("never write them: 'TBD', 'TODO', 'Add appropriate error handling', 'Write tests for the above', 'Similar to Task N', …")이 이어집니다.
 
-### Why it matters and why it is genuinely uncertain
+### 왜 이것이 중요하며 왜 정말로 불확실한가
 
-- Plans are the **largest generated artifact** in the workflow, and the
-  model has a real competing incentive to emit placeholders (they are the
-  path of least effort under length pressure) — the incentive structure of
-  the case where prohibition measurably backfired.
-- But the banned items are **discrete, recognizable tokens** — the shape
-  of the case where prohibition measurably held.
-- **The list is load-bearing elsewhere:** the skill's Self-Review section
-  references it ("Placeholder scan: search your plan for red flags — any
-  of the patterns from the 'No Placeholders' section above"). The tokens
-  double as the review-time scan inventory, and review-time recognition is
-  the category that works. A naive swap to a positive checklist breaks
-  that reference and discards good tripwire tokens.
+- 계획(Plans)은 워크플로우에서 **가장 큰 생성 아티팩트**이며, 모델은 플레이스홀더를 출력하려는 실제적인 경쟁 유인을 가지고 있습니다(길이 압박 하에서 최소한의 노력으로 갈 수 있는 경로이기 때문). 이는 금지형 지침이 측정 가능한 수준으로 역효과를 냈던 케이스의 유인 구조와 같습니다.
+- 하지만 금지된 항목들은 **개별적이고 인식 가능한 토큰(discrete, recognizable tokens)**입니다. 이는 금지형 지침이 측정 가능한 수준으로 잘 지켜졌던 케이스의 형태와 같습니다.
+- **이 목록은 다른 곳에서도 핵심 역할을 수행합니다:** 스킬의 자체 검토(Self-Review) 섹션이 이 목록을 참조합니다("플레이스홀더 스캔: 계획에서 위험 신호(red flags)를 검색하세요 — 위 'No Placeholders' 섹션에 있는 패턴 중 어느 것이든"). 이 토큰들은 리뷰 시점의 스캔 목록 역할을 겸하며, 리뷰 시점의 인식(recognition)은 잘 작동하는 카테고리에 속합니다. 이를 단순히 긍정형 체크리스트로 순진하게 바꾸면 해당 참조가 깨지고 훌륭한 인계철선 토큰들을 버리게 됩니다.
 
-### Variants to test
+### 테스트할 변형(Variants)
 
-- **V0 (current):** positive sentence + banned list at composition time;
-  Self-Review references the list.
-- **V1 (auditor's checklist):** composition-time positive recipe only —
-  "Before finalizing a step, confirm it has: the literal code to write, a
-  runnable command with expected output, types and method names defined
-  within this plan, error handling shown explicitly. A step is complete
-  when an engineer could implement it without asking any follow-up
-  questions." Self-Review keeps a generic placeholder scan.
-- **V2 (restructure by mechanism — predicted winner):** composition time
-  gets only V1's positive recipe; the named patterns move wholesale into
-  the Self-Review placeholder-scan step, reframed as recognition ("when
-  you scan, look for: 'TBD', 'TODO', 'Similar to Task N', …"). Same
-  tokens, relocated from the category that primes to the category that
-  detects.
-- **V3 (control):** positive sentence only, no list anywhere.
+- **V0 (현재):** 작성 시점에 긍정형 문장 + 금지 목록 제시; 자체 검토(Self-Review)에서 해당 목록을 참조.
+- **V1 (감사자의 체크리스트):** 작성 시점의 긍정형 레시피만 제시 — "단계를 최종 확정하기 전에 다음이 포함되어 있는지 확인하세요: 작성할 실제 코드, 예상 출력이 포함된 실행 가능한 명령어, 이 계획 내에 정의된 타입 및 메서드 이름, 명시적으로 표시된 에러 처리. 엔지니어가 후속 질문을 전혀 하지 않고도 구현할 수 있을 때 단계가 완성된 것입니다." 자체 검토는 일반적인 플레이스홀더 스캔만 유지.
+- **V2 (메커니즘에 따른 재구조화 — 예상 우승 후보):** 작성 시점에는 V1의 긍정형 레시피만 제공하고, 구체적인 패턴 이름들은 통째로 자체 검토(Self-Review)의 플레이스홀더 스캔 단계로 이동시켜 인식(recognition) 프레임으로 재구성("스캔할 때 다음을 찾으세요: 'TBD', 'TODO', 'Similar to Task N', …"). 동일한 토큰을 사용하되, 단어를 오히려 떠올리게 자극하는(primes) 카테고리에서 탐지하는(detects) 카테고리로 위치를 재배치.
+- **V3 (대조군):** 긍정형 문장만 제시, 어디에도 목록 없음.
 
-### Micro-test design
+### 마이크로 테스트 설계
 
-- **Task:** opus writes a 2-3 task implementation plan from a deliberately
-  under-specified spec (under-specification is what tempts placeholders).
-  Use a fixture spec with: one well-specified task, one task whose error
-  handling the spec hand-waves, one task similar to the first (tempting
-  "Similar to Task 1").
-- **Sampling:** 5+ reps per variant, default temperature, model
-  `claude-opus-4-8` (the model that writes plans in practice).
-- **Programmatic scoring** (lower is better unless noted):
-  - banned-token count: `TBD|TODO|implement later|fill in details|appropriate error handling|handle edge cases|Similar to Task|Write tests for the above`
-  - steps lacking a fenced code block where the step changes code
-  - references to types/functions not defined anywhere in the plan output
-  - (higher is better) runnable commands with expected output per task
-- **Two-stage scoring for V2:** also test the Self-Review half — feed each
-  generated plan back with the variant's Self-Review section and measure
-  whether the scan actually catches seeded placeholders (insert 2 known
-  placeholders into a fixture plan; detection rate is the metric).
-- **Acceptance:** adopt a variant only if it beats V0 on banned-token count
-  without losing code-block coverage or self-review detection rate.
-  Expected cost: ~$6-10 total.
+- **작업:** Opus가 의도적으로 불충분하게 명세된(under-specified) 스펙으로부터 2~3개 태스크 분량의 구현 계획을 작성합니다(불충분한 명세가 바로 플레이스홀더를 유혹하는 요인임). 다음과 같은 픽스처(fixture) 스펙을 사용합니다: 잘 명세된 태스크 1개, 스펙에서 에러 처리를 대충 얼버무린 태스크 1개, 첫 번째 태스크와 유사한 태스크 1개("Similar to Task 1"을 유혹함).
+- **샘플링:** 변형당 5회 이상 반복, 기본 temperature, 모델은 `claude-opus-4-8` (실제로 계획을 작성하는 모델).
+- **프로그래밍 방식 채점** (별도 표기가 없는 한 낮을수록 좋음):
+  - 금지된 토큰 수: `TBD|TODO|implement later|fill in details|appropriate error handling|handle edge cases|Similar to Task|Write tests for the above`
+  - 코드를 변경하는 단계임에도 펜스 코드 블록(fenced code block)이 누락된 단계 수
+  - 계획 출력물 내 어디에도 정의되지 않은 타입/함수에 대한 참조 수
+  - (높을수록 좋음) 태스크당 예상 출력이 포함된 실행 가능한 명령어 수
+- **V2를 위한 2단계 채점:** 자체 검토(Self-Review) 절반도 함께 테스트합니다 — 생성된 각 계획을 해당 변형의 자체 검토 섹션과 함께 다시 입력하고, 스캔 과정이 의도적으로 심어둔(seeded) 플레이스홀더를 실제로 잡아내는지 측정합니다(픽스처 계획에 알려진 플레이스홀더 2개를 삽입하며, 탐지율이 지표가 됨).
+- **채택 기준(Acceptance):** 코드 블록 커버리지나 자체 검토 탐지율을 잃지 않으면서 금지된 토큰 수에서 V0를 이기는 경우에만 변형을 채택합니다. 예상 비용: 총 약 \$6~10.
 
-### PR scoping
+### PR 범위 설정 (PR scoping)
 
-Separate PR (writing-plans is a different skill; its "No Placeholders"
-list is tuned content where the contributor guidelines demand eval
-evidence). The PR must include: the micro-test harness + results table,
-before/after text, and the V2 relocation rationale.
+별도의 PR로 진행합니다(`writing-plans`는 다른 스킬이며, 그 안의 "No Placeholders" 목록은 기여자 가이드라인에서 평가 증거를 요구하는 튜닝된 콘텐츠이기 때문). PR에는 마이크로 테스트 하네스 + 결과 테이블, 변경 전/후 텍스트, 그리고 V2 재배치 근거가 반드시 포함되어야 합니다.
 
-## The micro-test harness (method, so it isn't lost)
+## 마이크로 테스트 하네스 (방법론이 유실되지 않도록 기록)
 
-`/tmp/sdd-exp/micro/run-micro.py` and `/tmp/sdd-exp/micro2/run-micro2.py`
-(2026-06-10; to be committed to superpowers-evals as
-`docs/superpowers/skills/micro-testing-prompt-guidance.md` + scripts):
+`/tmp/sdd-exp/micro/run-micro.py` 및 `/tmp/sdd-exp/micro2/run-micro2.py` (2026-06-10; `superpowers-evals` 저장소에 `docs/superpowers/skills/micro-testing-prompt-guidance.md` + 스크립트로 커밋될 예정):
 
-- One API call per sample: system prompt = the skill-guidance variant in
-  realistic surrounding context; user = a realistic mid-workflow scenario;
-  output = the composed artifact (dispatch prompt, plan, report).
-- Programmatic scoring with greps for unambiguous markers; **manually
-  inspect every match before trusting a verdict** — one of tonight's
-  "violations" was the controller correctly quoting the prohibition, and
-  automated negation detection mislabeled another.
-- ~$0.15-0.30/sample, seconds per iteration vs $12/50-min full eval runs.
-  Iterate phrasings here; confirm winners in full runs only when the
-  change is structural.
-- Always include a no-guidance control — tonight it revealed both a
-  backfire (restating: prohibition worse than nothing) and a working
-  prohibition (test-reruns: 3/5 control failures vs 0/5 with either
-  phrasing).
+- 샘플당 API 호출 1회: 시스템 프롬프트 = 현실적인 주변 컨텍스트 내에 배치된 스킬 가이드 변형; 사용자 프롬프트 = 현실적인 워크플로우 중간 시나리오; 출력 = 작성된 아티팩트(디스패치 프롬프트, 계획, 리포트).
+- 모호하지 않은 마커에 대한 grep을 사용한 프로그래밍 방식 채점; **판정을 신뢰하기 전에 모든 매칭 결과를 수동으로 직접 검사하세요** — 오늘 밤 발견된 "위반" 중 하나는 컨트롤러가 금지 문구를 올바르게 인용한 것이었으며, 자동화된 부정어 탐지가 또 다른 하나를 잘못 분류했습니다.
+- 샘플당 약 \$0.15~0.30, 반복당 몇 초 소요 (전체 평가 실행 시 50분 동안 \$12가 드는 것과 대비됨). 여기서 문구 표현들을 반복 테스트하고, 변경 사항이 구조적인 경우에만 전체 실행(full runs)에서 최종 승자를 확인하세요.
+- 항상 가이드가 없는 대조군(no-guidance control)을 포함하세요 — 오늘 밤 대조군을 통해 역효과 사례(재서술: 금지형이 아무 가이드도 없는 것보다 더 나쁨)와 잘 작동하는 금지형 사례(테스트 재실행: 대조군은 3/5 실패한 반면, 두 문구 표현 모두 0/5 위반)를 모두 밝혀낼 수 있었습니다.
 
-## Result: writing-plans micro-test (run 2026-06-10, after this spec was written)
+## 결과: writing-plans 마이크로 테스트 (이 스펙이 작성된 후인 2026-06-10 실행)
 
-**Resolved — no change needed.** Stage 1 (3-task spec, no pressure): 0
-placeholders in all 20 plans across all four variants including the
-no-guidance control. Stage 1b (10-task spec, five near-identical commands
-tempting "Similar to Task N", explicit ~2,500-word economy target): 40/40
-clean — the single regex hit was a V2 self-review *attesting* "no
-TBD/TODO ✓". Current-generation opus does not produce plan placeholders
-even under deliberate pressure, with or without the banned-patterns list.
-Disposition: leave the No Placeholders section exactly as it is (it costs
-little and the counterfactual is unmeasurable); do NOT open the follow-up
-PR. The V2 relocation design remains on file here should a future model
-generation regress.
+**해결됨 — 변경 불필요.** 스테이지 1 (3개 태스크 스펙, 압박 없음): 가이드 없는 대조군을 포함한 네 가지 변형 전체의 20개 계획 모두에서 플레이스홀더 0건. 스테이지 1b (10개 태스크 스펙, "Similar to Task N"을 유혹하는 거의 동일한 5개의 명령어, 약 2,500단어 분량으로 아껴 쓰라는 명시적인 압박 목표 부여): 40/40 모두 깨끗함 — 유일하게 정규식에 걸린 1건은 V2 자체 검토에서 "TBD/TODO 없음 ✓"이라고 *증명(attesting)*한 문구였습니다. 현세대 Opus는 의도적인 압박 하에서도 금지 패턴 목록 유무와 상관없이 계획에 플레이스홀더를 생성하지 않습니다.
+처리 방침(Disposition): No Placeholders 섹션을 현재 상태 그대로 유지합니다(비용이 거의 들지 않으며 반사실적(counterfactual) 효과를 측정할 수 없음). 후속 PR을 열지 마세요. 향후 모델 세대에서 회귀(regress)가 발생할 경우를 대비해 V2 재배치 설계는 이 문서에 기록으로 남겨둡니다.
 
-## Also explicitly not-dropped (tested-and-declined, with data)
+## 또한 명시적으로 버리지 않기로 한 항목들 (데이터를 바탕으로 테스트 후 기각됨)
 
-Recorded so nobody re-proposes them without new evidence — full numbers in
-the 2026-06-09 SDD design spec's Cost-iterations section:
+새로운 증거 없이 누군가 다시 제안하지 않도록 기록해 둡니다 — 전체 수치는 2026-06-09 SDD 설계 스펙의 비용 반복(Cost-iterations) 섹션에 있습니다:
 
-- **Controller turn batching / parallel tool calls in one message:** the
-  controller emits exactly one tool call per message (0 multi-tool
-  messages across every measured run, with and without guidance). 46% of
-  controller turns are thinking/narration with no tool call — a
-  prompt-immune floor.
-- **Pipelined reviews via parallel calls:** dead for the same reason.
-- **Pipelined reviews via `run_in_background`:** mechanism adopted when
-  offered (7/28 dispatches) but benefit below the run-to-run noise floor
-  on 45-min scenarios (reviews are only ~30-60s each); adds dual
-  result-stream coordination. Worth revisiting only for plans whose
-  reviews are individually long.
-- **Nuance clauses appended to winning recipes:** measurably degrade them
-  (C2: 3.8 noisy vs C: 3.0 consistent). Iterate by re-deriving the recipe,
-  not by appending caveats.
+- **컨트롤러 턴 배칭 / 한 메시지 내 병렬 도구 호출:** 컨트롤러는 메시지당 정확히 하나의 도구 호출만 출력합니다(가이드 유무와 상관없이 측정된 모든 실행에서 다중 도구 메시지는 0건). 컨트롤러 턴의 46%는 도구 호출이 없는 생각/내레이션(thinking/narration)이며, 이는 프롬프트로 바꿀 수 없는 하한선(prompt-immune floor)입니다.
+- **병렬 호출을 통한 파이프라인 리뷰:** 동일한 이유로 불가능합니다.
+- **`run_in_background`를 통한 파이프라인 리뷰:** 메커니즘을 제안했을 때 채택되기는 했으나(7/28 디스패치), 45분짜리 시나리오에서 그 이점이 실행 간 노이즈 하한선(run-to-run noise floor)보다 낮았습니다(리뷰는 각각 약 30~60초에 불과함). 오히려 이중 결과 스트림 조율이라는 복잡성만 추가합니다. 개별 리뷰 시간이 긴 계획에 대해서만 다시 검토할 가치가 있습니다.
+- **성공적인 레시피 뒤에 덧붙여진 뉘앙스 단서 조항:** 측정 가능한 수준으로 레시피의 성능을 저하시킵니다(C2: 3.8 노이즈 발생 vs C: 3.0 일관됨). 단서 조항(caveats)을 덧붙이는 대신 레시피 자체를 다시 도출하는 방식으로 반복 개선하세요.

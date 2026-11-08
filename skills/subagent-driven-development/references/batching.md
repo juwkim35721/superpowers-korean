@@ -1,11 +1,5 @@
-# Batching Small Same-Shape Work
+# 동일한 형태의 작은 작업 일괄 처리하기 (Batching Small Same-Shape Work)
 
-Part of superpowers:subagent-driven-development.
+`superpowers:subagent-driven-development`의 일부입니다.
 
-**Batch small same-shape work.** When the plan lists several tasks that are
-each a small, independent edit of the same kind — the same one-line fix,
-constant change, or field addition repeated across files — do not dispatch
-one subagent per task. Compose ONE dispatch brief listing every file and
-its change, send the whole batch to a single subagent, and review its diff
-as one unit. Reserve one-dispatch-per-task for work that needs its own
-judgment, its own tests, or its own review surface.
+**동일한 형태의 작은 작업들은 일괄 처리(batch)하세요.** 계획에 나열된 여러 태스크가 각각 여러 파일에 걸쳐 반복되는 동일한 종류의 작고 독립적인 편집 작업(예: 동일한 한 줄 수정, 상수 변경, 필드 추가 등)일 때는 태스크마다 서브에이전트를 하나씩 디스패치하지 마세요. 모든 파일과 각 파일의 변경 사항을 나열한 **단 하나의** 디스패치 브리프를 작성하여 단일 서브에이전트에게 전체 배치를 한 번에 보내고, 그 결과 diff도 하나의 단위로 묶어서 리뷰하세요. 태스크당 한 번씩 디스패치하는 방식은 고유한 판단, 고유한 테스트, 또는 고유한 리뷰 영역이 필요한 작업에만 아껴 두세요.

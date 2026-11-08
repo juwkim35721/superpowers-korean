@@ -1,15 +1,15 @@
-# Handling a Report That Isn't DONE
+# DONE이 아닌 보고서 처리하기 (Handling a Report That Isn't DONE)
 
-Part of superpowers:subagent-driven-development.
+`superpowers:subagent-driven-development`의 일부입니다.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS:** 구현자가 작업을 완료했지만 의구심이나 우려 사항을 표시했습니다. 다음 단계로 진행하기 전에 우려 사항을 먼저 읽으세요. 만약 우려 사항이 코드의 정확성이나 요구사항 범위(scope)에 관한 것이라면 리뷰로 넘어가기 전에 먼저 해결하세요. 만약 단순한 관찰 사항(예: "이 파일이 점점 커지고 있습니다")이라면 기록해 두고 리뷰로 진행하세요.
 
-**NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
+**NEEDS_CONTEXT:** 구현자에게 제공되지 않은 추가 정보가 필요한 상태입니다. 누락된 컨텍스트를 제공하고 다시 디스패치하세요.
 
-**BLOCKED:** The implementer cannot complete the task. Assess the blocker:
-1. If it's a context problem, provide more context and re-dispatch with the same model
-2. If the task requires more reasoning, re-dispatch with a more capable model
-3. If the task is too large, break it into smaller pieces
-4. If the plan itself is wrong, rule on the correction, ledger it, and re-dispatch with the ruling carried in the dispatch
+**BLOCKED:** 구현자가 태스크를 완료할 수 없는 상태입니다. 무엇이 작업을 가로막고 있는지(blocker) 평가하세요:
+1. 컨텍스트 부족 문제라면, 더 많은 컨텍스트를 제공하고 동일한 모델로 다시 디스패치하세요
+2. 태스크에 더 깊은 추론 능력이 필요하다면, 더 뛰어난 모델로 다시 디스패치하세요
+3. 태스크가 너무 크다면, 더 작은 조각들로 나누세요
+4. 계획 자체에 문제가 있다면, 수정 사항에 대해 판정(ruling)을 내리고 원장(ledger)에 기록한 뒤, 해당 판정을 디스패치에 포함하여 다시 디스패치하세요
 
-**Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
+에스컬레이션을 무시하거나 아무런 변경 없이 동일한 모델에게 재시도를 강요해서는 **절대** 안 됩니다. 구현자가 막혔다고 말했다면 무언가는 반드시 달라져야 합니다.

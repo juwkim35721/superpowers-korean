@@ -1,77 +1,30 @@
-# The Fix Loop
+# 수정 루프 (The Fix Loop)
 
-Part of superpowers:subagent-driven-development. The task review reported
-spec ❌, a Critical or Important finding, or a ⚠️ item you confirmed as a real
-gap.
+`superpowers:subagent-driven-development`의 일부입니다. 태스크 리뷰에서 명세 미준수(spec ❌), Critical 또는 Important 지적 사항, 혹은 당신이 실제 누락(real gap)으로 확인한 ⚠️ 항목이 보고된 상태입니다.
 
-Before the loop starts, two routes leave it immediately:
+루프가 시작되기 전에, 다음 두 가지 경우는 즉시 루프에서 제외됩니다:
 
-- Record Minor findings in the progress ledger as you go
-  (`Task <N>: minor (deferred): <one-liner>`), and point the final
-  whole-branch review at that list so it can triage which must be fixed
-  before merge. A roll-up nobody reads is a silent discard. Minor findings
-  never enter the loop.
-- A finding labeled plan-mandated — or any finding that conflicts with
-  what the plan's text requires — is yours to rule on: weigh the finding
-  against the plan text, decide with the spec as the binding authority, and
-  ledger the ruling before you act on it. Do not dismiss the finding because
-  the plan mandates it, and do not dispatch a fix that contradicts the plan
-  without a recorded ruling.
-Everything else enters the loop. A fix round is one fix dispatch plus one
-scoped re-review. Five rounds maximum per task:
+- Minor 지적 사항들은 진행하면서 진행 원장(progress ledger)에 기록해 두고(`Task <N>: minor (deferred): <한 줄 요약>`), 브랜치 전체 최종 리뷰 시 이 목록을 가리켜 주어 병합 전에 수정해야 할 항목을 분류(triage)하게 하세요. 아무도 읽지 않는 요약본은 조용히 버리는 것(silent discard)과 같습니다. Minor 지적 사항은 절대 수정 루프에 들어가지 않습니다.
+- `plan-mandated`(계획에서 지시됨) 라벨이 붙은 지적 사항 — 또는 계획 텍스트가 요구하는 바와 충돌하는 모든 지적 사항 — 은 당신이 직접 판정(rule on)해야 합니다: 지적 사항과 계획 텍스트를 저울질하고, 명세(spec)를 구속력 있는 최종 기준으로 삼아 결정한 뒤, 조치를 취하기 전에 원장에 그 판정을 먼저 기록하세요. 계획이 지시했다는 이유만으로 지적 사항을 묵살하지 마시고, 반대로 기록된 판정 없이 계획과 모순되는 수정을 디스패치하지도 마세요.
+그 외의 모든 항목은 수정 루프로 들어갑니다. 한 번의 수정 라운드는 1회의 수정 디스패치와 1회의 범위 지정 재리뷰(scoped re-review)로 구성됩니다. 태스크당 최대 5라운드까지 허용됩니다:
 
-**Rounds 1-3 — resume the original implementer.** Send it the open findings
-verbatim. Its context is intact: it knows the task, the code, and its own
-choices. If your harness cannot send another message to a live subagent,
-dispatch a fresh implementer carrying the brief path, the report-file path,
-and the findings — the report file is the persistent memory either way.
+**1~3라운드 — 기존 구현자(implementer)를 재개(resume)합니다.** 미해결 지적 사항들을 글자 그대로 전달하세요. 기존 구현자는 컨텍스트가 그대로 유지되어 있어 태스크, 코드, 그리고 자신이 내렸던 선택들을 모두 알고 있습니다. 만약 사용 중인 하네스(harness)가 실행 중인 서브에이전트에게 추가 메시지를 보낼 수 없다면, 브리프 경로, 보고서 파일 경로, 그리고 지적 사항들을 담아 새로운 구현자를 디스패치하세요 — 어느 쪽이든 보고서 파일이 영구적인 메모리 역할을 합니다.
 
-**Rounds 4-5 — dispatch a fresh implementer on a more capable model** (per
-SKILL.md's Model Selection), with the brief path, the report-file path, the open
-findings, and this framing: "A prior implementer attempted this task
-[N] times; you own it now. Read the report file for what was tried." A loop
-that survives three resumes usually means the implementer cannot see its
-own problem — fresh eyes and a capability bump in one move.
+**4~5라운드 — 더 뛰어난 모델로 새로운 구현자를 디스패치합니다** (SKILL.md의 Model Selection 기준 적용). 브리프 경로, 보고서 파일 경로, 미해결 지적 사항들과 함께 다음과 같은 프레이밍을 전달하세요: "이전 구현자가 이 태스크를 [N]번 시도했으나 해결하지 못했습니다. 이제부터 당신이 이 태스크를 맡습니다. 그동안 어떤 시도가 있었는지 보고서 파일을 먼저 읽으세요." 3번의 재개 후에도 루프가 끝나지 않았다는 것은 대개 기존 구현자가 자신의 문제를 스스로 보지 못하고 있음을 의미합니다 — 새로운 시각과 모델 성능 향상을 동시에 투입하는 것입니다.
 
-**Every round, either way:** the implementer fixes, re-runs the tests
-covering the amended code, appends its fix report to the same report file,
-and returns the short contract. Before re-dispatching the reviewer, confirm
-the fix report contains the covering tests, the command run, and the
-output; dispatch the re-review once all three are present. Name the
-covering test files in the fix message — a one-line fix does not need the
-whole suite.
+**모든 라운드 공통 (어느 방식이든):** 구현자는 문제를 수정하고, 수정된 코드를 커버하는 테스트들을 다시 실행하며, 동일한 보고서 파일 끝에 수정 보고서(fix report)를 덧붙인 뒤 짧은 규약(short contract)으로 응답합니다. 리뷰어를 다시 디스패치하기 전에, 수정 보고서에 커버리지 테스트 목록, 실행한 명령어, 그리고 출력 결과가 모두 포함되어 있는지 확인하세요. 세 가지가 모두 갖춰졌을 때만 재리뷰를 디스패치합니다. 수정 메시지에는 커버리지 테스트 파일들의 이름을 명시하세요 — 한 줄짜리 수정에 전체 테스트 스위트를 다 돌릴 필요는 없습니다.
 
-**The re-review is scoped.** Run `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`
-by its absolute path, from the working tree you're executing in, where FIX_BASE is the head the previous review saw, and dispatch
-[re-review-prompt.md](../re-review-prompt.md) with the findings list, the
-brief, the report file, and the printed diff path. The re-reviewer verdicts
-each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix
-diff only. New Critical/Important breakage in the fix diff joins the open
-findings list. Out-of-scope observations go to the ledger as deferred
-minors — they never extend the loop.
+**재리뷰는 범위가 제한됩니다(scoped).** 현재 실행 중인 작업 트리에서 `bash scripts/review-package PLAN_FILE FIX_BASE HEAD`를 절대 경로로 실행하고(`FIX_BASE`는 이전 리뷰가 보았던 head 커밋), 지적 사항 목록, 브리프, 보고서 파일, 그리고 출력된 diff 파일 경로와 함께 [re-review-prompt.md](../re-review-prompt.md)를 디스패치하세요. 재리뷰어는 각 지적 사항에 대해 `ADDRESSED` 또는 `NOT ADDRESSED` 평결을 내리고, 오직 수정 diff 내에서 새로 발생한 결함(new breakage)만 지적합니다. 수정 diff에서 새로 발견된 Critical/Important 결함은 미해결 지적 사항 목록에 추가됩니다. 수정 범위를 벗어난 관찰 사항(Out-of-scope observations)은 보류된 사소한 항목(deferred minors)으로 원장에 기록되며 — 절대 루프를 연장시키지 않습니다.
 
-**After each round,** append to the ledger:
-`Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)`
+**매 라운드가 끝날 때마다** 원장에 다음 줄을 추가하세요:
+`Task <N>: fix round <R>/5 (<X> addressed, <Y> open — <지적 사항 한 줄 요약들>; commits <a7>..<b7>)`
 
-Never fix findings yourself in the controller session — your context stays
-clean for coordination, and controller fixes skip review.
+컨트롤러 세션에서 당신이 직접 지적 사항을 수정하지 마세요 — 조율 작업을 위해 당신의 컨텍스트를 깨끗하게 유지해야 하며, 컨트롤러가 직접 수정하면 리뷰 과정을 건너뛰게 됩니다.
 
-**The breaker.** When round 5's re-review still leaves findings open, stop
-dispatching. Adjudicate each open finding yourself — you hold the plan and
-the cross-task context the reviewer lacks:
+**차단기 (The breaker).** 5라운드의 재리뷰가 끝난 후에도 여전히 미해결 지적 사항이 남아 있다면, 더 이상 디스패치하지 말고 멈추세요. 당신은 리뷰어에게는 없는 전체 계획과 태스크 간(cross-task) 컨텍스트를 가지고 있으므로, 남은 각 미해결 지적 사항을 직접 판정(adjudicate)하세요:
 
-- **The reviewer is wrong, or the point is contestable:** park it —
-  `Task <N>: parked — <finding> — Ruling: <why the code stands>`. The final
-  review sees both sides.
-- **Real, but nothing downstream builds on it:** park it the same way, with
-  a ruling that says it's real and deferred.
-- **Real and load-bearing** — a later task builds on it, or it reveals a
-  plan defect: rule on the smallest change that unblocks the dependent work,
-  ledger it as `Task <N>: Ruling: <finding> — <what you decided and why>`,
-  and carry it into the next task's dispatch. Parking a structural failure
-  silently lets every dependent task build on it. Stop only when the defect
-  leaves every path forward a guess.
+- **리뷰어가 틀렸거나, 논쟁의 여지가 있는 경우:** 보류(park) 처리합니다 — `Task <N>: parked — <지적 사항> — Ruling: <현재 코드를 유지하는 이유>`. 최종 리뷰에서 양쪽의 입장을 모두 확인하게 됩니다.
+- **실제 문제가 맞지만, 이후(downstream)의 어떤 작업도 이에 의존하지 않는 경우:** 동일한 방식으로 보류 처리하되, 실제 문제이지만 연기(deferred)한다는 판정을 기록합니다.
+- **실제 문제이며 핵심적인(load-bearing) 경우** — 이후 태스크가 이 위에 구축되거나 계획의 결함을 드러내는 경우: 의존하는 후속 작업의 차단을 해제할 수 있는 최소한의 변경 사항을 결정(rule on)하고, 원장에 `Task <N>: Ruling: <지적 사항> — <결정 내용 및 이유>`로 기록한 뒤, 이를 다음 태스크의 디스패치에 포함하여 전달하세요. 구조적인 실패를 조용히 보류해 버리면 이에 의존하는 모든 후속 태스크가 무너진 기반 위에 쌓이게 됩니다. 오직 결함이 너무 심각하여 앞으로 나아가는 모든 경로가 단순한 추측에 불과할 때만 멈추세요.
 
-Adjudicate only at the cap. Adjudicating earlier to end a loop is
-pre-judging with a different name. Every adjudication is a ledger entry —
-a silent discard is forbidden.
+판정(adjudication)은 오직 한도(cap)에 도달했을 때만 내리세요. 루프를 일찍 끝내기 위해 한도 도달 전에 판정을 내리는 것은 이름만 바꾼 예단(pre-judging)일 뿐입니다. 모든 판정은 원장에 기록되어야 하며 — 조용히 무시하고 버리는 행위(silent discard)는 금지되어 있습니다.

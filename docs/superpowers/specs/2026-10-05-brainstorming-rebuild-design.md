@@ -1,165 +1,101 @@
-# Brainstorming rebuild: intent
+# 브레인스토밍 재구축: 의도(Intent)
 
-## Why this exists
+## 이 작업이 존재하는 이유
 
-Coding agents are very good at building. They build what they believe the
-human wants, and they rarely ask enough or look around enough before they
-start. The brainstorming skill exists to close that gap: draw the human's
-real intent out of them, including the parts they haven't worked out yet,
-before anything gets built.
+코딩 에이전트는 무언가를 만드는 데 매우 뛰어납니다. 에이전트는 인간이 원한다고 자신이 믿는 것을 만들어내며, 작업을 시작하기 전에 충분히 질문하거나 주변을 충분히 살펴보는 경우가 드뭅니다. `brainstorming` 스킬은 바로 그 간극을 메우기 위해 존재합니다. 즉, 무언가를 만들기 전에 인간이 아직 미처 다 구체화하지 못한 부분까지 포함하여 인간의 진짜 의도(intent)를 끌어내는 것입니다.
 
-The original superpowers prompt did this well in about forty words: "I've
-got an idea in my head. I'd like you to ask me lots of questions about it.
-As you think you understand what I really want, describe it to me in
-chunks of about 200-300 words. Once we're dialed in, write out an informal
-spec." The current skill has grown to about 2,600 words, almost all of it
-about routing (spike / bounded / architectural), approval gates, and the
-spec-to-plan handoff. Intent got squeezed into one paragraph whose default
-move is "ask one focused question about purpose", which doesn't work on
-people.
+초기 superpowers 프롬프트는 약 40단어로 이 역할을 훌륭하게 해냈습니다: "내 머릿속에 아이디어가 하나 있어. 그것에 대해 나에게 질문을 많이 해줬으면 좋겠어. 내가 정말로 원하는 게 무엇인지 이해했다고 생각되면, 약 200~300단어 단위로 나에게 설명해 줘. 우리가 완전히 주파수를 맞추고 나면, 비공식 스펙(spec)을 작성해 줘." 현재 스킬은 약 2,600단어로 비대해졌는데, 그중 거의 전부가 라우팅(스파이크(spike) / 범위가 명확한 작업(bounded) / 아키텍처 작업(architectural)), 승인 게이트(approval gates), 그리고 스펙에서 계획으로의 인계(spec-to-plan handoff)에 관한 것입니다. 정작 의도(intent)는 한 문단으로 쥐어짜여 축소되었고, 그 기본 행동은 "목적에 대해 집중된 질문 하나를 던져라"인데, 이는 실제 사람들에게 제대로 작동하지 않습니다.
 
-This is a rewrite from scratch, not an edit.
+이 작업은 부분적인 수정이 아니라 처음부터 다시 쓰는 전면 재작성(rewrite from scratch)입니다.
 
-## Goals
+## 목표 (Goals)
 
-- The agent understands the *why* behind anything non-trivial, because an
-  agent that knows the why makes the hundred unstated decisions well.
-- The human ends up thinking through what they actually want. Good
-  questions help them flesh out an idea they haven't finished forming.
-- Works for any domain: software, a talk, a renovation, a small business.
-- Ends with a document a talented builder in that domain could plan from
-  without going back to the human.
+- 에이전트가 사소하지 않은 모든 작업 이면의 *이유(why)*를 이해합니다. 왜냐하면 '왜'를 아는 에이전트는 명시되지 않은 수많은 의사결정을 훌륭하게 내려주기 때문입니다.
+- 인간이 자신이 실제로 원하는 것이 무엇인지 깊이 생각해 보게 됩니다. 좋은 질문은 아직 형태를 다 갖추지 못한 아이디어를 구체화하는 데 도움을 줍니다.
+- 소프트웨어, 발표 준비, 리모델링, 소규모 비즈니스 등 어떤 도메인에서든 작동합니다.
+- 해당 도메인의 유능한 빌더(builder)가 인간에게 다시 물어보러 가지 않고도 바로 계획을 세울 수 있는 문서를 최종 산출물로 남깁니다.
 
-## How a session should feel
+## 세션이 어떠해야 하는가 (How a session should feel)
 
-**Start with a private check.** The agent asks itself: what do I actually
-know about what they want, and why? If the answer is "nearly everything"
-("make the icon cornflower blue"), it confirms and moves on. If anything
-non-trivial is missing, it starts asking.
+**내부 점검(private check)으로 시작합니다.** 에이전트는 스스로에게 묻습니다: 그들이 무엇을 원하고 왜 원하는지에 대해 내가 실제로 알고 있는 것은 무엇인가? 만약 그 답이 "거의 전부"("아이콘을 수레국화 파란색(cornflower blue)으로 만들어 줘")라면, 확인 후 바로 진행합니다. 사소하지 않은 무언가가 빠져 있다면 질문을 시작합니다.
 
-**Ask, one question at a time.** Plain language by default, pitched just a
-little above the human's level. Questions should help the human think, not
-quiz them.
+**한 번에 하나씩 질문합니다.** 기본적으로 평이한 언어를 사용하되, 인간의 수준보다 아주 조금만 더 높은 눈높이로 맞춥니다. 질문은 인간을 시험(quiz)하는 것이 아니라 인간이 생각할 수 있도록 도와야 합니다.
 
-- Get them describing first. Open questions beat menus because menus
-  garden-path people toward the agent's assumptions.
-- Offer a menu only when they're struggling.
-- If they say "just guess" or "what do you think", always propose.
-- Ground questions in real moments ("walk me through the last time...")
-  and concrete tradeoffs ("if it could only do one of these well...").
-- Ask about prior art and current state: what exists elsewhere, what
-  exists now.
-- Ask which parts of the *how* they want to decide, and which they'd
-  rather hand to the builder.
+- 먼저 설명하게 만드세요. 객관식 메뉴는 사람을 에이전트의 가정으로 유도(garden-path)하기 때문에 열린 질문(open questions)이 메뉴보다 낫습니다.
+- 인간이 대답하기 어려워할 때만 메뉴를 제안하세요.
+- 만약 인간이 "그냥 추측해 봐" 또는 "네 생각은 어때?"라고 말하면 항상 제안을 내놓으세요.
+- 실제 순간("마지막으로 ...했던 때를 차근차근 들려주세요")과 구체적인 트레이드오프("만약 이 중 딱 하나만 잘할 수 있다면...")에 기반하여 질문하세요.
+- 기존 사례(prior art)와 현재 상태에 대해 질문하세요: 다른 곳에는 무엇이 있는지, 지금 현재는 무엇이 있는지 물어봅니다.
+- *어떻게(how)*의 영역 중 어떤 부분을 인간이 직접 결정하고 싶은지, 그리고 어떤 부분을 빌더에게 맡기고 싶은지 물어보세요.
 
-The ground to cover, loosely in order: what kind of thing this is, what
-makes it special, goals, non-goals, anti-goals, the details they care
-about, and what they want to delegate. These are territory, not a script.
-The agent never reads them out as literal questions.
+다루어야 할 영역은 대략 다음 순서와 같습니다: 이것이 어떤 종류의 것인지, 무엇이 이것을 특별하게 만드는지, 목표(goals), 비목표(non-goals), 안티목표(anti-goals), 인간이 신경 쓰는 세부 사항, 그리고 위임하고 싶어 하는 부분입니다. 이것들은 탐색해야 할 영역(territory)이지 대본(script)이 아닙니다. 에이전트는 절대 이것들을 문자 그대로 읽으며 질문하지 않습니다.
 
-**Offer recon.** Once there's some grounding, the agent offers to go look:
-the codebase or project, the human's own files and data, or the web. The
-human decides whether it goes.
+**사전 조사(recon)를 제안합니다.** 어느 정도 기반이 잡히면, 에이전트는 직접 살펴보겠다고 제안합니다: 코드베이스나 프로젝트, 인간이 가진 파일과 데이터, 또는 웹 검색 등입니다. 에이전트가 조사를 하러 갈지 여부는 인간이 결정합니다.
 
-**Show, don't tell, once things get concrete.** Use the visual companion
-for diagrams, mockups, and throwaway prototypes where seeing beats reading.
+**구체화되면 말로만 하지 말고 보여줍니다(Show, don't tell).** 읽는 것보다 보는 것이 나은 경우 다이어그램, 목업(mockup), 일회용 프로토타입을 위해 시각적 컴패니언(visual companion)을 사용합니다.
 
-**Spike to feel things out.** Agentic development is waterfall, but very,
-very fast. A quick throwaway build is often the cheapest way to find out
-what the human wants or whether something works, and the agent should
-offer one when it would help. When the human just wants to spike, the
-agent gets out of the way. Spikes have no tests or minimal ones, aren't
-bulletproof, and don't go through the full plan, implementation, and
-review process. What a spike teaches feeds back into the conversation.
+**감을 잡기 위해 스파이크(Spike)를 수행합니다.** 에이전트 기반 개발은 폭포수(waterfall) 모델이지만, 아주 엄청나게 빠른 폭포수입니다. 빠르게 만들어보고 버리는 일회용 빌드(throwaway build)는 인간이 무엇을 원하는지 또는 무언가가 작동하는지 알아내는 가장 저렴한 방법인 경우가 많으며, 도움이 될 때 에이전트가 이를 제안해야 합니다. 인간이 단지 스파이크만 원할 때, 에이전트는 방해하지 않고 길을 비켜줍니다. 스파이크는 테스트가 없거나 최소한만 있으며, 완벽하게 방탄(bulletproof) 처리되지 않고, 전체 계획, 구현, 리뷰 프로세스를 거치지 않습니다. 스파이크를 통해 배운 것은 다시 대화로 피드백됩니다.
 
-**Think wide internally.** Before proposing anything, the agent generates
-several ideas and discards the weak ones. It shows the human the comparison
-only when that helps them decide.
+**내부적으로는 넓게 생각합니다.** 무언가를 제안하기 전에 에이전트는 여러 아이디어를 생성하고 약한 아이디어는 버립니다. 비교 내용을 보여주는 것이 인간의 결정에 도움이 될 때만 인간에게 비교표를 보여줍니다.
 
-**Play it back.** Once the agent thinks it understands, it describes its
-understanding in chunks of roughly 200-300 words and adjusts after each.
+**이해한 바를 되짚어 들려줍니다(Play it back).** 에이전트가 이해했다고 생각하면, 자신이 이해한 내용을 약 200~300단어 단위로 설명하고 매 단위마다 피드백을 받아 조정합니다.
 
-## What it produces
+## 무엇을 만들어내는가 (What it produces)
 
-A plain written document covering:
+다음 내용을 다루는 평이한 작성 문서:
 
-- intent and the why
-- goals, non-goals, anti-goals
-- constraints
-- the parts of the how the human cares about, as they decided them
-- what's explicitly left to the builder
+- 의도(intent)와 이유(why)
+- 목표(goals), 비목표(non-goals), 안티목표(anti-goals)
+- 제약 사항(constraints)
+- 인간이 신경 쓰는 *어떻게(how)*의 영역 중 인간이 결정한 내용
+- 빌더에게 명시적으로 위임된 영역
 
-**Done test:** before the human reviews it, a fresh subagent playing a
-talented builder in the domain reads the document and lists what it would
-still need to ask. Those questions go back to the human. The document is
-done when the builder has nothing important left to ask.
+**완료 테스트(Done test):** 인간이 문서를 검토하기 전에, 해당 도메인의 유능한 빌더 역할을 맡은 새로운 서브에이전트(subagent)가 문서를 읽고 여전히 물어봐야 할 질문들의 목록을 작성합니다. 그 질문들은 다시 인간에게 전달됩니다. 빌더가 더 이상 물어볼 중요한 질문이 없을 때 문서는 완료됩니다.
 
-**Sizing the work.** Once intent is clear, the agent sorts the work into
-one of three sizes, says which out loud, and lets the human override:
+**작업 규모 산정(Sizing the work).** 의도가 명확해지면, 에이전트는 작업을 세 가지 크기 중 하나로 분류하여 소리 내어 말하고, 인간이 이를 변경(override)할 수 있게 합니다:
 
-- **A quick, clear task.** Intent was clear from the start. Confirm and do it.
-- **A small change.** The full description lives in chat. No document file.
-- **A project with a written design.** The full description is the
-  document above, followed by a full plan (for software, the writing-plans
-  skill).
+- **빠르고 명확한 작업(A quick, clear task).** 처음부터 의도가 명확했습니다. 확인하고 바로 수행합니다.
+- **작은 변경(A small change).** 전체 설명은 채팅창 안에만 존재합니다. 별도의 문서 파일은 없습니다.
+- **작성된 설계 문서가 있는 프로젝트(A project with a written design).** 전체 설명은 위에서 언급한 문서가 되며, 이어서 전체 계획(소프트웨어의 경우 `writing-plans` 스킬)이 뒤따릅니다.
 
-This is where the old spike / bounded / architectural choice lives now:
-after intent, not before it, with plain names.
+과거의 스파이크(spike) / 범위가 명확한 작업(bounded) / 아키텍처 작업(architectural) 선택지가 이제 자리 잡는 곳이 바로 여기입니다. 의도 파악 전이 아니라 의도 파악 후이며, 평이한 이름을 사용합니다.
 
-**Approval.** Whatever the size, the human approves the full description
-before anything gets built: in chat for a small change, by reading the
-document for a project.
+**승인(Approval).** 규모가 어떠하든, 무언가가 만들어지기 전에 인간이 전체 설명을 승인합니다. 작은 변경의 경우 채팅에서, 프로젝트의 경우 문서를 읽음으로써 승인합니다.
 
-**Opting out.** Early in the session, the agent mentions once that if the
-human doesn't want to go through this process, they can just say so.
+**옵트아웃(Opting out).** 세션 초반에 에이전트는 인간이 이 프로세스를 거치고 싶지 않다면 언제든 그냥 말하면 된다고 한 번 언급합니다.
 
-## Non-goals
+## 비목표 (Non-goals)
 
-- Designing architecture the human didn't ask to decide. The doc records
-  the how the human cares about; the rest belongs to the builder.
-- Being software-specific.
-- Ceremony for trivial requests.
+- 인간이 결정하겠다고 요청하지 않은 아키텍처를 설계하는 것. 문서는 인간이 신경 쓰는 '어떻게(how)'만 기록하며, 나머지는 빌더의 몫입니다.
+- 소프트웨어에만 국한되는 것.
+- 사소한 요청에 대해 거창한 의식(ceremony)을 치르는 것.
 
-## Anti-goals
+## 안티목표 (Anti-goals)
 
-- Interrogation: a checklist of questions read at the human.
-- Garden-pathing: steering the human into the agent's preferred idea with
-  leading menus.
-- "What are you actually trying to do?" style questions that ask the human
-  to do the agent's thinking.
-- Small asks inflating into multi-phase projects.
-- Building before the human agrees with the playback.
+- 심문(Interrogation): 인간에게 질문 체크리스트를 줄줄 읽어 내려가는 것.
+- 유도 신문(Garden-pathing): 유도성 메뉴를 통해 에이전트가 선호하는 아이디어로 인간을 몰고 가는 것.
+- 에이전트가 해야 할 생각을 인간에게 떠넘기는 "실제로 하려는 게 무엇인가요?" 스타일의 질문.
+- 작은 요청이 다단계 프로젝트로 부풀려지는 것.
+- 인간이 되짚어 들려준 내용(playback)에 동의하기 전에 빌드를 시작하는 것.
 
-## Decisions
+## 결정 사항 (Decisions)
 
-- The skill keeps the name `brainstorming`. Other skills and the README
-  point at it.
-- The visual companion and its server scripts stay as they are.
-- `spec-document-reviewer-prompt.md` is replaced by the builder-check prompt.
-- The agent screens the builder check's questions before bringing them to
-  the human: it answers what it can from context and drops questions about
-  delegated details. Without a subagent tool, it runs the check itself.
-- A short hard gate stays: nothing gets built until the human approves the
-  full description. One exception: a spike the human said yes to. It stays
-  labeled throwaway. Keeping what it produced is a new request and goes
-  through the gate.
-- The builder check runs only on the written document. Small changes stay
-  in chat.
-- The trigger description keeps the strong "use before any creative work"
-  wording. The opening check keeps trivial asks cheap.
-- The todo-list example from the old skill goes. The evals that encode the
-  old routing (`brainstorming-todo-purpose-discovery`,
-  `brainstorming-todo-shared-intent`) get rewritten to match.
-- Software projects keep `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  as the default location for the document.
+- 스킬 이름은 `brainstorming`을 유지합니다. 다른 스킬들과 README가 이 이름을 가리키고 있습니다.
+- 시각적 컴패니언(visual companion)과 그 서버 스크립트들은 현재 상태 그대로 유지됩니다.
+- `spec-document-reviewer-prompt.md`는 빌더 점검 프롬프트(builder-check prompt)로 대체됩니다.
+- 에이전트는 빌더 점검에서 나온 질문들을 인간에게 가져가기 전에 먼저 걸러냅니다(screen): 컨텍스트로부터 답할 수 있는 것은 스스로 답하고, 위임된 세부 사항에 대한 질문은 버립니다. 서브에이전트 도구가 없는 환경에서는 에이전트가 직접 점검을 실행합니다.
+- 짧고 강력한 게이트(hard gate)는 유지됩니다: 인간이 전체 설명을 승인할 때까지 아무것도 빌드되지 않습니다. 단 하나의 예외는 인간이 동의한 스파이크(spike)입니다. 스파이크는 일회용(throwaway)이라는 라벨이 유지됩니다. 스파이크가 만들어낸 결과물을 유지하는 것은 새로운 요청으로 간주하며 게이트를 통과해야 합니다.
+- 빌더 점검은 작성된 문서에 대해서만 실행됩니다. 작은 변경 사항은 채팅창에 머뭅니다.
+- 트리거 설명(trigger description)은 "모든 창의적인 작업 전에 사용하라(use before any creative work)"는 강력한 문구를 유지합니다. 시작 시점의 내부 점검이 사소한 요청을 가볍고 저렴하게 처리해 줍니다.
+- 기존 스킬에 있던 할 일 목록(todo-list) 예시는 제거합니다. 과거의 라우팅 방식을 인코딩하고 있는 평가(evals)들(`brainstorming-todo-purpose-discovery`, `brainstorming-todo-shared-intent`)은 이에 맞춰 다시 작성합니다.
+- 소프트웨어 프로젝트는 문서의 기본 저장 위치로 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`를 유지합니다.
 
-## Left to the builder
+## 빌더에게 위임된 사항 (Left to the builder)
 
-- Section structure and wording of the skill.
-- Exact prompts for the builder check.
-- Where non-software documents get saved, absent a human preference.
+- 스킬의 섹션 구조와 구체적인 문구.
+- 빌더 점검을 위한 정확한 프롬프트.
+- 인간이 선호하는 위치가 없을 때 비소프트웨어 문서가 저장되는 위치.
 
-## Will be tuned after first use
+## 첫 사용 후 튜닝 예정 (Will be tuned after first use)
 
-Jesse expects to tune the skill after real sessions. Ship something small
-and sharp rather than complete.
+Jesse는 실제 세션을 거친 후 스킬을 튜닝할 것으로 예상합니다. 완벽하게 갖춘 것보다는 작고 날카로운(small and sharp) 것을 먼저 출시하세요.

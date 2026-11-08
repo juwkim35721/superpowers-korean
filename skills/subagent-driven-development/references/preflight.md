@@ -1,26 +1,12 @@
-# The Pre-flight Scan
+# 사전 점검 스캔 (The Pre-flight Scan)
 
-Part of superpowers:subagent-driven-development. Run it once, before
-dispatching Task 1.
+`superpowers:subagent-driven-development`의 일부입니다. Task 1을 디스패치하기 전에 단 한 번 실행하세요.
 
-Before dispatching Task 1, scan the plan once for conflicts, writing down
-what you checked as you check it:
+Task 1을 디스패치하기 전에, 계획 전체를 한 번 스캔하여 충돌 요소가 없는지 확인하고 확인한 내용을 그때그때 기록하세요:
 
-- tasks that contradict each other or the plan's Global Constraints
-- anything the plan explicitly mandates that the review rubric treats as a
-  defect (a test that asserts nothing, verbatim duplication of a logic block)
+- 서로 모순되거나 계획의 전역 제약 조건(Global Constraints)과 충돌하는 태스크들
+- 계획에서 명시적으로 지시하고 있지만 리뷰 기준표(rubric)에서는 결함으로 취급하는 항목들 (예: 아무것도 검증하지 않는 테스트, 로직 블록의 글자 그대로의 중복)
 
-The scan's output is a table, not a verdict. One row for every pair of tasks
-that share a file or an interface: the two tasks, what one produces against
-what the other consumes, and what you found. One row for every task: whether
-its own text agrees with itself — the tests it specifies against the code it
-specifies, the files it creates against the files it later touches. "The scan
-is clean" without those rows is not a scan you ran.
+스캔의 출력물은 단순한 평결(verdict)이 아니라 표(table)여야 합니다. 동일한 파일이나 인터페이스를 공유하는 모든 태스크 쌍(pair)마다 한 행씩 작성하세요: 두 태스크의 이름, 한쪽이 생성하는 것과 다른 쪽이 소비하는 것의 대조, 그리고 발견한 사항을 적습니다. 또한 모든 개별 태스크마다 한 행씩 작성하세요: 해당 태스크의 텍스트가 자체적으로 일관성이 있는지 — 명시된 테스트와 명시된 코드가 일치하는지, 생성하는 파일들과 이후에 수정하는 파일들이 일치하는지 확인합니다. 이러한 행들이 없이 단순히 "스캔 결과 깨끗함(The scan is clean)"이라고만 적는 것은 실제로 스캔을 실행한 것이 아닙니다.
 
-Write the table to the ledger. Rule on everything you find before execution
-begins — each finding against the plan text that mandates it — and record
-each ruling in the ledger. If the scan is clean, proceed without comment.
-Rule on each conflict it surfaces — the spec is the binding authority, the
-plan is its argument — record the ruling beside its row, and dispatch
-Task 1. The review loop remains the net for conflicts that only emerge from
-implementation.
+이 표를 원장(ledger)에 기록하세요. 실행을 시작하기 전에 발견한 모든 사항에 대해 — 해당 사항을 지시하는 계획 텍스트와 대조하여 — 판정(rule on)을 내리고, 각 판정을 원장에 기록하세요. 스캔 결과 아무런 문제가 없다면 별도의 코멘트 없이 진행하세요. 스캔을 통해 드러난 각 충돌에 대해 판정을 내리고 — 명세(spec)가 구속력 있는 최종 기준이고 계획은 그 논거입니다 — 해당 행 옆에 판정을 기록한 뒤 Task 1을 디스패치하세요. 구현 과정에서야 비로소 드러나는 충돌들은 리뷰 루프가 안전망 역할을 하여 잡아낼 것입니다.

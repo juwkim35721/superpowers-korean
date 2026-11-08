@@ -1,711 +1,710 @@
-# Skills Improvements from User Feedback
+# 사용자 피드백 기반 스킬 개선안 (Skills Improvements from User Feedback)
 
-**Date:** 2025-11-28
-**Status:** Draft
-**Source:** Two Claude instances using superpowers in real development scenarios
-
----
-
-## Executive Summary
-
-Two Claude instances provided detailed feedback from actual development sessions. Their feedback reveals **systematic gaps** in current skills that allowed preventable bugs to ship despite following the skills.
-
-**Critical insight:** These are problem reports, not just solution proposals. The problems are real; the solutions need careful evaluation.
-
-**Key themes:**
-1. **Verification gaps** - We verify operations succeed but not that they achieve intended outcomes
-2. **Process hygiene** - Background processes accumulate and interfere across subagents
-3. **Context optimization** - Subagents get too much irrelevant information
-4. **Self-reflection missing** - No prompt to critique own work before handoff
-5. **Mock safety** - Mocks can drift from interfaces without detection
-6. **Skill activation** - Skills exist but aren't being read/used
+**날짜:** 2025-11-28
+**상태:** 초안 (Draft)
+**출처:** 실제 개발 시나리오에서 superpowers를 사용한 두 개의 Claude 인스턴스
 
 ---
 
-## Problems Identified
+## 핵심 요약 (Executive Summary)
 
-### Problem 1: Configuration Change Verification Gap
+두 개의 Claude 인스턴스가 실제 개발 세션에서 얻은 상세한 피드백을 제공했습니다. 이들의 피드백은 스킬을 따랐음에도 불구하고 예방 가능한 버그가 배포되도록 허용한 현재 스킬들의 **체계적인 격차(systematic gaps)**를 드러냅니다.
 
-**What happened:**
-- Subagent tested "OpenAI integration"
-- Set `OPENAI_API_KEY` env var
-- Got status 200 responses
-- Reported "OpenAI integration working"
-- **BUT** response contained `"model": "claude-sonnet-4-20250514"` - was actually using Anthropic
+**핵심 인사이트:** 이것들은 단순한 해결책 제안이 아니라 문제 보고서(problem reports)입니다. 문제들은 실재하며, 해결책들은 면밀한 평가가 필요합니다.
 
-**Root cause:**
-`verification-before-completion` checks operations succeed but not that outcomes reflect intended configuration changes.
-
-**Impact:** High - False confidence in integration tests, bugs ship to production
-
-**Example failure pattern:**
-- Switch LLM provider → verify status 200 but don't check model name
-- Enable feature flag → verify no errors but don't check feature is active
-- Change environment → verify deployment succeeds but don't check environment vars
+**주요 테마:**
+1. **검증 격차 (Verification gaps)** - 작업이 성공하는지는 검증하지만 의도한 결과를 달성하는지는 검증하지 않음
+2. **프로세스 위생 (Process hygiene)** - 백그라운드 프로세스가 누적되어 서브에이전트 간에 간섭을 일으킴
+3. **컨텍스트 최적화 (Context optimization)** - 서브에이전트가 관련 없는 정보를 너무 많이 받음
+4. **자기 성찰 누락 (Self-reflection missing)** - 인계(handoff) 전에 자신의 작업을 비평하도록 하는 프롬프트가 없음
+5. **모의 객체 안전성 (Mock safety)** - 모의 객체(Mock)가 인터페이스와 달라져도(drift) 탐지되지 않음
+6. **스킬 활성화 (Skill activation)** - 스킬이 존재하지만 읽히거나 사용되지 않음
 
 ---
 
-### Problem 2: Background Process Accumulation
+## 식별된 문제점 (Problems Identified)
 
-**What happened:**
-- Multiple subagents dispatched during session
-- Each started background server processes
-- Processes accumulated (4+ servers running)
-- Stale processes still bound to ports
-- Later E2E test hit stale server with wrong config
-- Confusing/incorrect test results
+### 문제 1: 설정 변경 검증 격차 (Configuration Change Verification Gap)
 
-**Root cause:**
-Subagents are stateless - don't know about previous subagents' processes. No cleanup protocol.
+**발생한 일:**
+- 서브에이전트가 "OpenAI 연동"을 테스트함
+- `OPENAI_API_KEY` 환경 변수를 설정함
+- 상태 코드 200 응답을 받음
+- "OpenAI 연동 작동 중"이라고 보고함
+- **하지만(BUT)** 응답에는 `"model": "claude-sonnet-4-20250514"`가 포함되어 있었음 - 실제로는 Anthropic을 사용하고 있었던 것임
 
-**Impact:** Medium-High - Tests hit wrong server, false passes/failures, debugging confusion
+**근본 원인:**
+`verification-before-completion`은 작업이 성공하는지는 확인하지만, 결과물이 의도한 설정 변경을 반영하는지는 확인하지 않습니다.
+
+**영향도:** 높음 - 통합 테스트에 대한 잘못된 확신을 주며, 버그가 프로덕션으로 배포됨
+
+**실패 패턴 예시:**
+- LLM 프로바이더 전환 → 상태 코드 200은 확인하지만 모델 이름은 확인하지 않음
+- 피처 플래그 활성화 → 에러가 없는지는 확인하지만 기능이 실제로 활성화되었는지는 확인하지 않음
+- 환경 변경 → 배포 성공은 확인하지만 환경 변수는 확인하지 않음
 
 ---
 
-### Problem 3: Context Bloat in Subagent Prompts
+### 문제 2: 백그라운드 프로세스 누적 (Background Process Accumulation)
 
-**What happened:**
-- Standard approach: give subagent full plan file to read
-- Experiment: give only task + pattern + file + verify command
-- Result: Faster, more focused, single-attempt completion more common
+**발생한 일:**
+- 세션 동안 여러 서브에이전트가 디스패치됨
+- 각 서브에이전트가 백그라운드 서버 프로세스를 시작함
+- 프로세스가 누적됨 (4개 이상의 서버가 실행 중)
+- 오래된(stale) 프로세스가 여전히 포트에 바인딩되어 있음
+- 이후 E2E 테스트가 잘못된 설정을 가진 오래된 서버를 호출함
+- 혼란스럽고 부정확한 테스트 결과 발생
 
-**Root cause:**
-Subagents waste tokens and attention on irrelevant plan sections.
+**근본 원인:**
+서브에이전트는 상태가 없으므로(stateless) 이전 서브에이전트가 띄운 프로세스에 대해 알지 못합니다. 정리(cleanup) 프로토콜이 없습니다.
 
-**Impact:** Medium - Slower execution, more failed attempts
+**영향도:** 중간~높음 - 테스트가 엉뚱한 서버를 호출함, 잘못된 통과/실패, 디버깅 혼란
 
-**What worked:**
+---
+
+### 문제 3: 서브에이전트 프롬프트의 컨텍스트 비대화 (Context Bloat in Subagent Prompts)
+
+**발생한 일:**
+- 표준 접근 방식: 서브에이전트에게 읽으라고 전체 계획 파일을 제공함
+- 실험: 태스크 + 패턴 + 파일 + 검증 명령어만 제공함
+- 결과: 더 빠르고, 더 집중하며, 단 한 번의 시도로 완료하는 경우가 더 흔해짐
+
+**근본 원인:**
+서브에이전트가 관련 없는 계획 섹션에 토큰과 주의력(attention)을 낭비합니다.
+
+**영향도:** 중간 - 느린 실행 속도, 더 많은 실패 시도
+
+**효과가 있었던 방식:**
 ```
-You are adding a single E2E test to packnplay's test suite.
+당신은 packnplay의 테스트 스위트에 단일 E2E 테스트를 추가하고 있습니다.
 
-**Your task:** Add `TestE2E_FeaturePrivilegedMode` to `pkg/runner/e2e_test.go`
+**당신의 태스크:** `pkg/runner/e2e_test.go`에 `TestE2E_FeaturePrivilegedMode` 추가하기
 
-**What to test:** A local devcontainer feature that requests `"privileged": true`
-in its metadata should result in the container running with `--privileged` flag.
+**테스트할 내용:** 메타데이터에서 `"privileged": true`를 요청하는 로컬 devcontainer 피처는
+컨테이너가 `--privileged` 플래그와 함께 실행되는 결과를 낳아야 합니다.
 
-**Follow the exact pattern of TestE2E_FeatureOptionValidation** (at the end of the file)
+**(파일 끝에 있는) TestE2E_FeatureOptionValidation의 정확한 패턴을 따르세요**
 
-**After writing, run:** `go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m`
+**작성 후 다음을 실행하세요:** `go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m`
 ```
 
 ---
 
-### Problem 4: No Self-Reflection Before Handoff
+### 문제 4: 인계 전 자기 성찰 부재 (No Self-Reflection Before Handoff)
 
-**What happened:**
-- Added self-reflection prompt: "Look at your work with fresh eyes - what could be better?"
-- Implementer for Task 5 identified failing test was due to implementation bug, not test bug
-- Traced to line 99: `strings.Join(metadata.Entrypoint, " ")` creating invalid Docker syntax
-- Without self-reflection, would have just reported "test fails" without root cause
+**발생한 일:**
+- 자기 성찰 프롬프트 추가: "새로운 시각으로 자신의 작업을 돌아보세요 - 무엇이 더 나아질 수 있을까요?"
+- 태스크 5의 구현자(implementer)가 실패하는 테스트의 원인이 테스트 버그가 아니라 구현 버그 때문임을 파악함
+- 99번째 줄까지 추적함: `strings.Join(metadata.Entrypoint, " ")`가 잘못된 Docker 구문을 생성하고 있었음
+- 자기 성찰이 없었다면 근본 원인을 찾지 못한 채 그저 "테스트 실패함"이라고만 보고했을 것임
 
-**Root cause:**
-Implementers don't naturally step back and critique their own work before reporting completion.
+**근본 원인:**
+구현자들은 완료를 보고하기 전에 자연스럽게 한 걸음 물러나 자신의 작업을 비평하지 않습니다.
 
-**Impact:** Medium - Bugs handed off to reviewer that implementer could have caught
+**영향도:** 중간 - 구현자가 스스로 잡을 수 있었던 버그가 리뷰어에게 그대로 넘어감
 
 ---
 
-### Problem 5: Mock-Interface Drift
+### 문제 5: 모의 객체와 인터페이스 간의 괴리 (Mock-Interface Drift)
 
-**What happened:**
+**발생한 일:**
 ```typescript
-// Interface defines close()
+// 인터페이스는 close()를 정의함
 interface PlatformAdapter {
   close(): Promise<void>;
 }
 
-// Code (BUGGY) calls cleanup()
+// 코드(버그 있음)는 cleanup()을 호출함
 await adapter.cleanup();
 
-// Mock (MATCHES BUG) defines cleanup()
+// 모의 객체(버그와 일치함)는 cleanup()을 정의함
 vi.mock('web-adapter', () => ({
   WebAdapter: vi.fn().mockImplementation(() => ({
-    cleanup: vi.fn().mockResolvedValue(undefined),  // Wrong!
+    cleanup: vi.fn().mockResolvedValue(undefined),  // 잘못됨!
   })),
 }));
 ```
-- Tests passed
-- Runtime crashed: "adapter.cleanup is not a function"
+- 테스트는 통과함
+- 런타임에 크래시 발생: "adapter.cleanup is not a function"
 
-**Root cause:**
-Mock derived from what buggy code calls, not from interface definition. TypeScript can't catch inline mocks with wrong method names.
+**근본 원인:**
+모의 객체가 인터페이스 정의가 아니라 버그가 있는 코드가 호출하는 것으로부터 파생되었습니다. TypeScript는 잘못된 메서드 이름을 가진 인라인 모의 객체를 잡아내지 못합니다.
 
-**Impact:** High - Tests give false confidence, runtime crashes
+**영향도:** 높음 - 테스트가 잘못된 확신을 주며, 런타임에 크래시가 발생함
 
-**Why testing-anti-patterns didn't prevent this:**
-The skill covers testing mock behavior and mocking without understanding, but not the specific pattern of "derive mock from interface, not implementation."
-
----
-
-### Problem 6: Code Reviewer File Access
-
-**What happened:**
-- Code reviewer subagent dispatched
-- Couldn't find test file: "The file doesn't appear to exist in the repository"
-- File actually exists
-- Reviewer didn't know to explicitly read it first
-
-**Root cause:**
-Reviewer prompts don't include explicit file reading instructions.
-
-**Impact:** Low-Medium - Reviews fail or incomplete
+**`testing-anti-patterns`가 이를 막지 못한 이유:**
+해당 스킬은 모의 객체의 동작을 테스트하는 것과 이해 없이 모킹(mocking)하는 것은 다루지만, "구현이 아니라 인터페이스로부터 모의 객체를 파생시켜라"라는 구체적인 패턴은 다루지 않습니다.
 
 ---
 
-### Problem 7: Fix Workflow Latency
+### 문제 6: 코드 리뷰어의 파일 접근 (Code Reviewer File Access)
 
-**What happened:**
-- Implementer identifies bug during self-reflection
-- Implementer knows the fix
-- Current workflow: report → I dispatch fixer → fixer fixes → I verify
-- Extra round-trip adds latency without adding value
+**발생한 일:**
+- 코드 리뷰어 서브에이전트가 디스패치됨
+- 테스트 파일을 찾지 못함: "해당 파일이 저장소에 존재하지 않는 것 같습니다"
+- 파일은 실제로 존재함
+- 리뷰어가 파일을 먼저 명시적으로 읽어야 한다는 것을 몰랐음
 
-**Root cause:**
-Rigid separation between implementer and fixer roles when implementer has already diagnosed.
+**근본 원인:**
+리뷰어 프롬프트에 명시적인 파일 읽기 지침이 포함되어 있지 않습니다.
 
-**Impact:** Low - Latency, but no correctness issue
-
----
-
-### Problem 8: Skills Not Being Read
-
-**What happened:**
-- `testing-anti-patterns` skill exists
-- Neither human nor subagents read it before writing tests
-- Would have prevented some issues (though not all - see Problem 5)
-
-**Root cause:**
-No enforcement that subagents read relevant skills. No prompt includes skill reading.
-
-**Impact:** Medium - Skill investment wasted if not used
+**영향도:** 낮음~중간 - 리뷰가 실패하거나 불완전해짐
 
 ---
 
-## Proposed Improvements
+### 문제 7: 수정 워크플로우 지연 시간 (Fix Workflow Latency)
 
-### 1. verification-before-completion: Add Configuration Change Verification
+**발생한 일:**
+- 구현자가 자기 성찰 중에 버그를 식별함
+- 구현자가 해결책을 알고 있음
+- 현재 워크플로우: 보고 → 내가 해결사(fixer) 디스패치 → 해결사가 수정 → 내가 검증
+- 불필요한 왕복(round-trip)이 가치를 더하지 않으면서 지연 시간만 늘림
 
-**Add new section:**
+**근본 원인:**
+구현자가 이미 진단을 마친 상태임에도 구현자와 해결사 역할을 경직되게 분리해 두었습니다.
+
+**영향도:** 낮음 - 지연 시간만 발생할 뿐 정확성 문제는 없음
+
+---
+
+### 문제 8: 읽히지 않는 스킬들 (Skills Not Being Read)
+
+**발생한 일:**
+- `testing-anti-patterns` 스킬이 존재함
+- 인간도 서브에이전트도 테스트를 작성하기 전에 이를 읽지 않음
+- 읽었더라면 일부 문제를 예방했을 것임 (문제 5처럼 전부는 아니더라도)
+
+**근본 원인:**
+서브에이전트가 관련 스킬을 읽도록 강제하는 장치가 없습니다. 어떤 프롬프트에도 스킬 읽기가 포함되어 있지 않습니다.
+
+**영향도:** 중간 - 스킬을 만들어 둔 투자가 사용되지 않아 낭비됨
+
+---
+
+## 제안된 개선 사항 (Proposed Improvements)
+
+### 1. verification-before-completion: 설정 변경 검증 추가
+
+**새 섹션 추가:**
 
 ```markdown
-## Verifying Configuration Changes
+## 설정 변경 검증하기 (Verifying Configuration Changes)
 
-When testing changes to configuration, providers, feature flags, or environment:
+설정, 프로바이더, 피처 플래그 또는 환경에 대한 변경 사항을 테스트할 때:
 
-**Don't just verify the operation succeeded. Verify the output reflects the intended change.**
+**단지 작업이 성공했는지만 검증하지 마세요. 출력이 의도한 변경 사항을 반영하는지 검증하세요.**
 
-### Common Failure Pattern
+### 흔한 실패 패턴
 
-Operation succeeds because *some* valid config exists, but it's not the config you intended to test.
+*어떠한* 유효한 설정이 존재하기 때문에 작업이 성공하지만, 그것이 당신이 테스트하려던 설정은 아닙니다.
 
-### Examples
+### 예시
 
-| Change | Insufficient | Required |
+| 변경 사항 | 불충분한 검증 | 필수 검증 |
 |--------|-------------|----------|
-| Switch LLM provider | Status 200 | Response contains expected model name |
-| Enable feature flag | No errors | Feature behavior actually active |
-| Change environment | Deploy succeeds | Logs/vars reference new environment |
-| Set credentials | Auth succeeds | Authenticated user/context is correct |
+| LLM 프로바이더 전환 | 상태 코드 200 | 응답에 예상 모델 이름이 포함됨 |
+| 피처 플래그 활성화 | 에러 없음 | 기능 동작이 실제로 활성화됨 |
+| 환경 변경 | 배포 성공 | 로그/변수가 새로운 환경을 참조함 |
+| 자격 증명 설정 | 인증 성공 | 인증된 사용자/컨텍스트가 정확함 |
 
-### Gate Function
+### 게이트 함수 (Gate Function)
 
 ```
-BEFORE claiming configuration change works:
+설정 변경이 작동한다고 주장하기 전에(BEFORE):
 
-1. IDENTIFY: What should be DIFFERENT after this change?
-2. LOCATE: Where is that difference observable?
-   - Response field (model name, user ID)
-   - Log line (environment, provider)
-   - Behavior (feature active/inactive)
-3. RUN: Command that shows the observable difference
-4. VERIFY: Output contains expected difference
-5. ONLY THEN: Claim configuration change works
+1. 식별(IDENTIFY): 이 변경 후에 무엇이 달라져야(DIFFERENT) 하는가?
+2. 위치 파악(LOCATE): 그 차이를 어디서 관찰할 수 있는가?
+   - 응답 필드 (모델 이름, 사용자 ID)
+   - 로그 라인 (환경, 프로바이더)
+   - 동작 (기능 활성/비활성)
+3. 실행(RUN): 관찰 가능한 차이를 보여주는 명령어 실행
+4. 검증(VERIFY): 출력에 예상된 차이가 포함되어 있는지 확인
+5. 오직 그 후에(ONLY THEN): 설정 변경이 작동한다고 주장
 
-Red flags:
-  - "Request succeeded" without checking content
-  - Checking status code but not response body
-  - Verifying no errors but not positive confirmation
+위험 신호 (Red flags):
+  - 내용을 확인하지 않고 "요청이 성공했다"고 하는 것
+  - 상태 코드만 확인하고 응답 본문은 확인하지 않는 것
+  - 에러가 없는지만 확인하고 긍정적인(positive) 확인을 하지 않는 것
 ```
 
-**Why this works:**
-Forces verification of INTENT, not just operation success.
+**이 방식이 작동하는 이유:**
+단순한 작업 성공 여부가 아니라 의도(INTENT)에 대한 검증을 강제합니다.
 
 ---
 
-### 2. subagent-driven-development: Add Process Hygiene for E2E Tests
+### 2. subagent-driven-development: E2E 테스트를 위한 프로세스 위생 추가
 
-**Add new section:**
+**새 섹션 추가:**
 
 ```markdown
-## Process Hygiene for E2E Tests
+## E2E 테스트를 위한 프로세스 위생 (Process Hygiene for E2E Tests)
 
-When dispatching subagents that start services (servers, databases, message queues):
+서비스(서버, 데이터베이스, 메시지 큐)를 시작하는 서브에이전트를 디스패치할 때:
 
-### Problem
+### 문제점
 
-Subagents are stateless - they don't know about processes started by previous subagents. Background processes persist and can interfere with later tests.
+서브에이전트는 상태가 없으므로(stateless) 이전 서브에이전트가 시작한 프로세스에 대해 알지 못합니다. 백그라운드 프로세스가 계속 남아 이후 테스트에 간섭을 일으킬 수 있습니다.
 
-### Solution
+### 해결책
 
-**Before dispatching E2E test subagent, include cleanup in prompt:**
-
-```
-BEFORE starting any services:
-1. Kill existing processes: pkill -f "<service-pattern>" 2>/dev/null || true
-2. Wait for cleanup: sleep 1
-3. Verify port free: lsof -i :<port> && echo "ERROR: Port still in use" || echo "Port free"
-
-AFTER tests complete:
-1. Kill the process you started
-2. Verify cleanup: pgrep -f "<service-pattern>" || echo "Cleanup successful"
-```
-
-### Example
+**E2E 테스트 서브에이전트를 디스패치하기 전에 프롬프트에 정리(cleanup) 절차를 포함하세요:**
 
 ```
-Task: Run E2E test of API server
+어떠한 서비스든 시작하기 전에(BEFORE):
+1. 기존 프로세스 종료: pkill -f "<service-pattern>" 2>/dev/null || true
+2. 정리 대기: sleep 1
+3. 포트가 비어 있는지 확인: lsof -i :<port> && echo "ERROR: Port still in use" || echo "Port free"
 
-Prompt includes:
-"Before starting the server:
-- Kill any existing servers: pkill -f 'node.*server.js' 2>/dev/null || true
-- Verify port 3001 is free: lsof -i :3001 && exit 1 || echo 'Port available'
-
-After tests:
-- Kill the server you started
-- Verify: pgrep -f 'node.*server.js' || echo 'Cleanup verified'"
+테스트가 완료된 후에(AFTER):
+1. 당신이 시작한 프로세스 종료
+2. 정리 확인: pgrep -f "<service-pattern>" || echo "Cleanup successful"
 ```
 
-### Why This Matters
+### 예시
 
-- Stale processes serve requests with wrong config
-- Port conflicts cause silent failures
-- Process accumulation slows system
-- Confusing test results (hitting wrong server)
+```
+태스크: API 서버의 E2E 테스트 실행
+
+프롬프트에 포함할 내용:
+"서버를 시작하기 전에:
+- 기존 서버 모두 종료: pkill -f 'node.*server.js' 2>/dev/null || true
+- 3001번 포트가 비어 있는지 확인: lsof -i :3001 && exit 1 || echo 'Port available'
+
+테스트 후에:
+- 당신이 시작한 서버 종료
+- 확인: pgrep -f 'node.*server.js' || echo 'Cleanup verified'"
 ```
 
-**Trade-off analysis:**
-- Adds boilerplate to prompts
-- But prevents very confusing debugging
-- Worth it for E2E test subagents
+### 이것이 중요한 이유
+
+- 오래된 프로세스가 잘못된 설정으로 요청을 처리함
+- 포트 충돌이 침묵하는 실패(silent failures)를 유발함
+- 프로세스 누적이 시스템을 느리게 만듦
+- 혼란스러운 테스트 결과 초래 (엉뚱한 서버를 호출함)
+```
+
+**트레이드오프 분석:**
+- 프롬프트에 보일러플레이트(상투적인 문구)가 추가됨
+- 하지만 매우 혼란스러운 디버깅을 예방함
+- E2E 테스트 서브에이전트에게는 충분히 그럴 만한 가치가 있음
 
 ---
 
-### 3. subagent-driven-development: Add Lean Context Option
+### 3. subagent-driven-development: 간결한 컨텍스트(Lean Context) 옵션 추가
 
-**Modify Step 2: Execute Task with Subagent**
+**2단계 수정: 서브에이전트로 태스크 실행하기 (Execute Task with Subagent)**
 
-**Before:**
+**변경 전:**
 ```
-Read that task carefully from [plan-file].
-```
-
-**After:**
-```
-## Context Approaches
-
-**Full Plan (default):**
-Use when tasks are complex or have dependencies:
-```
-Read Task N from [plan-file] carefully.
+[plan-file]에서 해당 태스크를 주의 깊게 읽으세요.
 ```
 
-**Lean Context (for independent tasks):**
-Use when task is standalone and pattern-based:
+**변경 후:**
 ```
-You are implementing: [1-2 sentence task description]
+## 컨텍스트 접근 방식 (Context Approaches)
 
-File to modify: [exact path]
-Pattern to follow: [reference to existing function/test]
-What to implement: [specific requirement]
-Verification: [exact command to run]
-
-[Do NOT include full plan file]
+**전체 계획 (Full Plan, 기본값):**
+태스크가 복잡하거나 의존성이 있을 때 사용하세요:
+```
+[plan-file]에서 태스크 N을 주의 깊게 읽으세요.
 ```
 
-**Use lean context when:**
-- Task follows existing pattern (add similar test, implement similar feature)
-- Task is self-contained (doesn't need context from other tasks)
-- Pattern reference is sufficient (e.g., "follow TestE2E_FeatureOptionValidation")
+**간결한 컨텍스트 (Lean Context, 독립적인 태스크용):**
+태스크가 독립형(standalone)이고 패턴 기반일 때 사용하세요:
+```
+당신은 다음을 구현하고 있습니다: [1~2문장의 태스크 설명]
 
-**Use full plan when:**
-- Task has dependencies on other tasks
-- Requires understanding of overall architecture
-- Complex logic that needs context
+수정할 파일: [정확한 경로]
+따라야 할 패턴: [기존 함수/테스트에 대한 참조]
+구현할 내용: [구체적인 요구 사항]
+검증: [실행할 정확한 명령어]
+
+[전체 계획 파일은 포함하지 마세요]
 ```
 
-**Example:**
-```
-Lean context prompt:
+**간결한 컨텍스트를 사용해야 할 때:**
+- 태스크가 기존 패턴을 따를 때 (유사한 테스트 추가, 유사한 기능 구현)
+- 태스크가 자체 완결적일 때 (다른 태스크의 컨텍스트가 필요하지 않음)
+- 패턴 참조만으로 충분할 때 (예: "TestE2E_FeatureOptionValidation을 따르세요")
 
-"You are adding a test for privileged mode in devcontainer features.
-
-File: pkg/runner/e2e_test.go
-Pattern: Follow TestE2E_FeatureOptionValidation (at end of file)
-Test: Feature with `"privileged": true` in metadata results in `--privileged` flag
-Verify: go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m
-
-Report: Implementation, test results, any issues."
+**전체 계획을 사용해야 할 때:**
+- 태스크가 다른 태스크에 의존성이 있을 때
+- 전체 아키텍처에 대한 이해가 필요할 때
+- 컨텍스트가 필요한 복잡한 로직일 때
 ```
 
-**Why this works:**
-Reduces token usage, increases focus, faster completion when appropriate.
+**예시:**
+```
+간결한 컨텍스트 프롬프트:
+
+"당신은 devcontainer 피처의 privileged 모드에 대한 테스트를 추가하고 있습니다.
+
+파일: pkg/runner/e2e_test.go
+패턴: (파일 끝에 있는) TestE2E_FeatureOptionValidation을 따르세요
+테스트: 메타데이터에 `"privileged": true`가 있는 피처가 `--privileged` 플래그를 생성하는지 확인
+검증: go test -v ./pkg/runner -run TestE2E_FeaturePrivilegedMode -timeout 5m
+
+보고: 구현 내용, 테스트 결과, 발생한 모든 이슈."
+```
+
+**이 방식이 작동하는 이유:**
+적절한 상황에서 토큰 사용량을 줄이고, 집중도를 높이며, 더 빠르게 작업을 완료합니다.
 
 ---
 
-### 4. subagent-driven-development: Add Self-Reflection Step
+### 4. subagent-driven-development: 자기 성찰(Self-Reflection) 단계 추가
 
-**Modify Step 2: Execute Task with Subagent**
+**2단계 수정: 서브에이전트로 태스크 실행하기 (Execute Task with Subagent)**
 
-**Add to prompt template:**
+**프롬프트 템플릿에 추가:**
 
 ```
-When done, BEFORE reporting back:
+완료되었을 때, 결과를 보고하기 전에(BEFORE):
 
-Take a step back and review your work with fresh eyes.
+한 걸음 물러나 새로운 시각으로 당신의 작업을 검토하세요.
 
-Ask yourself:
-- Does this actually solve the task as specified?
-- Are there edge cases I didn't consider?
-- Did I follow the pattern correctly?
-- If tests are failing, what's the ROOT CAUSE (implementation bug vs test bug)?
-- What could be better about this implementation?
+스스로에게 질문하세요:
+- 이것이 실제로 명세된 대로 태스크를 해결하는가?
+- 내가 고려하지 못한 엣지 케이스가 있는가?
+- 패턴을 정확하게 따랐는가?
+- 만약 테스트가 실패하고 있다면, 근본 원인(ROOT CAUSE)은 무엇인가 (구현 버그 vs 테스트 버그)?
+- 이 구현에서 무엇이 더 나아질 수 있는가?
 
-If you identify issues during this reflection, fix them now.
+이 성찰 과정에서 문제를 발견했다면, 지금 바로 수정하세요.
 
-Then report:
-- What you implemented
-- Self-reflection findings (if any)
-- Test results
-- Files changed
+그런 다음 보고하세요:
+- 구현한 내용
+- 자기 성찰을 통해 발견한 사항 (있는 경우)
+- 테스트 결과
+- 변경된 파일들
 ```
 
-**Why this works:**
-Catches bugs implementer can find themselves before handoff. Documented case: identified entrypoint bug through self-reflection.
+**이 방식이 작동하는 이유:**
+인계하기 전에 구현자가 스스로 찾을 수 있는 버그를 잡아냅니다. 문서화된 사례: 자기 성찰을 통해 entrypoint 버그를 식별함.
 
-**Trade-off:**
-Adds ~30 seconds per task, but catches issues before review.
+**트레이드오프:**
+태스크당 약 30초가 추가되지만, 리뷰 전에 문제를 잡아냅니다.
 
 ---
 
-### 5. requesting-code-review: Add Explicit File Reading
+### 5. requesting-code-review: 명시적인 파일 읽기 추가
 
-**Modify the code-reviewer template:**
+**code-reviewer 템플릿 수정:**
 
-**Add at the beginning:**
+**시작 부분에 추가:**
 
 ```markdown
-## Files to Review
+## 검토할 파일 (Files to Review)
 
-BEFORE analyzing, read these files:
+분석하기 전에(BEFORE), 다음 파일들을 읽으세요:
 
-1. [List specific files that changed in the diff]
-2. [Files referenced by changes but not modified]
+1. [diff에서 변경된 구체적인 파일 목록]
+2. [변경 사항에서 참조되지만 수정되지는 않은 파일들]
 
-Use Read tool to load each file.
+각 파일을 로드하려면 Read 도구를 사용하세요.
 
-If you cannot find a file:
-- Check exact path from diff
-- Try alternate locations
-- Report: "Cannot locate [path] - please verify file exists"
+파일을 찾을 수 없는 경우:
+- diff에서 정확한 경로를 확인하세요
+- 대체 위치들을 시도해 보세요
+- 보고: "[path]를 찾을 수 없습니다 - 파일이 존재하는지 확인해 주세요"
 
-DO NOT proceed with review until you've read the actual code.
+실제 코드를 읽기 전까지는 리뷰를 진행하지 마세요(DO NOT proceed).
 ```
 
-**Why this works:**
-Explicit instruction prevents "file not found" issues.
+**이 방식이 작동하는 이유:**
+명시적인 지침이 "파일을 찾을 수 없음(file not found)" 문제를 방지합니다.
 
 ---
 
-### 6. testing-anti-patterns: Add Mock-Interface Drift Anti-Pattern
+### 6. testing-anti-patterns: 모의 객체와 인터페이스 간의 괴리 안티패턴 추가
 
-**Add new Anti-Pattern 6:**
+**새로운 안티패턴 6 추가:**
 
 ```markdown
-## Anti-Pattern 6: Mocks Derived from Implementation
+## 안티패턴 6: 구현으로부터 파생된 모의 객체 (Mocks Derived from Implementation)
 
-**The violation:**
+**위반 사례:**
 ```typescript
-// Code (BUGGY) calls cleanup()
+// 코드(버그 있음)가 cleanup()을 호출함
 await adapter.cleanup();
 
-// Mock (MATCHES BUG) has cleanup()
+// 모의 객체(버그와 일치함)가 cleanup()을 가짐
 const mock = {
   cleanup: vi.fn().mockResolvedValue(undefined)
 };
 
-// Interface (CORRECT) defines close()
+// 인터페이스(올바름)는 close()를 정의함
 interface PlatformAdapter {
   close(): Promise<void>;
 }
 ```
 
-**Why this is wrong:**
-- Mock encodes the bug into the test
-- TypeScript can't catch inline mocks with wrong method names
-- Test passes because both code and mock are wrong
-- Runtime crashes when real object is used
+**이것이 잘못된 이유:**
+- 모의 객체가 버그를 테스트 안에 그대로 인코딩함
+- TypeScript는 잘못된 메서드 이름을 가진 인라인 모의 객체를 잡아내지 못함
+- 코드와 모의 객체가 둘 다 틀렸기 때문에 테스트가 통과함
+- 실제 객체가 사용될 때 런타임에 크래시가 발생함
 
-**The fix:**
+**해결책:**
 ```typescript
-// ✅ GOOD: Derive mock from interface
+// ✅ 좋음(GOOD): 인터페이스로부터 모의 객체 파생시키기
 
-// Step 1: Open interface definition (PlatformAdapter)
-// Step 2: List methods defined there (close, initialize, etc.)
-// Step 3: Mock EXACTLY those methods
+// 1단계: 인터페이스 정의(PlatformAdapter)를 엽니다
+// 2단계: 거기에 정의된 메서드들(close, initialize 등)을 나열합니다
+// 3단계: 정확히(EXACTLY) 그 메서드들만 모킹합니다
 
 const mock = {
   initialize: vi.fn().mockResolvedValue(undefined),
-  close: vi.fn().mockResolvedValue(undefined),  // From interface!
+  close: vi.fn().mockResolvedValue(undefined),  // 인터페이스에서 가져옴!
 };
 
-// Now test FAILS because code calls cleanup() which doesn't exist
-// That failure reveals the bug BEFORE runtime
+// 이제 코드가 존재하지 않는 cleanup()을 호출하므로 테스트가 실패(FAILS)합니다
+// 그 실패가 런타임 전에 버그를 드러냅니다
 ```
 
-### Gate Function
+### 게이트 함수 (Gate Function)
 
 ```
-BEFORE writing any mock:
+어떠한 모의 객체든 작성하기 전에(BEFORE):
 
-  1. STOP - Do NOT look at the code under test yet
-  2. FIND: The interface/type definition for the dependency
-  3. READ: The interface file
-  4. LIST: Methods defined in the interface
-  5. MOCK: ONLY those methods with EXACTLY those names
-  6. DO NOT: Look at what your code calls
+  1. 멈추세요(STOP) - 아직 테스트 대상 코드를 보지 마세요
+  2. 찾기(FIND): 의존성에 대한 인터페이스/타입 정의를 찾으세요
+  3. 읽기(READ): 인터페이스 파일을 읽으세요
+  4. 나열하기(LIST): 인터페이스에 정의된 메서드들을 나열하세요
+  5. 모킹하기(MOCK): 오직(ONLY) 그 메서드들만 정확히(EXACTLY) 그 이름으로 모킹하세요
+  6. 하지 말 것(DO NOT): 당신의 코드가 무엇을 호출하는지 보지 마세요
 
-  IF your test fails because code calls something not in mock:
-    ✅ GOOD - The test found a bug in your code
-    Fix the code to call the correct interface method
-    NOT the mock
+  만약 코드가 모의 객체에 없는 것을 호출해서 테스트가 실패한다면:
+    ✅ 좋음(GOOD) - 테스트가 코드의 버그를 찾아낸 것입니다
+    모의 객체가 아니라, 올바른 인터페이스 메서드를 호출하도록 코드를 수정하세요
 
-  Red flags:
-    - "I'll mock what the code calls"
-    - Copying method names from implementation
-    - Mock written without reading interface
-    - "The test is failing so I'll add this method to the mock"
+  위험 신호 (Red flags):
+    - "코드가 호출하는 것을 모킹해야지"
+    - 구현에서 메서드 이름을 복사해 오는 것
+    - 인터페이스를 읽지 않고 작성된 모의 객체
+    - "테스트가 실패하니까 모의 객체에 이 메서드를 추가해야지"
 ```
 
-**Detection:**
+**탐지 방법:**
 
-When you see runtime error "X is not a function" and tests pass:
-1. Check if X is mocked
-2. Compare mock methods to interface methods
-3. Look for method name mismatches
+테스트는 통과하는데 런타임 에러 "X is not a function"을 보게 될 때:
+1. X가 모킹되었는지 확인합니다
+2. 모의 객체의 메서드와 인터페이스의 메서드를 비교합니다
+3. 메서드 이름 불일치를 찾습니다
 ```
 
-**Why this works:**
-Directly addresses the failure pattern from feedback.
+**이 방식이 작동하는 이유:**
+피드백에서 나타난 실패 패턴을 직접적으로 해결합니다.
 
 ---
 
-### 7. subagent-driven-development: Require Skills Reading for Test Subagents
+### 7. subagent-driven-development: 테스트 서브에이전트에게 스킬 읽기 요구
 
-**Add to prompt template when task involves testing:**
+**태스크에 테스트가 포함될 때 프롬프트 템플릿에 추가:**
 
 ```markdown
-BEFORE writing any tests:
+어떠한 테스트든 작성하기 전에(BEFORE):
 
-1. Read testing-anti-patterns skill:
-   Use Skill tool: superpowers:testing-anti-patterns
+1. testing-anti-patterns 스킬을 읽으세요:
+   Skill 도구 사용: superpowers:testing-anti-patterns
 
-2. Apply gate functions from that skill when:
-   - Writing mocks
-   - Adding methods to production classes
-   - Mocking dependencies
+2. 다음 작업을 할 때 해당 스킬의 게이트 함수를 적용하세요:
+   - 모의 객체(mocks) 작성 시
+   - 프로덕션 클래스에 메서드 추가 시
+   - 의존성 모킹 시
 
-This is NOT optional. Tests that violate anti-patterns will be rejected in review.
+이것은 선택 사항이 아닙니다(NOT optional). 안티패턴을 위반하는 테스트는 리뷰에서 거절됩니다.
 ```
 
-**Why this works:**
-Ensures skills are actually used, not just exist.
+**이 방식이 작동하는 이유:**
+스킬이 단순히 존재하는 데 그치지 않고 실제로 사용되도록 보장합니다.
 
-**Trade-off:**
-Adds time to each task, but prevents entire classes of bugs.
+**트레이드오프:**
+각 태스크에 시간이 조금 추가되지만, 특정 부류의 버그 전체를 예방합니다.
 
 ---
 
-### 8. subagent-driven-development: Allow Implementer to Fix Self-Identified Issues
+### 8. subagent-driven-development: 구현자가 스스로 식별한 문제를 직접 수정하도록 허용
 
-**Modify Step 2:**
+**2단계 수정:**
 
-**Current:**
+**현재:**
 ```
-Subagent reports back with summary of work.
-```
-
-**Proposed:**
-```
-Subagent performs self-reflection, then:
-
-IF self-reflection identifies fixable issues:
-  1. Fix the issues
-  2. Re-run verification
-  3. Report: "Initial implementation + self-reflection fix"
-
-ELSE:
-  Report: "Implementation complete"
-
-Include in report:
-- Self-reflection findings
-- Whether fixes were applied
-- Final verification results
+서브에이전트가 작업 요약과 함께 결과를 보고합니다.
 ```
 
-**Why this works:**
-Reduces latency when implementer already knows the fix. Documented case: would have saved one round-trip for entrypoint bug.
+**제안:**
+```
+서브에이전트가 자기 성찰을 수행한 후:
 
-**Trade-off:**
-Slightly more complex prompt, but faster end-to-end.
+만약(IF) 자기 성찰에서 수정 가능한 문제를 식별했다면:
+  1. 문제를 수정합니다
+  2. 검증을 다시 실행합니다
+  3. 보고: "초기 구현 + 자기 성찰 수정 완료"
 
----
+그렇지 않다면(ELSE):
+  보고: "구현 완료"
 
-## Implementation Plan
+보고서에 포함할 내용:
+- 자기 성찰 발견 사항
+- 수정 사항이 적용되었는지 여부
+- 최종 검증 결과
+```
 
-### Phase 1: High-Impact, Low-Risk (Do First)
+**이 방식이 작동하는 이유:**
+구현자가 이미 해결책을 알고 있을 때 지연 시간을 줄여줍니다. 문서화된 사례: entrypoint 버그에 대해 한 번의 왕복(round-trip)을 아낄 수 있었음.
 
-1. **verification-before-completion: Configuration change verification**
-   - Clear addition, doesn't change existing content
-   - Addresses high-impact problem (false confidence in tests)
-   - File: `skills/verification-before-completion/SKILL.md`
-
-2. **testing-anti-patterns: Mock-interface drift**
-   - Adds new anti-pattern, doesn't modify existing
-   - Addresses high-impact problem (runtime crashes)
-   - File: `skills/testing-anti-patterns/SKILL.md`
-
-3. **requesting-code-review: Explicit file reading**
-   - Simple addition to template
-   - Fixes concrete problem (reviewers can't find files)
-   - File: `skills/requesting-code-review/SKILL.md`
-
-### Phase 2: Moderate Changes (Test Carefully)
-
-4. **subagent-driven-development: Process hygiene**
-   - Adds new section, doesn't change workflow
-   - Addresses medium-high impact (test reliability)
-   - File: `skills/subagent-driven-development/SKILL.md`
-
-5. **subagent-driven-development: Self-reflection**
-   - Changes prompt template (higher risk)
-   - But documented to catch bugs
-   - File: `skills/subagent-driven-development/SKILL.md`
-
-6. **subagent-driven-development: Skills reading requirement**
-   - Adds prompt overhead
-   - But ensures skills are actually used
-   - File: `skills/subagent-driven-development/SKILL.md`
-
-### Phase 3: Optimization (Validate First)
-
-7. **subagent-driven-development: Lean context option**
-   - Adds complexity (two approaches)
-   - Needs validation that it doesn't cause confusion
-   - File: `skills/subagent-driven-development/SKILL.md`
-
-8. **subagent-driven-development: Allow implementer to fix**
-   - Changes workflow (higher risk)
-   - Optimization, not bug fix
-   - File: `skills/subagent-driven-development/SKILL.md`
+**트레이드오프:**
+프롬프트가 약간 더 복잡해지지만, 전체 엔드투엔드 속도는 더 빨라집니다.
 
 ---
 
-## Open Questions
+## 구현 계획 (Implementation Plan)
 
-1. **Lean context approach:**
-   - Should we make it the default for pattern-based tasks?
-   - How do we decide which approach to use?
-   - Risk of being too lean and missing important context?
+### 1단계: 높은 영향도, 낮은 리스크 (가장 먼저 수행)
 
-2. **Self-reflection:**
-   - Will this slow down simple tasks significantly?
-   - Should it only apply to complex tasks?
-   - How do we prevent "reflection fatigue" where it becomes rote?
+1. **verification-before-completion: 설정 변경 검증**
+   - 명확한 추가 사항이며 기존 콘텐츠를 변경하지 않음
+   - 영향도가 높은 문제 해결 (테스트에 대한 잘못된 확신)
+   - 파일: `skills/verification-before-completion/SKILL.md`
 
-3. **Process hygiene:**
-   - Should this be in subagent-driven-development or a separate skill?
-   - Does it apply to other workflows beyond E2E tests?
-   - How do we handle cases where process SHOULD persist (dev servers)?
+2. **testing-anti-patterns: 모의 객체와 인터페이스 간의 괴리**
+   - 새로운 안티패턴을 추가하며 기존 내용을 수정하지 않음
+   - 영향도가 높은 문제 해결 (런타임 크래시)
+   - 파일: `skills/testing-anti-patterns/SKILL.md`
 
-4. **Skills reading enforcement:**
-   - Should we require ALL subagents to read relevant skills?
-   - How do we keep prompts from becoming too long?
-   - Risk of over-documenting and losing focus?
+3. **requesting-code-review: 명시적인 파일 읽기**
+   - 템플릿에 대한 간단한 추가
+   - 구체적인 문제 해결 (리뷰어가 파일을 찾지 못함)
+   - 파일: `skills/requesting-code-review/SKILL.md`
 
----
+### 2단계: 중간 수준의 변경 사항 (주의 깊게 테스트)
 
-## Success Metrics
+4. **subagent-driven-development: 프로세스 위생**
+   - 새 섹션을 추가하며 워크플로우를 변경하지 않음
+   - 중간~높은 영향도의 문제 해결 (테스트 신뢰성)
+   - 파일: `skills/subagent-driven-development/SKILL.md`
 
-How do we know these improvements work?
+5. **subagent-driven-development: 자기 성찰**
+   - 프롬프트 템플릿을 변경함 (더 높은 리스크)
+   - 하지만 버그를 잡아내는 것으로 문서화됨
+   - 파일: `skills/subagent-driven-development/SKILL.md`
 
-1. **Configuration verification:**
-   - Zero instances of "test passed but wrong config was used"
-   - Jesse doesn't say "that's not actually testing what you think"
+6. **subagent-driven-development: 스킬 읽기 요구 사항**
+   - 프롬프트 오버헤드가 추가됨
+   - 하지만 스킬이 실제로 사용되도록 보장함
+   - 파일: `skills/subagent-driven-development/SKILL.md`
 
-2. **Process hygiene:**
-   - Zero instances of "test hit wrong server"
-   - No port conflict errors during E2E test runs
+### 3단계: 최적화 (먼저 검증 필요)
 
-3. **Mock-interface drift:**
-   - Zero instances of "tests pass but runtime crashes on missing method"
-   - No method name mismatches between mocks and interfaces
+7. **subagent-driven-development: 간결한 컨텍스트 옵션**
+   - 복잡성이 추가됨 (두 가지 접근 방식)
+   - 혼란을 야기하지 않는지 검증이 필요함
+   - 파일: `skills/subagent-driven-development/SKILL.md`
 
-4. **Self-reflection:**
-   - Measurable: Do implementer reports include self-reflection findings?
-   - Qualitative: Do fewer bugs make it to code review?
-
-5. **Skills reading:**
-   - Subagent reports reference skill gate functions
-   - Fewer anti-pattern violations in code review
-
----
-
-## Risks and Mitigations
-
-### Risk: Prompt Bloat
-**Problem:** Adding all these requirements makes prompts overwhelming
-**Mitigation:**
-- Phase implementation (don't add everything at once)
-- Make some additions conditional (E2E hygiene only for E2E tests)
-- Consider templates for different task types
-
-### Risk: Analysis Paralysis
-**Problem:** Too much reflection/verification slows execution
-**Mitigation:**
-- Keep gate functions quick (seconds, not minutes)
-- Make lean context opt-in initially
-- Monitor task completion times
-
-### Risk: False Sense of Security
-**Problem:** Following checklist doesn't guarantee correctness
-**Mitigation:**
-- Emphasize gate functions are minimums, not maximums
-- Keep "use judgment" language in skills
-- Document that skills catch common failures, not all failures
-
-### Risk: Skill Divergence
-**Problem:** Different skills give conflicting advice
-**Mitigation:**
-- Review changes across all skills for consistency
-- Document how skills interact (Integration sections)
-- Test with real scenarios before deployment
+8. **subagent-driven-development: 구현자의 직접 수정 허용**
+   - 워크플로우를 변경함 (더 높은 리스크)
+   - 버그 수정이 아니라 최적화임
+   - 파일: `skills/subagent-driven-development/SKILL.md`
 
 ---
 
-## Recommendation
+## 열린 질문들 (Open Questions)
 
-**Proceed with Phase 1 immediately:**
-- verification-before-completion: Configuration change verification
-- testing-anti-patterns: Mock-interface drift
-- requesting-code-review: Explicit file reading
+1. **간결한 컨텍스트 접근 방식:**
+   - 패턴 기반 태스크의 기본값으로 만들어야 할까요?
+   - 어떤 접근 방식을 사용할지 어떻게 결정할까요?
+   - 너무 간결하게 줄여서 중요한 컨텍스트를 놓칠 위험은 없을까요?
 
-**Test Phase 2 with Jesse before finalizing:**
-- Get feedback on self-reflection impact
-- Validate process hygiene approach
-- Confirm skills reading requirement is worth overhead
+2. **자기 성찰:**
+   - 간단한 태스크들을 눈에 띄게 느리게 만들까요?
+   - 복잡한 태스크에만 적용해야 할까요?
+   - 성찰이 기계적인 형식(rote)으로 전락하는 "성찰 피로(reflection fatigue)"를 어떻게 방지할까요?
 
-**Hold Phase 3 pending validation:**
-- Lean context needs real-world testing
-- Implementer-fix workflow change needs careful evaluation
+3. **프로세스 위생:**
+   - `subagent-driven-development` 안에 있어야 할까요, 아니면 별도의 스킬로 분리해야 할까요?
+   - E2E 테스트 외의 다른 워크플로우에도 적용될까요?
+   - 프로세스가 계속 유지되어야만 하는 경우(개발 서버 등)는 어떻게 처리할까요?
 
-These changes address real problems documented by users while minimizing risk of making skills worse.
+4. **스킬 읽기 강제:**
+   - 모든 서브에이전트가 관련 스킬을 읽도록 요구해야 할까요?
+   - 프롬프트가 너무 길어지지 않게 어떻게 유지할까요?
+   - 과도한 문서화로 인해 집중력을 잃을 위험은 없을까요?
+
+---
+
+## 성공 지표 (Success Metrics)
+
+이러한 개선 사항들이 작동하는지 어떻게 알 수 있을까요?
+
+1. **설정 검증:**
+   - "테스트는 통과했지만 잘못된 설정이 사용됨" 사례 0건
+   - Jesse가 "그건 실제로 네가 생각하는 걸 테스트하고 있는 게 아니야"라고 말하지 않음
+
+2. **프로세스 위생:**
+   - "테스트가 엉뚱한 서버를 호출함" 사례 0건
+   - E2E 테스트 실행 중 포트 충돌 에러 없음
+
+3. **모의 객체와 인터페이스 간의 괴리:**
+   - "테스트는 통과하지만 누락된 메서드로 인해 런타임에 크래시 발생" 사례 0건
+   - 모의 객체와 인터페이스 간의 메서드 이름 불일치 없음
+
+4. **자기 성찰:**
+   - 측정 가능한 지표: 구현자 보고서에 자기 성찰 발견 사항이 포함되는가?
+   - 정성적 지표: 코드 리뷰 단계까지 넘어가는 버그가 줄어드는가?
+
+5. **스킬 읽기:**
+   - 서브에이전트 보고서가 스킬 게이트 함수를 참조함
+   - 코드 리뷰에서 안티패턴 위반이 줄어듦
+
+---
+
+## 리스크 및 완화 방안 (Risks and Mitigations)
+
+### 리스크: 프롬프트 비대화 (Prompt Bloat)
+**문제:** 이 모든 요구 사항을 추가하면 프롬프트가 지나치게 부담스러워짐
+**완화 방안:**
+- 단계별 구현 (모든 것을 한꺼번에 추가하지 않음)
+- 일부 추가 사항을 조건부로 만듦 (E2E 위생은 E2E 테스트에만 적용)
+- 서로 다른 태스크 유형에 맞는 템플릿 고려
+
+### 리스크: 분석 마비 (Analysis Paralysis)
+**문제:** 지나치게 많은 성찰/검증이 실행 속도를 늦춤
+**완화 방안:**
+- 게이트 함수를 빠르게 유지 (몇 분이 아니라 몇 초 내에 끝나도록)
+- 간결한 컨텍스트는 초기에 옵트인(opt-in)으로 설정
+- 태스크 완료 시간 모니터링
+
+### 리스크: 잘못된 안전감 (False Sense of Security)
+**문제:** 체크리스트를 따른다고 해서 정확성이 보장되지는 않음
+**완화 방안:**
+- 게이트 함수는 최대치가 아니라 최소치임을 강조
+- 스킬 내에 "판단력을 발휘하라(use judgment)"는 문구 유지
+- 스킬은 모든 실패가 아니라 흔한 실패를 잡아낸다는 점을 문서화
+
+### 리스크: 스킬 간 불일치 (Skill Divergence)
+**문제:** 서로 다른 스킬이 상충되는 조언을 제공함
+**완화 방안:**
+- 일관성을 위해 모든 스킬에 걸쳐 변경 사항 검토
+- 스킬들이 어떻게 상호작용하는지 문서화 (Integration 섹션)
+- 배포 전에 실제 시나리오로 테스트
+
+---
+
+## 권장 사항 (Recommendation)
+
+**1단계는 즉시 진행:**
+- `verification-before-completion`: 설정 변경 검증
+- `testing-anti-patterns`: 모의 객체와 인터페이스 간의 괴리
+- `requesting-code-review`: 명시적인 파일 읽기
+
+**2단계는 최종 확정 전에 Jesse와 함께 테스트:**
+- 자기 성찰의 영향에 대한 피드백 받기
+- 프로세스 위생 접근 방식 검증하기
+- 스킬 읽기 요구 사항이 오버헤드를 감수할 가치가 있는지 확인하기
+
+**3단계는 검증 전까지 보류:**
+- 간결한 컨텍스트는 실제 환경 테스트가 필요함
+- 구현자 직접 수정 워크플로우 변경은 면밀한 평가가 필요함
+
+이러한 변경 사항들은 스킬을 악화시킬 리스크를 최소화하면서 사용자들이 기록한 실제 문제들을 해결합니다.

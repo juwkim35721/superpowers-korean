@@ -1,399 +1,389 @@
 ---
 name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+description: 새로운 스킬을 생성하거나 기존 스킬을 수정할 때, 또는 배포 전에 스킬이 제대로 작동하는지 검증할 때 사용합니다
 ---
 
-# Writing Skills
+# 스킬 작성하기 (Writing Skills)
 
-## Overview
+## 개요
 
-**Writing skills IS Test-Driven Development applied to process documentation.**
+**스킬 작성은 프로세스 문서화에 테스트 주도 개발(TDD)을 적용하는 것입니다.**
 
-**Personal skills live in your runtime's skills directory** (`~/.claude/skills/` on Claude Code) — see [codex-tools.md](../using-superpowers/references/codex-tools.md) or [gemini-tools.md](../using-superpowers/references/gemini-tools.md) for the path on those runtimes. Codex, Copilot CLI, and Gemini CLI all also recognize `~/.agents/skills/` as a cross-runtime alias.
+**개인용 스킬은 각 런타임의 스킬 디렉터리에 위치합니다** (Claude Code의 경우 `~/.claude/skills/`) — 다른 런타임의 경로는 [codex-tools.md](../using-superpowers/references/codex-tools.md) 또는 [gemini-tools.md](../using-superpowers/references/gemini-tools.md)를 참조하세요. 또한 Codex, Copilot CLI, Gemini CLI는 모두 `~/.agents/skills/`를 런타임 간 공통 별칭(cross-runtime alias)으로 인식합니다.
 
-You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
+테스트 케이스(서브에이전트를 활용한 압박 시나리오)를 작성하고, 실패하는 것을 확인한 뒤(베이스라인 행동), 스킬(문서)을 작성하고, 테스트가 통과하는지 확인하며(에이전트가 규칙을 준수함), 리팩터링(허점 차단)을 수행합니다.
 
-**Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
+**핵심 원칙:** 스킬이 없을 때 에이전트가 실패하는 모습을 직접 보지 못했다면, 그 스킬이 올바른 내용을 가르치고 있는지 알 수 없습니다.
 
-**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+**필수 배경지식:** 이 스킬을 사용하기 전에 반드시 superpowers:test-driven-development를 이해해야 합니다. 해당 스킬은 기본적인 RED-GREEN-REFACTOR 사이클을 정의하며, 이 스킬은 TDD를 문서화에 맞게 적용합니다.
 
-**Official guidance:** For Anthropic's official skill authoring best practices, see references/anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+**공식 가이드:** Anthropic의 공식 스킬 작성 모범 사례는 references/anthropic-best-practices.md를 참조하세요. 해당 문서는 이 스킬의 TDD 중심 접근 방식을 보완하는 추가 패턴과 가이드라인을 제공합니다.
 
-## What is a Skill?
+## 스킬(Skill)이란 무엇인가?
 
-A **skill** is a reference guide for proven techniques, patterns, or tools. Skills help future agents find and apply effective approaches.
+**스킬**은 검증된 기법, 패턴 또는 도구를 다룬 레퍼런스 가이드입니다. 스킬은 향후 에이전트가 효과적인 접근법을 찾아 적용할 수 있도록 돕습니다.
 
-**Skills are:** Reusable techniques, patterns, tools, reference guides
+**스킬에 해당하는 것:** 재사용 가능한 기법, 패턴, 도구, 레퍼런스 가이드
 
-**Skills are NOT:** Narratives about how you solved a problem once
+**스킬이 아닌 것:** 특정 문제를 한 번 어떻게 해결했는지에 대한 무용담(내러티브)
 
-## TDD Mapping for Skills
+## 스킬 작성을 위한 TDD 매핑
 
-| TDD Concept | Skill Creation |
+| TDD 개념 | 스킬 생성 |
 |-------------|----------------|
-| **Test case** | Pressure scenario with subagent |
-| **Production code** | Skill document (SKILL.md) |
-| **Test fails (RED)** | Agent violates rule without skill (baseline) |
-| **Test passes (GREEN)** | Agent complies with skill present |
-| **Refactor** | Close loopholes while maintaining compliance |
-| **Write test first** | Run baseline scenario BEFORE writing skill |
-| **Watch it fail** | Document exact rationalizations agent uses |
-| **Minimal code** | Write skill addressing those specific violations |
-| **Watch it pass** | Verify agent now complies |
-| **Refactor cycle** | Find new rationalizations → plug → re-verify |
+| **테스트 케이스** | 서브에이전트를 활용한 압박 시나리오(Pressure scenario) |
+| **프로덕션 코드** | 스킬 문서 (`SKILL.md`) |
+| **테스트 실패 (RED)** | 스킬이 없을 때 에이전트가 규칙을 위반함 (베이스라인) |
+| **테스트 통과 (GREEN)** | 스킬이 주어졌을 때 에이전트가 규칙을 준수함 |
+| **리팩터링 (Refactor)** | 준수 상태를 유지하면서 허점(loophole)을 차단함 |
+| **테스트 먼저 작성** | 스킬을 작성하기 **전에** 베이스라인 시나리오를 실행함 |
+| **실패 확인** | 에이전트가 사용하는 합리화(변명)를 토씨 하나 틀리지 않고 기록함 |
+| **최소한의 코드** | 확인된 특정 위반 사항을 해결하는 스킬을 작성함 |
+| **통과 확인** | 이제 에이전트가 규칙을 준수하는지 검증함 |
+| **리팩터링 사이클** | 새로운 합리화 발견 → 허점 차단 → 재검증 |
 
-The entire skill creation process follows RED-GREEN-REFACTOR.
+스킬 생성의 전 과정은 RED-GREEN-REFACTOR를 따릅니다.
 
-## When to Create a Skill
+## 언제 스킬을 만들어야 하는가
 
-**Create when:**
-- Technique wasn't intuitively obvious to you
-- You'd reference this again across projects
-- Pattern applies broadly (not project-specific)
-- Others would benefit
+**다음과 같을 때 생성하세요:**
+- 기법이 직관적으로 자명하지 않았을 때
+- 여러 프로젝트에 걸쳐 다시 참고하게 될 내용일 때
+- 패턴이 특정 프로젝트에 국한되지 않고 폭넓게 적용될 때
+- 다른 사람(또는 에이전트)에게도 유익할 때
 
-**Don't create for:**
-- One-off solutions
-- Standard practices well-documented elsewhere
-- Project-specific conventions (put in your instructions file)
-- Mechanical constraints (if it's enforceable with regex/validation, automate it—save documentation for judgment calls)
+**다음과 같은 경우에는 생성하지 마세요:**
+- 일회성 해결책
+- 다른 곳에 이미 잘 문서화된 표준 관행
+- 특정 프로젝트에만 국한된 컨벤션 (이런 내용은 프로젝트 지침 파일에 넣으세요)
+- 기계적인 제약 사항 (정규식이나 유효성 검사로 강제할 수 있다면 자동화하세요. 문서는 판단이 필요한 영역을 위해 남겨두세요)
 
-## Skill Types
+## 스킬 유형
 
-### Technique
-Concrete method with steps to follow (condition-based-waiting, root-cause-tracing)
+### 기법 (Technique)
+따라야 할 구체적인 단계가 있는 방법론 (condition-based-waiting, root-cause-tracing)
 
-### Pattern
-Way of thinking about problems (flatten-with-flags, test-invariants)
+### 패턴 (Pattern)
+문제를 바라보는 사고방식 및 멘탈 모델 (flatten-with-flags, test-invariants)
 
-### Reference
-API docs, syntax guides, tool documentation (office docs)
+### 레퍼런스 (Reference)
+API 문서, 문법 가이드, 도구 문서 (오피스 문서 등)
 
-## Directory Structure
+## 디렉터리 구조
 
 
 ```
 skills/
   skill-name/
-    SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    SKILL.md              # 메인 레퍼런스 (필수)
+    supporting-file.*     # 필요한 경우에만 추가
 ```
 
-**Flat namespace** - all skills in one searchable namespace
+**평면 네임스페이스(Flat namespace)** - 모든 스킬은 검색 가능한 단일 네임스페이스에 위치합니다
 
-**Separate files for:**
-1. **Heavy reference** (100+ lines) - API docs, comprehensive syntax
-2. **Reusable tools** - Scripts, utilities, templates
+**다음의 경우에만 별도 파일로 분리하세요:**
+1. **방대한 레퍼런스** (100줄 이상) - API 문서, 포괄적인 문법 가이드
+2. **재사용 가능한 도구** - 스크립트, 유틸리티, 템플릿
 
-**Keep inline:**
-- Principles and concepts
-- Code patterns (< 50 lines)
-- Everything else
+**다음 내용은 본문(inline)에 유지하세요:**
+- 원칙과 개념
+- 코드 패턴 (50줄 미만)
+- 그 외 모든 내용
 
-## Writing SKILL.md
+## SKILL.md 작성하기
 
-A skill's `description` says only when to use it: triggering conditions and
-symptoms, starting with "Use when...". It never summarizes the skill's
-workflow, because an agent that reads a workflow summary follows it instead
-of reading the skill.
+스킬의 `description`에는 오직 언제 사용해야 하는지(트리거 조건과 증상)만 적으며, "Use when..."(한국어의 경우 "~할 때 사용합니다" 등 트리거 조건 중심)으로 시작합니다. 절대로 스킬의 워크플로우를 요약하지 마세요. 워크플로우 요약이 있으면 에이전트가 스킬 본문을 읽는 대신 그 요약만 보고 행동하기 때문입니다.
 
-When you write or change a skill's frontmatter, name or description, or
-need to cut its size, read [references/discovery.md](references/discovery.md):
-the SKILL.md template, description and keyword guidance, naming, token
-budgets, and cross-referencing other skills.
+스킬의 프론트매터(frontmatter), 이름 또는 설명을 작성·수정하거나 파일 크기를 줄여야 할 때는 [references/discovery.md](references/discovery.md)를 읽어보세요. SKILL.md 템플릿, 설명 및 키워드 가이드라인, 명명 규칙, 토큰 예산, 다른 스킬 상호 참조 방법이 나와 있습니다.
 
-## Flowcharts
+## 플로우차트 (Flowcharts)
 
-When you add or change a flowchart in a skill, read
-[references/flowcharts.md](references/flowcharts.md) first: when a flowchart
-earns its place, the graphviz conventions, and how to render one.
+스킬에 플로우차트를 추가하거나 수정할 때는 먼저 [references/flowcharts.md](references/flowcharts.md)를 읽어보세요. 플로우차트가 꼭 필요한 경우, graphviz 컨벤션, 렌더링 방법을 다룹니다.
 
-## Code Examples
+## 코드 예제
 
-**One excellent example beats many mediocre ones**
+**평범한 예제 여러 개보다 훌륭한 예제 하나가 낫습니다**
 
-Choose most relevant language:
-- Testing techniques → TypeScript/JavaScript
-- System debugging → Shell/Python
-- Data processing → Python
+가장 적합한 언어를 선택하세요:
+- 테스팅 기법 → TypeScript/JavaScript
+- 시스템 디버깅 → Shell/Python
+- 데이터 처리 → Python
 
-**Good example:**
-- Complete and runnable
-- Well-commented explaining WHY
-- From real scenario
-- Shows pattern clearly
-- Ready to adapt (not generic template)
+**좋은 예제:**
+- 완전하고 실행 가능함
+- **왜(WHY)** 그렇게 하는지 설명하는 주석이 잘 달려 있음
+- 실제 시나리오에서 가져옴
+- 패턴을 명확하게 보여줌
+- 바로 응용할 수 있음 (추상적인 일반 템플릿이 아님)
 
-**Don't:**
-- Implement in 5+ languages
-- Create fill-in-the-blank templates
-- Write contrived examples
+**하지 말아야 할 것:**
+- 5개 이상의 언어로 동일 예제 구현하기
+- 빈칸 채우기 식의 템플릿 만들기
+- 억지스러운(contrived) 예제 작성하기
 
-You're good at porting - one great example is enough.
+에이전트는 코드 포팅에 능숙하므로 훌륭한 예제 하나면 충분합니다.
 
-## File Organization
+## 파일 구성
 
-### Self-Contained Skill
+### 자체 완결형 스킬 (Self-Contained Skill)
 ```
 defense-in-depth/
-  SKILL.md    # Everything inline
+  SKILL.md    # 모든 내용을 인라인으로 포함
 ```
-When: All content fits, no heavy reference needed
+적용 시점: 모든 내용이 한 파일에 들어가며 방대한 레퍼런스가 필요 없을 때
 
-### Skill with Reusable Tool
+### 재사용 가능한 도구가 포함된 스킬 (Skill with Reusable Tool)
 ```
 condition-based-waiting/
-  SKILL.md    # Overview + patterns
-  example.ts  # Working helpers to adapt
+  SKILL.md    # 개요 + 패턴
+  example.ts  # 응용해서 쓸 수 있는 실제 동작 헬퍼 코드
 ```
-When: Tool is reusable code, not just narrative
+적용 시점: 도구가 단순 설명이 아니라 재사용 가능한 코드일 때
 
-### Skill with Heavy Reference
+### 방대한 레퍼런스가 포함된 스킬 (Skill with Heavy Reference)
 ```
 pptx/
-  SKILL.md       # Overview + workflows
-  pptxgenjs.md   # 600 lines API reference
-  ooxml.md       # 500 lines XML structure
-  scripts/       # Executable tools
+  SKILL.md       # 개요 + 워크플로우
+  pptxgenjs.md   # 600줄 분량의 API 레퍼런스
+  ooxml.md       # 500줄 분량의 XML 구조
+  scripts/       # 실행 가능한 도구들
 ```
-When: Reference material too large for inline
+적용 시점: 레퍼런스 자료가 너무 방대하여 본문에 인라인으로 넣기 어려울 때
 
-Invoke bundled scripts through their interpreter in the prose (`bash scripts/tool.sh`, `node scripts/tool.js`), never by bare path: some harness plugin packagers strip executable bits, and a bare `scripts/tool.sh` fails there with `Permission denied`.
+문서 본문에서 번들 스크립트를 호출할 때는 맨 경로(`scripts/tool.sh`)가 아니라 인터프리터를 명시하여(`bash scripts/tool.sh`, `node scripts/tool.js`) 호출하세요. 일부 하네스 플러그인 패키저는 실행 권한 비트(executable bit)를 제거하므로, 인터프리터 없이 `scripts/tool.sh`만 실행하면 `Permission denied` 오류가 발생합니다.
 
-## The Iron Law (Same as TDD)
+## 철칙 (The Iron Law - TDD와 동일)
 
 ```
 NO SKILL WITHOUT A FAILING TEST FIRST
+(실패하는 테스트 없이는 어떠한 스킬도 작성하지 않는다)
 ```
 
-This applies to NEW skills AND EDITS to existing skills.
+이 원칙은 **새로운 스킬**뿐만 아니라 **기존 스킬의 수정**에도 동일하게 적용됩니다.
 
-Write skill before testing? Delete it. Start over.
-Edit skill without testing? Same violation.
+테스트하기 전에 스킬을 작성했나요? 삭제하세요. 처음부터 다시 시작하세요.
+테스트 없이 스킬을 수정했나요? 똑같은 규칙 위반입니다.
 
-**No exceptions:**
-- Not for "simple additions"
-- Not for "just adding a section"
-- Not for "documentation updates"
-- Don't keep untested changes as "reference"
-- Don't "adapt" while running tests
-- Delete means delete
+**예외는 없습니다:**
+- "간단한 내용 추가"도 예외 아님
+- "섹션 하나만 추가하는 것"도 예외 아님
+- "문서 업데이트"도 예외 아님
+- 테스트하지 않은 변경 사항을 "참고용"으로 남겨두지 마세요
+- 테스트를 실행하면서 기존 내용을 "적당히 수정해 맞추지(adapt)" 마세요
+- 삭제란 완전히 지우는 것을 의미합니다
 
-**REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
+**필수 배경지식:** superpowers:test-driven-development 스킬은 왜 이 원칙이 중요한지 설명합니다. 문서화에도 동일한 원칙이 적용됩니다.
 
-## Testing All Skill Types
+## 모든 스킬 유형 테스트하기
 
-Different skill types need different test approaches:
+스킬 유형에 따라 서로 다른 테스트 접근법이 필요합니다:
 
-### Discipline-Enforcing Skills (rules/requirements)
+### 규율 강제형 스킬 (Discipline-Enforcing Skills - 규칙/요구사항)
 
-**Examples:** TDD, verification-before-completion, designing-before-coding
+**예시:** TDD, verification-before-completion, designing-before-coding
 
-**Test with:**
-- Academic questions: Do they understand the rules?
-- Pressure scenarios: Do they comply under stress?
-- Multiple pressures combined: time + sunk cost + exhaustion
-- Identify rationalizations and add explicit counters
+**테스트 방법:**
+- 이론적 질문: 규칙을 이해하고 있는가?
+- 압박 시나리오: 스트레스 상황에서도 규칙을 준수하는가?
+- 복합 압박: 시간 압박 + 매몰 비용(sunk cost) + 피로도 결합
+- 합리화(변명)를 파악하고 명시적인 반박 논리 추가
 
-**Success criteria:** Agent follows rule under maximum pressure
+**성공 기준:** 에이전트가 최대 압박 상황에서도 규칙을 따름
 
-### Technique Skills (how-to guides)
+### 기법형 스킬 (Technique Skills - How-to 가이드)
 
-**Examples:** condition-based-waiting, root-cause-tracing, defensive-programming
+**예시:** condition-based-waiting, root-cause-tracing, defensive-programming
 
-**Test with:**
-- Application scenarios: Can they apply the technique correctly?
-- Variation scenarios: Do they handle edge cases?
-- Missing information tests: Do instructions have gaps?
+**테스트 방법:**
+- 적용 시나리오: 기법을 올바르게 적용할 수 있는가?
+- 변형 시나리오: 엣지 케이스를 잘 처리하는가?
+- 정보 누락 테스트: 지침에 빈틈이 없는가?
 
-**Success criteria:** Agent successfully applies technique to new scenario
+**성공 기준:** 에이전트가 새로운 시나리오에 기법을 성공적으로 적용함
 
-### Pattern Skills (mental models)
+### 패턴형 스킬 (Pattern Skills - 멘탈 모델)
 
-**Examples:** reducing-complexity, information-hiding concepts
+**예시:** reducing-complexity, 정보 은닉(information-hiding) 개념
 
-**Test with:**
-- Recognition scenarios: Do they recognize when pattern applies?
-- Application scenarios: Can they use the mental model?
-- Counter-examples: Do they know when NOT to apply?
+**테스트 방법:**
+- 인식 시나리오: 패턴이 적용되는 시점을 알아차리는가?
+- 적용 시나리오: 해당 멘탈 모델을 활용할 수 있는가?
+- 반례(Counter-examples): 언제 적용하지 **말아야** 하는지 아는가?
 
-**Success criteria:** Agent correctly identifies when/how to apply pattern
+**성공 기준:** 에이전트가 패턴을 언제, 어떻게 적용할지 정확히 판단함
 
-### Reference Skills (documentation/APIs)
+### 레퍼런스형 스킬 (Reference Skills - 문서/API)
 
-**Examples:** API documentation, command references, library guides
+**예시:** API 문서, 명령어 레퍼런스, 라이브러리 가이드
 
-**Test with:**
-- Retrieval scenarios: Can they find the right information?
-- Application scenarios: Can they use what they found correctly?
-- Gap testing: Are common use cases covered?
+**테스트 방법:**
+- 검색 시나리오: 올바른 정보를 찾아낼 수 있는가?
+- 적용 시나리오: 찾은 정보를 올바르게 사용할 수 있는가?
+- 공백(Gap) 테스트: 자주 쓰이는 유스케이스가 빠짐없이 다루어졌는가?
 
-**Success criteria:** Agent finds and correctly applies reference information
+**성공 기준:** 에이전트가 레퍼런스 정보를 찾아 올바르게 적용함
 
-## Common Rationalizations for Skipping Testing
+## 테스트를 건너뛰려는 흔한 합리화 (Rationalizations)
 
-| Excuse | Reality |
+| 변명 (Excuse) | 현실 (Reality) |
 |--------|---------|
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps, unclear sections. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. 15 min testing saves hours. |
-| "I'll test if problems emerge" | Problems = agents can't use skill. Test BEFORE deploying. |
-| "Too tedious to test" | Testing is less tedious than debugging bad skill in production. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "Academic review is enough" | Reading ≠ using. Test application scenarios. |
-| "No time to test" | Deploying untested skill wastes more time fixing it later. |
+| "스킬 내용이 누가 봐도 명확하다" | 나에게 명확하다고 해서 다른 에이전트에게도 명확한 것은 아닙니다. 테스트하세요. |
+| "그냥 단순 레퍼런스일 뿐이다" | 레퍼런스에도 빈틈이나 모호한 섹션이 있을 수 있습니다. 정보 탐색을 테스트하세요. |
+| "테스트까지 하는 건 과하다" | 테스트하지 않은 스킬에는 반드시 문제가 있습니다. 언제나 그렇습니다. 15분의 테스트가 수 시간을 아껴줍니다. |
+| "문제가 생기면 그때 테스트하겠다" | 문제가 생긴다는 건 에이전트가 스킬을 제대로 못 쓴다는 뜻입니다. 배포하기 **전에** 테스트하세요. |
+| "테스트하기 너무 번거롭다" | 프로덕션에서 잘못된 스킬을 디버깅하는 것보다 테스트하는 편이 덜 번거롭습니다. |
+| "품질에 자신이 있다" | 과신은 문제를 부릅니다. 그래도 테스트하세요. |
+| "눈으로 읽고 검토한 것으로 충분하다" | 읽는 것과 실제로 사용하는 것은 다릅니다. 적용 시나리오를 테스트하세요. |
+| "테스트할 시간이 없다" | 테스트되지 않은 스킬을 배포하면 나중에 고치는 데 훨씬 더 많은 시간을 낭비하게 됩니다. |
 
-**All of these mean: Test before deploying. No exceptions.**
+**이 모든 변명의 결론은 하나입니다: 배포 전에 테스트하세요. 예외는 없습니다.**
 
-## Match the Form to the Failure
+## 실패 유형에 맞는 작성 형식 선택하기 (Match the Form to the Failure)
 
-Before writing guidance, classify the baseline failure. The form that bulletproofs one failure type measurably backfires on another.
+가이드를 작성하기 전에 베이스라인 실패 유형부터 분류하세요. 한 실패 유형을 완벽히 방어(bulletproof)하는 형식이 다른 유형에서는 오히려 역효과를 낼 수 있습니다.
 
-| Baseline failure | Right form | Wrong form |
+| 베이스라인 실패 유형 | 올바른 형식 | 잘못된 형식 |
 |---|---|---|
-| Skips/violates a rule under pressure (knows better, does it anyway) | Prohibition + rationalization table + red flags (see references/bulletproofing.md) | Soft guidance ("prefer...", "consider...") |
-| Complies, but output has the wrong shape (bloated prompt, buried verdict, restated spec) | Positive recipe or contract: state what the output IS — its parts, in order | Prohibition list ("don't restate", "never narrate") |
-| Omits a required element from something they already produce | Structural: REQUIRED field or slot in the template they fill in | Prose reminders near the template |
-| Behavior should depend on a condition | Conditional keyed to an observable predicate ("if the brief exists, reference it") | Unconditional rule + exemption clauses |
+| 압박 속에서 규칙을 건너뛰거나 위반함 (더 나은 방법을 알면서도 어김) | 금지 조항 + 합리화 테이블 + 위험 신호(Red Flags) (references/bulletproofing.md 참조) | 완곡한 권고 ("~하는 것을 권장합니다", "~를 고려하세요") |
+| 규칙은 따르지만 출력의 형태가 잘못됨 (비대한 프롬프트, 묻혀버린 결론, 스펙 재서술) | 긍정형 레시피(Positive recipe) 또는 계약(Contract): 출력이 무엇인지 구성 요소를 순서대로 명시 | 금지 목록 ("재서술하지 마세요", "절대 설명식으로 쓰지 마세요") |
+| 이미 생성하는 결과물에서 필수 요소를 누락함 | 구조적 장치: 채워 넣는 템플릿 내에 필수(REQUIRED) 필드나 슬롯 배치 | 템플릿 주변에 줄글로 당부 사항 적기 |
+| 특정 조건에 따라 행동이 달라져야 함 | 관찰 가능한 조건(predicate)에 연결된 조건문 ("브리프가 존재하면 이를 참조하라") | 무조건적인 규칙 + 예외 조항 덧붙이기 |
 
-**Why prohibitions backfire on shaping problems:** under a competing incentive ("make the prompt self-contained"), agents negotiate with "don't X". In head-to-head wording tests on dispatch-prompt guidance, the prohibition arm produced clearly more of the unwanted content than the recipe arm (fully separated distributions), and trended worse than even the no-guidance control — micro-test your own case rather than assuming, but never reach for the prohibition by default. A recipe leaves nothing to negotiate: the output matches the stated shape or it doesn't.
+**출력 형태(shaping) 문제에서 금지 조항이 역효과를 내는 이유:** 상충하는 유인("프롬프트를 자체 완결적으로 만들어라")이 있을 때 에이전트는 "X하지 마라"는 지시와 타협(협상)하려 듭니다. 서브에이전트 디스패치 프롬프트 가이드에 대한 문구 비교(head-to-head) 테스트에서, 금지 조항 그룹은 레시피 그룹보다 원치 않는 콘텐츠를 명확히 더 많이 생성했으며(분포가 완전히 분리됨), 심지어 가이드가 전혀 없는 대조군(no-guidance control)보다도 나쁜 경향을 보였습니다. 추측하지 말고 직접 마이크로 테스트를 해보되, 기본적으로 금지 조항부터 찾지는 마세요. 레시피 형식은 협상의 여지를 남기지 않습니다. 출력이 명시된 형태와 일치하거나, 그렇지 않거나 둘 중 하나입니다.
 
-**Rules for whichever form you pick:**
-- **No nuance clauses.** "Don't X unless it matters" reopens the negotiation — appending a single nuance clause to a winning recipe degraded it from consistent to noisy in the same wording tests. Express a real exception as its own conditional on an observable predicate.
-- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses code blocks. If part of the output must be exempt, restructure so the rule can't reach it.
+**어떤 형식을 선택하든 지켜야 할 규칙:**
+- **단서 조항(nuance clauses)을 넣지 마세요.** "중요한 경우가 아니라면 X하지 마세요" 같은 문구는 다시 협상의 문을 열어줍니다. 동일한 문구 테스트에서 성공적이었던 레시피 끝에 단서 조항 한 줄을 추가하자 일관되던 결과가 들쭉날쭉해졌습니다. 진짜 예외 상황이라면 관찰 가능한 조건에 기반한 별도의 조건문으로 표현하세요.
+- **면제 조항(exemption clauses)은 범위를 제대로 제한하지 못합니다.** "이 제한은 코드 블록에는 적용되지 않습니다"라고 적어도 에이전트는 여전히 코드 블록까지 억제하려 합니다. 출력의 일부가 규칙에서 면제되어야 한다면, 애초에 규칙의 영향이 그 부분에 미치지 않도록 구조를 다시 짜세요.
 
-## Bulletproofing Against Rationalization
+## 합리화에 맞서 빈틈없이 방어하기 (Bulletproofing Against Rationalization)
 
-When the baseline failure is a discipline failure, read
-[references/bulletproofing.md](references/bulletproofing.md) before you write
-the guidance: closing loopholes, the spirit-vs-letter line, the
-rationalization table, and the red-flags list.
+베이스라인 실패가 규율(discipline) 실패인 경우, 가이드를 작성하기 전에 [references/bulletproofing.md](references/bulletproofing.md)를 읽으세요. 허점 차단하기, 규칙의 정신 대 문구(spirit-vs-letter) 논쟁 차단, 합리화 테이블, 위험 신호(Red Flags) 목록 작성법을 다룹니다.
 
-## RED-GREEN-REFACTOR for Skills
+## 스킬을 위한 RED-GREEN-REFACTOR
 
-Follow the TDD cycle:
+TDD 사이클을 따르세요:
 
-### RED: Write Failing Test (Baseline)
+### RED: 실패하는 테스트 작성 (베이스라인)
 
-Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
-- What choices did they make?
-- What rationalizations did they use (verbatim)?
-- Which pressures triggered violations?
+스킬이 **없는** 상태에서 서브에이전트로 압박 시나리오를 실행합니다. 정확한 행동을 기록하세요:
+- 어떤 선택을 했는가?
+- 어떤 합리화(변명)를 사용했는가 (토씨 하나 바꾸지 않고 그대로 기록)?
+- 어떤 압박이 규칙 위반을 유발했는가?
 
-This is "watch the test fail" - you must see what agents naturally do before writing the skill.
+이것이 바로 "테스트가 실패하는 것을 확인하는 단계"입니다. 스킬을 작성하기 전에 에이전트가 기본적으로 어떻게 행동하는지 반드시 확인해야 합니다.
 
-### GREEN: Write Minimal Skill
+### GREEN: 최소한의 스킬 작성
 
-Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
+확인된 특정 합리화들을 해결하는 스킬을 작성합니다. 가상의 상황을 대비해 불필요한 내용을 추가하지 마세요.
 
-Run same scenarios WITH skill. Agent should now comply.
+스킬이 **있는** 상태에서 동일한 시나리오를 실행합니다. 이제 에이전트가 규칙을 준수해야 합니다.
 
-### REFACTOR: Close Loopholes
+### REFACTOR: 허점 차단하기
 
-Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
+에이전트가 새로운 합리화를 찾아냈나요? 명시적인 반박(counter)을 추가하세요. 빈틈없이 방어될(bulletproof) 때까지 재테스트합니다.
 
-### Micro-Test Wording Before Full Scenarios
+### 전체 시나리오 전에 문구 마이크로 테스트하기 (Micro-Test Wording)
 
-Full pressure-scenario runs are the final gate, but they are slow and expensive per iteration. Verify the wording itself first with micro-tests:
+전체 압박 시나리오 실행은 최종 관문이지만, 매 반복마다 실행하기에는 느리고 비용이 많이 듭니다. 먼저 마이크로 테스트로 문구 자체를 검증하세요:
 
-1. **One fresh-context sample per call** — a raw API call, or a single-shot subagent if you don't have API access. System prompt = the realistic context the guidance will live in (the full skill or prompt template, not the guidance in isolation); user message = a task that tempts the failure.
-2. **Always include a no-guidance control.** If the control doesn't exhibit the failure, there is nothing to fix — stop, don't author the guidance.
-3. **5+ reps per variant.** Single samples lie.
-4. **Manually read every flagged match.** Score programmatically if you like, but template echoes and quoted counter-examples masquerade as hits; automated counts alone overstate both failure and success.
-5. **Variance is a metric.** When guidance lands, reps converge on the same shape. Five different interpretations across five reps means the wording isn't binding — tighten the form before adding words.
+1. **호출당 하나의 새로운 컨텍스트(fresh-context) 샘플** — 원시 API 호출을 사용하거나, API 접근이 불가능한 경우 단발성(single-shot) 서브에이전트를 사용합니다. 시스템 프롬프트 = 해당 가이드가 실제로 놓이게 될 현실적인 컨텍스트(가이드 문구만 따로 떼어낸 것이 아니라 전체 스킬 또는 프롬프트 템플릿), 사용자 메시지 = 실패를 유혹하는 작업.
+2. **항상 가이드 없는 대조군(no-guidance control)을 포함하세요.** 대조군에서 해당 실패가 나타나지 않는다면 고쳐야 할 문제 자체가 없는 것입니다. 멈추고 가이드 작성을 그만두세요.
+3. **변형(variant)당 5회 이상 반복(reps)하세요.** 단 한 번의 샘플은 거짓말을 합니다.
+4. **탐지된 모든 매칭 결과를 직접 눈으로 읽으세요.** 프로그래밍 방식으로 점수를 매겨도 좋지만, 템플릿 문구의 단순 반복이나 인용된 반례가 적중(hit)으로 위장되곤 합니다. 자동화된 카운트만 믿으면 실패와 성공 모두 과장됩니다.
+5. **분산(Variance)도 중요한 지표입니다.** 가이드가 제대로 먹히면 반복 실행 결과들이 동일한 형태로 수렴합니다. 5번의 반복에서 5가지 서로 다른 해석이 나온다면 문구가 구속력을 갖지 못한다는 뜻입니다. 단어를 더 덧붙이기 전에 형식(form)부터 다잡으세요.
 
-Micro-tests verify wording; they do not replace pressure scenarios for discipline skills.
+마이크로 테스트는 문구를 검증하는 것이며, 규율 스킬을 위한 압박 시나리오를 대체하지는 않습니다.
 
-**Testing methodology:** See [references/testing-skills-with-subagents.md](references/testing-skills-with-subagents.md) for the complete testing methodology:
-- How to write pressure scenarios
-- Pressure types (time, sunk cost, authority, exhaustion)
-- Plugging holes systematically
-- Meta-testing techniques
+**테스팅 방법론:** 전체 테스팅 방법론은 [references/testing-skills-with-subagents.md](references/testing-skills-with-subagents.md)를 참조하세요:
+- 압박 시나리오 작성 방법
+- 압박 유형 (시간, 매몰 비용, 권위, 피로도)
+- 체계적으로 빈틈 메우기
+- 메타 테스팅(Meta-testing) 기법
 
-## Anti-Patterns
+## 안티패턴 (Anti-Patterns)
 
-### ❌ Narrative Example
-"In session 2025-10-03, we found empty projectDir caused..."
-**Why bad:** Too specific, not reusable
+### ❌ 내러티브(무용담)식 예제
+"2025-10-03 세션에서 우리는 비어 있는 projectDir이 문제를 일으킨다는 것을 발견했고..."
+**나쁜 이유:** 너무 특수한 상황에 매몰되어 재사용할 수 없음
 
-### ❌ Multi-Language Dilution
+### ❌ 다국어 나열로 인한 품질 저하 (Multi-Language Dilution)
 example-js.js, example-py.py, example-go.go
-**Why bad:** Mediocre quality, maintenance burden
+**나쁜 이유:** 예제 품질이 평범해지고 유지보수 부담만 커짐
 
-### ❌ Code in Flowcharts
+### ❌ 플로우차트 안에 코드 넣기
 ```dot
 step1 [label="import fs"];
 step2 [label="read file"];
 ```
-**Why bad:** Can't copy-paste, hard to read
+**나쁜 이유:** 복사해서 붙여넣을 수 없고 읽기 어려움
 
-### ❌ Generic Labels
+### ❌ 의미 없는 일반 라벨 (Generic Labels)
 helper1, helper2, step3, pattern4
-**Why bad:** Labels should have semantic meaning
+**나쁜 이유:** 라벨에는 의미론적(semantic) 뜻이 담겨야 함
 
-## STOP: Before Moving to Next Skill
+## 멈춤(STOP): 다음 스킬로 넘어가기 전에
 
-**After writing ANY skill, you MUST STOP and complete the deployment process.**
+**어떤 스킬이든 작성한 후에는 반드시 멈추고 배포 프로세스를 완료해야 합니다.**
 
-**Do NOT:**
-- Create multiple skills in batch without testing each
-- Move to next skill before current one is verified
-- Skip testing because "batching is more efficient"
+**절대 하지 말아야 할 것:**
+- 각 스킬을 테스트하지 않고 여러 스킬을 일괄(batch) 생성하기
+- 현재 스킬이 검증되기 전에 다음 스킬로 넘어가기
+- "일괄 처리하는 게 더 효율적"이라는 이유로 테스트 건너뛰기
 
-**The deployment checklist below is MANDATORY for EACH skill.**
+**아래의 배포 체크리스트는 각 스킬마다 필수(MANDATORY)입니다.**
 
-Deploying untested skills = deploying untested code. It's a violation of quality standards.
+테스트하지 않은 스킬을 배포하는 것은 테스트하지 않은 코드를 배포하는 것과 같습니다. 이는 품질 기준 위반입니다.
 
-## Skill Creation Checklist (TDD Adapted)
+## 스킬 생성 체크리스트 (TDD 적용)
 
-**IMPORTANT: Create a todo for EACH checklist item below.**
+**중요: 아래의 각 체크리스트 항목마다 할 일(todo)을 생성하세요.**
 
-**RED Phase - Write Failing Test:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
-- [ ] Identify patterns in rationalizations/failures
+**RED 단계 - 실패하는 테스트 작성:**
+- [ ] 압박 시나리오 생성 (규율 스킬의 경우 3개 이상의 복합 압박)
+- [ ] 스킬 **없이** 시나리오 실행 - 베이스라인 행동을 토씨 하나 바꾸지 않고 그대로(verbatim) 기록
+- [ ] 합리화/실패에서 나타나는 패턴 파악
 
-**GREEN Phase - Write Minimal Skill:**
-- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with required `name` and `description` fields (max 1024 chars; see [spec](https://agentskills.io/specification))
-- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
-- [ ] Description written in third person
-- [ ] Keywords throughout for search (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures identified in RED
-- [ ] Guidance form matches the failure type (see Match the Form to the Failure)
-- [ ] For behavior-shaping guidance: wording micro-tested against a no-guidance control (5+ reps, every flagged match read manually) — N/A for pure reference skills
-- [ ] Code inline OR link to separate file
-- [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify agents now comply
+**GREEN 단계 - 최소한의 스킬 작성:**
+- [ ] 이름은 영문자, 숫자, 하이픈(`-`)만 사용 (괄호나 특수문자 금지)
+- [ ] 필수 필드인 `name`과 `description`이 포함된 YAML 프론트매터 (최대 1024자; [명세(spec)](https://agentskills.io/specification) 참조)
+- [ ] `description`은 "Use when..."(또는 구체적 사용 시점 조건)으로 시작하며 구체적인 트리거/증상을 포함함
+- [ ] `description`은 3인칭 시점으로 작성됨
+- [ ] 검색을 위해 본문 전반에 키워드 배치 (오류 메시지, 증상, 도구 이름)
+- [ ] 핵심 원칙을 담은 명확한 개요(Overview)
+- [ ] RED 단계에서 확인된 특정 베이스라인 실패들을 해결함
+- [ ] 가이드 형식이 실패 유형과 일치함 ('실패 유형에 맞는 작성 형식 선택하기' 참조)
+- [ ] 행동 교정(behavior-shaping) 가이드의 경우: 가이드 없는 대조군과 비교하여 문구를 마이크로 테스트함 (5회 이상 반복, 탐지된 모든 매칭을 직접 읽음) — 순수 레퍼런스 스킬에는 해당 없음(N/A)
+- [ ] 코드를 본문에 인라인으로 포함하거나 별도 파일 링크로 연결함
+- [ ] 훌륭한 예제 하나 제공 (다국어 나열 지양)
+- [ ] 스킬이 **있는** 상태에서 시나리오 실행 - 에이전트가 이제 규칙을 준수하는지 검증
 
-**REFACTOR Phase - Close Loopholes:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (if discipline skill)
-- [ ] Build rationalization table from all test iterations
-- [ ] Create red flags list
-- [ ] Re-test until bulletproof
+**REFACTOR 단계 - 허점 차단:**
+- [ ] 테스트를 통해 **새로운** 합리화 파악
+- [ ] 명시적인 반박 추가 (규율 스킬인 경우)
+- [ ] 모든 테스트 반복 결과를 모아 합리화 테이블 구축
+- [ ] 위험 신호(Red Flags) 목록 생성
+- [ ] 빈틈없이 방어될 때까지 재테스트
 
-**Quality Checks:**
-- [ ] Small flowchart only if decision non-obvious
-- [ ] Quick reference table
-- [ ] Common mistakes section
-- [ ] No narrative storytelling
-- [ ] Supporting files only for tools or heavy reference
+**품질 점검:**
+- [ ] 판단이 자명하지 않은 경우에만 작은 플로우차트 사용
+- [ ] 빠른 참조(Quick reference) 테이블 포함
+- [ ] 흔한 실수(Common mistakes) 섹션 포함
+- [ ] 내러티브식 스토리텔링 배제
+- [ ] 보조 파일은 도구나 방대한 레퍼런스 용도로만 사용
 
-**Deployment:**
-- [ ] Commit skill to git and push to your fork (if configured)
-- [ ] Consider contributing back via PR (if broadly useful)
+**배포:**
+- [ ] 스킬을 git에 커밋하고 포크(fork) 저장소에 푸시 (설정된 경우)
+- [ ] 폭넓게 유용한 스킬이라면 PR을 통해 업스트림에 기여하는 것 고려
 
-## Discovery Workflow
+## 탐색 워크플로우 (Discovery Workflow)
 
-How future agents find your skill:
+향후 에이전트가 여러분의 스킬을 찾는 과정은 다음과 같습니다:
 
-1. **Encounters problem** ("tests are flaky")
-2. **Searches skills** (greps descriptions, browses categories)
-3. **Finds SKILL** (description matches)
-4. **Scans overview** (is this relevant?)
-5. **Reads patterns** (quick reference table)
-6. **Loads example** (only when implementing)
+1. **문제 직면** ("테스트가 간헐적으로 실패함(flaky)")
+2. **스킬 검색** (description을 grep으로 검색하거나 카테고리 탐색)
+3. **SKILL 발견** (description이 문제 상황과 일치함)
+4. **개요 스캔** (지금 상황에 관련이 있는가?)
+5. **패턴 읽기** (빠른 참조 테이블 확인)
+6. **예제 로드** (실제 구현할 때만 로드)
 
-**Optimize for this flow** - put searchable terms early and often.
+**이 흐름에 맞게 최적화하세요** - 검색 가능한 용어를 문서 앞부분에, 그리고 자주 배치하세요.

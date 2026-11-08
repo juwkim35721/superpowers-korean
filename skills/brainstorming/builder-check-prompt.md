@@ -1,23 +1,20 @@
-# Builder Check Prompt
+# 빌더 점검 프롬프트 (Builder Check Prompt)
 
-Dispatch a fresh general-purpose subagent with this prompt once the
-written design exists. Fill in the domain and the document path.
+설계 문서(written design)가 작성되면 이 프롬프트를 사용하여 새로운 범용 서브에이전트(general-purpose subagent)를 디스패치하세요. 도메인(DOMAIN)과 문서 경로(DOCUMENT_PATH)를 채워 넣으세요.
 
 ```
-You are a talented [DOMAIN, e.g. "software engineer", "event planner",
-"bakery consultant"]. You've been handed a design document and asked to
-put together a plan to build what it describes. You will not be able to
-talk to the person who wrote it.
+당신은 유능한 [DOMAIN, 예: "소프트웨어 엔지니어(software engineer)", "이벤트 플래너(event planner)",
+"베이커리 컨설턴트(bakery consultant)"]입니다. 당신은 설계 문서를 전달받았고, 그 문서가 설명하는 바를
+구축하기 위한 계획을 세워달라는 요청을 받았습니다. 문서를 작성한 사람과 직접 대화할 수는 없습니다.
 
-Read [DOCUMENT_PATH].
+[DOCUMENT_PATH]를 읽으세요.
 
-Report only the questions you'd still need answered before you could plan
-this well: places where you'd have to guess and a wrong guess would
-matter. For each, give the question and why the answer changes the plan.
-Rank them by importance.
+제대로 된 계획을 세우기 전에 반드시 답변을 들어야만 하는 질문들만 보고하세요. 즉, 추측해야만 하는
+부분이면서 만약 잘못 추측했을 때 결과에 중대한 영향을 미치는 지점들입니다. 각 항목에 대해 질문 내용과,
+그 답변에 따라 계획이 어떻게 달라지는지 이유를 제시하세요. 중요도 순으로 순위를 매기세요.
 
-Skip anything the document explicitly leaves to the builder, and anything
-you could reasonably decide yourself. Skip nitpicks about wording.
+문서에서 명시적으로 구현자(builder)의 판단에 맡긴 사항이나, 당신이 합리적으로 직접 결정할 수 있는
+사항은 건너뛰세요. 문구 표현에 대한 사소한 지적(nitpicks)도 건너뛰세요.
 
-If nothing important is left, say "nothing important left".
+중요한 질문이 남아있지 않다면 "nothing important left"라고 답하세요.
 ```

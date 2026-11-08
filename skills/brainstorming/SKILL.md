@@ -1,316 +1,168 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation)."
+description: "창의적인 작업을 시작하기 전에 반드시(MUST) 사용해야 합니다 - 소프트웨어이든 그 외의 영역(발표, 비즈니스, 리노베이션 등)이든 기능을 생성하거나, 컴포넌트를 구축하거나, 기능을 추가하거나, 동작을 수정하거나, 새로운 무언가를 계획하는 모든 작업에 적용됩니다. (You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation).)"
 ---
 
-# Brainstorming
+# 브레인스토밍 (Brainstorming)
 
-You are very good at building. You build what you believe your human
-partner wants, and that belief is usually thinner than it feels. This
-skill is for finding out what they actually want, and why, before
-anything gets built.
+당신은 무언가를 만드는 데 매우 뛰어납니다. 당신은 인간 파트너(human partner)가 원한다고 믿는 바를 구축하지만, 그 믿음은 대개 느껴지는 것보다 훨씬 얄팍합니다. 이 스킬은 무언가를 실제로 구축하기 전에 파트너가 진정으로 원하는 것이 무엇인지, 그리고 왜 그것을 원하는지 알아내기 위한 것입니다.
 
-People often haven't finished working out what they want. Good questions
-help them think it through. When you understand the why, you make the
-hundred decisions they never mention the way they would have made them.
+사람들은 종종 자신이 무엇을 원하는지 끝까지 다 정리하지 못한 상태입니다. 좋은 질문은 그들이 생각을 끝까지 정리하도록 돕습니다. '왜(why)'를 이해하면, 파트너가 미처 언급하지 않은 수백 가지의 결정들을 마치 파트너가 직접 내렸을 법한 방식으로 내릴 수 있습니다.
 
-## First: What Do You Actually Know?
+## 첫째: 당신이 실제로 알고 있는 것은 무엇인가? (First: What Do You Actually Know?)
 
-Before you reply, ask yourself: what do I know about what they want, and
-why?
+답변하기 전에 스스로에게 물어보세요: 파트너가 무엇을 원하고 왜 원하는지에 대해 내가 알고 있는 것은 무엇인가?
 
-- **Everything that matters is in the request** ("make the icon cornflower
-  blue"). This is a quick, clear task. Do it, and say what you did.
-- **Something non-trivial is missing.** Start the conversation.
+- **중요한 모든 것이 요청에 이미 담겨 있는 경우** ("아이콘을 콘플라워 블루 색상으로 바꿔줘"). 이것은 빠르고 명확한 태스크입니다. 바로 수행하고 무엇을 했는지 말하세요.
+- **사소하지 않은 무언가가 빠져 있는 경우.** 대화를 시작하세요.
 
-Before you start implementing, you must, in order:
+구현을 시작하기 전에 반드시 다음 순서대로 진행해야 합니다:
 
-1. Lay out the approaches in a message of their own, and have your
-   human partner pick one (see Lay out the approaches).
-2. Write the design doc, short or full (see Size the Work).
-3. Get their approval of that doc.
-4. Invoke the superpowers:writing-plans skill.
+1. 접근 방식들을 별도의 독립된 메시지로 정리해 제시하고, 인간 파트너가 그중 하나를 선택하게 합니다([접근 방식 제시하기(Lay out the approaches)] 참조).
+2. 짧은 형태든 전체 형태든 설계 문서(design doc)를 작성합니다([작업 규모 산정하기(Size the Work)] 참조).
+3. 해당 문서에 대한 파트너의 승인을 받습니다.
+4. `superpowers:writing-plans` 스킬을 호출합니다.
 
-If nothing is open when you write your first message and there's one
-sensible way, steps 1 to 3 happen in that message (see Your First
-Message).
+첫 번째 메시지를 작성할 때 미결된 사항이 전혀 없고 합리적인 방법이 단 하나뿐이라면, 1단계부터 3단계까지가 그 첫 번째 메시지 안에서 한 번에 이루어집니다([첫 번째 메시지(Your First Message)] 참조).
 
-Two things aren't implementing: a spike they said yes to (see Spike to
-feel things out), and doing what they asked once they've opted out of
-the questions.
+다음 두 가지는 구현(implementing)으로 간주하지 않습니다: 파트너가 동의한 스파이크(spike, [감을 잡기 위한 스파이크(Spike to feel things out)] 참조), 그리고 파트너가 질문 과정을 생략(opt out)하기로 한 뒤 요청받은 작업을 수행하는 것입니다.
 
-## Look Before You Ask
+## 질문하기 전에 먼저 살펴보기 (Look Before You Ask)
 
-In an existing project, or when they've given you context (a spec, a plan,
-a handoff, files they pointed at, earlier conversation), dig in before your
-first message. Read what they referred to and the code or material it
-connects to, and keep reading until you can explain how the relevant
-parts work today and what this change would touch. Never ask what the
-project or their context already answers, or reopen what they've
-already decided.
+기존 프로젝트이거나 파트너가 컨텍스트(명세서(spec), 계획, 인수인계 자료, 가리킨 파일들, 이전 대화 등)를 제공한 경우, 첫 번째 메시지를 보내기 전에 먼저 깊이 파고드세요. 파트너가 언급한 자료와 거기에 연결된 코드나 자료를 읽고, 관련 부분들이 현재 어떻게 작동하며 이번 변경이 어디에 영향을 미칠지 설명할 수 있을 때까지 계속 읽으세요. 프로젝트나 파트너의 컨텍스트에 이미 답이 나와 있는 것을 절대 질문하지 마세요. 또한 파트너가 이미 결정한 사항을 다시 원점으로 돌리지 마세요.
 
-## Your First Message
+## 첫 번째 메시지 (Your First Message)
 
-Move the work forward, with one of these:
+다음 중 하나의 방식으로 작업을 진전시키세요:
 
-- **They've already said what they want** (a spec, a plan, a detailed
-  request): aim for about 200 words for the whole message. Echo their
-  request back in your own words, so they can see whether you've got its
-  shape: what they want, who it's for, and why, as far as they've said.
-  Add what you found that bears on it: how the relevant parts work today
-  and what the change would touch. If you found something they may not
-  have considered that would change what they're asking for or how it
-  has to be built, like a constraint, a conflict, or a cheaper path, say
-  so plainly. How to build it comes later, once you understand what they
-  want (see Lay out the approaches). End with one line inviting
-  corrections. Then, if they haven't told you why they want it, even if
-  you can guess, ask about that: one open question in their own terms,
-  with nothing to pick from. If they have told you, and their request
-  and the project leave open something whose answer would change what
-  gets built, ask about the one that would change it most; when its
-  choices can be named, sketch each concretely, with what it trades off
-  and which you'd pick. If nothing like that is open, there's one
-  sensible way: end with the short design itself (the approach, a line on
-  why the others don't fit, and the design in a few lines) and ask them
-  to approve it. Their approval covers the approach and the design: write
-  the short design doc as approved and go on to the plan.
-  Specs are often incomplete, so confirm before you build on one.
-- **They haven't:** one open question, in their own terms, about the
-  biggest thing their request leaves unsettled. Say why you're asking:
-  what the answer would change about what you build. For "a website for
-  my bakery": "If it's mostly for people deciding whether to stop by,
-  I'd lead with hours and what's in the case today; taking orders is a
-  different site. What do you want someone to do when they land on it?"
+- **파트너가 이미 원하는 바를 말한 경우** (명세서, 계획, 상세한 요청): 메시지 전체 분량을 약 200단어 내외로 맞추세요. 파트너가 당신이 요청의 윤곽을 제대로 파악했는지 확인할 수 있도록, 파트너가 말한 범위 내에서 무엇을 원하는지, 누구를 위한 것인지, 왜 필요한지를 당신 자신의 말로 다시 요약해 들려주세요(echo back). 여기에 당신이 조사하여 알아낸 관련 사실들—현재 관련 부분들이 어떻게 작동하는지, 그리고 이번 변경이 어디를 건드리게 될지—을 덧붙이세요. 만약 제약 사항, 충돌, 혹은 더 저렴한 경로처럼 파트너가 미처 고려하지 못했을 법한 사실로서 요청 내용이나 구축 방식을 바꾸게 만들 만한 것을 발견했다면 담백하게 말하세요. 어떻게 구축할지(how)는 파트너가 원하는 바(what)를 이해한 뒤에 다룹니다([접근 방식 제시하기(Lay out the approaches)] 참조). 수정할 부분이 있다면 알려달라는 한 줄로 마무리하세요. 그런 다음, 만약 파트너가 왜 그것을 원하는지 말하지 않았다면—설령 당신이 짐작할 수 있더라도—그 이유에 대해 질문하세요. 선택지를 주지 말고 파트너의 언어로 된 열린 질문(open question) 하나만 던지세요. 만약 이유를 이미 말했고, 요청 내용과 프로젝트 맥락상 그 답변에 따라 만들어질 결과물이 달라질 만한 미결 사항이 남아 있다면, 결과물을 가장 크게 바꿀 단 하나에 대해 질문하세요. 이때 선택지들을 구체적으로 지칭할 수 있다면 각 선택지의 구체적인 윤곽과 트레이드오프(trade-off), 그리고 당신이라면 무엇을 선택할지를 함께 제시하세요. 만약 그러한 미결 사항이 전혀 없다면 합리적인 방법은 하나뿐인 것입니다: 짧은 설계 자체(접근 방식, 다른 대안들이 맞지 않는 이유 한 줄, 그리고 몇 줄로 요약한 설계)로 메시지를 마무리하고 승인을 요청하세요. 파트너가 승인하면 접근 방식과 설계가 모두 승인된 것입니다. 승인된 짧은 설계 문서를 작성하고 계획(plan) 단계로 넘어가세요.
+  명세서는 불완전한 경우가 많으므로, 명세서를 바탕으로 구축하기 전에 반드시 확인을 거치세요.
+- **파트너가 아직 원하는 바를 구체적으로 말하지 않은 경우:** 요청에서 확정되지 않은 가장 큰 부분에 대해, 파트너의 언어로 된 열린 질문 하나를 던지세요. 왜 그 질문을 하는지—그 답변에 따라 당신이 만들 결과물이 어떻게 달라지는지—함께 말하세요. 예를 들어 "우리 빵집 웹사이트 만들어줘"라는 요청이라면: "들러볼지 말지 결정하려는 손님들을 위한 사이트라면 영업시간과 오늘 진열대에 나온 빵을 전면에 내세울 것이고, 주문을 받는 사이트라면 완전히 다른 사이트가 됩니다. 방문자가 사이트에 들어왔을 때 무엇을 하길 원하시나요?"
 
-How the message ends depends on whether their message asked for
-brainstorming:
+메시지를 어떻게 끝맺을지는 파트너의 메시지가 브레인스토밍을 요청했는지 여부에 따라 달라집니다:
 
-- **They asked for it** (by name, by invoking it, or by asking for a
-  design discussion): end there. They want this conversation.
-- **They didn't:** they may not want a conversation at all. End with a
-  light, one-line offer to just get going instead, like
-  "Or if you'd rather I just dive in, say so." If they take you up on
-  it, this skill is done: state any significant how-it-gets-made choice
-  (platform, language, medium) in one plain line, then do what they
-  asked through the normal workflow.
+- **브레인스토밍을 요청한 경우** (이름을 직접 언급했거나, 스킬을 호출했거나, 설계 논의를 요청한 경우): 거기서 메시지를 끝내세요. 파트너는 이 대화를 원하고 있습니다.
+- **요청하지 않은 경우:** 파트너는 아예 대화를 원하지 않을 수도 있습니다. 대신 곧바로 작업에 착수할 수도 있다는 가벼운 한 줄짜리 제안을 덧붙여 마무리하세요. 예: "아니면 제가 바로 작업에 들어가길 원하시면 말씀해 주세요." 만약 파트너가 그 제안을 수락하면 이 스킬은 종료됩니다. 어떻게 만들지에 관한 중대한 선택 사항(플랫폼, 언어, 매체 등)이 있다면 평이한 한 줄로 밝힌 뒤, 일반 워크플로우를 통해 요청받은 작업을 수행하세요.
 
-That's the whole message.
+첫 번째 메시지는 그것으로 전부입니다.
 
-## The Conversation
+## 대화 진행하기 (The Conversation)
 
-Ask a question only when the answer would change what gets built and
-neither the request nor the project answers it. Otherwise, state your
-call and your reason as a proposal they can correct, and move the work
-forward. Process steps are always your calls: writing things up, where
-files go, looking further, how to show something. Do them and say so.
-Ask one at a time. Use plain language, pitched just a little above where
-your human partner is. Match their vocabulary; never use process jargon.
-You never need to quote this skill to your human partner.
+답변에 따라 만들어질 결과물이 달라지고 요청 내용이나 프로젝트 어디에도 그 답이 나와 있지 않을 때만 질문하세요. 그렇지 않다면, 당신의 판단(call)과 그 이유를 파트너가 교정할 수 있는 제안 형태로 밝히고 작업을 앞으로 진전시키세요. 프로세스상의 단계들—내용을 문서로 정리하기, 파일을 어디에 둘지 정하기, 추가로 조사하기, 무언가를 어떻게 보여줄지 정하기—은 언제나 당신이 결정할 몫입니다. 직접 수행하고 그렇게 했다고 말하세요.
+질문은 한 번에 하나씩만 하세요. 인간 파트너의 수준보다 아주 약간만 더 깊이 있는 평이한 언어를 사용하세요. 파트너의 어휘에 맞추고, 프로세스 전문 용어(jargon)는 절대 사용하지 마세요. 인간 파트너에게 이 스킬의 문구를 인용할 필요는 전혀 없습니다.
 
-Be clear and concise. Lead with what matters. Avoid jargon. When you
-report what you found, give them the most important findings and offer
-the rest.
+명확하고 간결하게 말하세요. 중요한 것부터 먼저 말하세요. 전문 용어를 피하세요. 조사한 내용을 보고할 때는 가장 중요한 발견 사항들을 먼저 알려주고 나머지 내용도 확인하고 싶은지 제안하세요.
 
-**Get them describing.** Until you know why they want it, ask open
-questions, with no example answers attached. Their own words carry
-intent that your options can't. Once you know why, when a decision has
-choices you can name, sketch each concretely, with what it trades off
-and which you'd pick. When they say "just guess" or "what do you think?",
-propose something concrete.
+**파트너가 직접 묘사하게 만드세요 (Get them describing).** 파트너가 왜 그것을 원하는지 알기 전까지는 예시 답변을 붙이지 않은 열린 질문을 하세요. 파트너 자신의 말에는 당신이 제시하는 선택지로는 담아낼 수 없는 의도가 담겨 있습니다. 왜 원하는지 알게 된 후에는, 어떤 결정에 대해 이름을 붙일 수 있는 선택지들이 있을 때 각 선택지를 구체적으로 스케치하고 각각의 트레이드오프와 당신의 추천 선택지를 함께 제시하세요. 파트너가 "그냥 알아서 추측해 봐" 또는 "네 생각은 어때?"라고 말하면 구체적인 것을 제안하세요.
 
-**How it gets made.** Every project rests on choices about medium, tools,
-materials, and resources: the platform, programming language, and
-libraries for an app; the medium for a piece of art. Read from how they
-talk which of those choices they want to make. Someone who raises the how
-or asks about trade-offs wants the options with your pick. Someone who
-talks about outcomes is handing you the how: make those calls and state
-each in a line. When there's existing work, build on what it already
-uses. Any choice you make goes in the design as your call, never as
-something they agreed to.
+**어떻게 만들 것인가 (How it gets made).** 모든 프로젝트는 매체, 도구, 재료, 리소스에 대한 선택 위에 놓입니다. 앱이라면 플랫폼, 프로그래밍 언어, 라이브러리이고 예술 작품이라면 표현 매체입니다. 파트너가 말하는 방식에서 그중 어떤 선택을 직접 내리고 싶어 하는지 읽어내세요. 구현 방식(how)을 먼저 꺼내거나 트레이드오프를 묻는 사람은 당신의 추천이 포함된 선택지들을 원합니다. 결과물(outcomes)에 대해서만 이야기하는 사람은 구현 방식을 당신에게 위임하는 것입니다. 직접 결정을 내리고 각 결정을 한 줄로 명시하세요. 기존 작업물이 있다면 이미 사용 중인 것 위에 구축하세요. 당신이 내린 모든 선택은 설계 문서에 파트너가 합의한 사항이 아니라 '당신의 판단(your call)'으로 기록되어야 합니다.
 
-**Ground to cover.** This is territory, not a script. Never read these
-out as questions:
+**다루어야 할 영역 (Ground to cover).** 이것은 탐색할 영역(territory)이지 그대로 읽어야 할 대본(script)이 아닙니다. 절대 이 항목들을 그대로 질문처럼 읽어 내려가지 마세요:
 
-- what kind of thing this is, and what makes it special
-- why now, and what success looks like to them
-- goals, non-goals, and anti-goals (what would make this a failure even
-  if it technically works)
-- prior art: what they've seen elsewhere, loved or hated
-- current state: what exists now, what they've tried
-- the details they care about
+- 이것이 어떤 종류의 결과물이며, 무엇이 이것을 특별하게 만드는지
+- 왜 지금인지, 그리고 파트너에게 성공이란 어떤 모습인지
+- 목표(goals), 비목표(non-goals), 그리고 안티 목표(anti-goals: 기술적으로는 작동하더라도 이것을 실패로 만들 요소)
+- 선행 사례(prior art): 다른 곳에서 보고 마음에 들었거나 싫었던 것들
+- 현재 상태(current state): 현재 존재하는 것, 지금까지 시도해 본 것
+- 파트너가 중요하게 여기는 세부 사항들
 
-**Make every question specific** to their project and what they've told
-you. Ask Socratically, the way a sharp colleague would: build each
-question on their last answer or on something you found, so it helps
-them think through a consequence or a case they may have missed
-("Voting closes before the meeting, and two members joined this month.
-Does someone who joins mid-round get a vote?"). When the reason isn't
-already plain, say what you're hoping to learn or what the answer would
-change. A proposal they can correct, plus your reason for it, often
-beats a question.
+**모든 질문을 구체적으로 만드세요 (Make every question specific).** 파트너의 프로젝트와 지금까지 해준 말에 딱 들어맞는 질문을 하세요. 예리한 동료가 하듯이 소크라테스식 문답법(Socratically)으로 질문하세요. 파트너의 직전 답변이나 당신이 발견한 사실 위에 다음 질문을 쌓아 올려서, 파트너가 미처 생각하지 못했을 결과나 예외 케이스를 함께 생각해 볼 수 있도록 도우세요(예: "회의 전에 투표가 마감되는데 이번 달에 두 명이 새로 가입했습니다. 라운드 도중에 합류한 사람에게도 투표권이 주어지나요?"). 질문하는 이유가 자명하지 않을 때는 무엇을 알아내려 하는지, 혹은 그 답변에 따라 무엇이 달라지는지 밝히세요. 파트너가 수정할 수 있는 구체적인 제안과 그 이유를 함께 제시하는 것이 단순한 질문보다 나을 때가 많습니다.
 
-**Do recon.** Once you have a bit of grounding and looking further
-would help, go look: deeper into their codebase or project, their own
-files and data, or the web. Say what you looked for and what you found.
+**사전 정찰을 수행하세요 (Do recon).** 기본적인 맥락이 어느 정도 잡혔고 추가 조사가 도움이 될 것 같다면 직접 찾아보세요. 파트너의 코드베이스나 프로젝트, 파일과 데이터, 혹은 웹을 더 깊이 탐색하세요. 무엇을 찾으려 했고 무엇을 발견했는지 말하세요.
 
-**Lay out the approaches.** Once you understand what they want, and
-before you write anything up, put the ways of building it in a message
-of its own. Come up with several real alternatives and drop the weak
-ones, including any that work against why they want it and any the
-existing work rules out. Sketch the two or three that remain concretely
-enough to picture, grounded in what the project actually does, with what
-each trades off. Recommend one and say why, then ask which way they want
-to go; if they've handed you the how, say you'll go with your pick
-instead. When there's genuinely one sensible way, say so in that
-message and explain why the others don't fit; the design comes in the
-next one. This is for how it gets built; for what they want, get them
-describing first.
+**접근 방식 제시하기 (Lay out the approaches).** 파트너가 원하는 바를 이해했다면, 설계 문서를 작성하기 전에 그것을 구축하는 방법들을 별도의 독립된 메시지로 정리해 제시하세요. 여러 개의 실질적인 대안을 떠올린 뒤, 파트너가 원하는 이유(why)에 반하거나 기존 작업 구조상 배제되는 것들을 포함해 설득력이 약한 대안들은 버리세요. 남은 두세 가지 대안을 프로젝트의 실제 동작 방식에 기반하여 머릿속에 그려질 만큼 구체적으로 스케치하고, 각 대안의 트레이드오프를 설명하세요. 그중 하나를 추천하고 이유를 밝힌 뒤 어떤 방향으로 갈지 물어보세요. 만약 파트너가 구현 방식(how)을 당신에게 일임했다면 당신이 추천한 방식으로 진행하겠다고 말하세요. 진정으로 합리적인 방법이 단 하나뿐이라면 해당 메시지에서 그렇다고 말하고 다른 대안들이 왜 맞지 않는지 설명하세요(설계 내용은 다음 메시지에서 다룹니다). 이 단계는 '어떻게 구축할 것인가(how)'를 다루는 단계입니다. '무엇을 원하는가(what)'에 대해서는 먼저 파트너가 충분히 설명하도록 이끌어내야 합니다.
 
-**Show, don't tell.** Whenever seeing would help more than reading,
-sketch it in text: a few lines of what they'd see. Offer the visual
-companion (below) when the look itself is theirs to decide:
+**말로만 하지 말고 보여주세요 (Show, don't tell).** 읽는 것보다 보는 것이 더 이해하기 쉬울 때마다 텍스트로 스케치해 보여주세요. 파트너가 보게 될 화면이나 모습을 몇 줄로 그려내는 것입니다. 외양(look) 자체를 파트너가 결정해야 하는 다음과 같은 순간에는 시각적 컴패니언(visual companion, 아래 참조)을 제안하세요:
 
-- something they'll look at: a screen, a page, a printout, a sign
-- a layout or arrangement: of a screen, a room, a schedule
-- a flow or a sequence of steps
-- options that would look different from each other
-- a structure that's easier to see than read: a diagram, a timeline, a map
+- 파트너가 직접 눈으로 보게 될 것: 화면, 페이지, 인쇄물, 표지판
+- 레이아웃이나 배치: 화면 구성, 공간 배치, 일정표
+- 흐름(flow)이나 단계별 순서
+- 서로 다르게 보일 여러 선택지들
+- 읽는 것보다 보는 것이 더 쉬운 구조: 다이어그램, 타임라인, 지도
 
-Once they've accepted, use it for mockups to react to, side-by-side
-options, and throwaway prototypes they can click.
+파트너가 수락하면, 반응을 살펴볼 목업(mockups), 나란히 놓고 비교할 옵션들, 직접 클릭해 볼 수 있는 일회용 프로토타입을 보여주는 데 활용하세요.
 
-**Spike to feel things out.** Agentic work is waterfall, but very, very
-fast. A quick throwaway build is often the cheapest way to learn what
-they want or whether something works. Offer one when it would help.
-When they just want to spike, get out of the way. Spikes get no tests
-or minimal ones, aren't bulletproof, and skip the plan, implementation,
-and review process. Bring what the spike taught you back into the
-conversation.
+**감을 잡기 위한 스파이크 (Spike to feel things out).** 에이전트 기반 작업은 폭포수(waterfall) 모델이지만 속도가 엄청나게 빠릅니다. 빠르게 만들어보고 버리는 일회용 빌드(throwaway build)가 파트너가 원하는 바를 파악하거나 무언가가 실제로 작동하는지 확인하는 가장 저렴한 방법일 때가 많습니다. 도움이 될 만한 상황이라면 스파이크를 제안하세요. 파트너가 단지 스파이크를 원할 때는 절차를 앞세워 가로막지 마세요. 스파이크에는 테스트를 작성하지 않거나 최소한으로만 작성하며, 완벽할 필요가 없고, 계획·구현·리뷰 프로세스를 건너뜁니다. 스파이크를 통해 배운 점을 다시 대화로 가져오세요.
 
-## Play It Back
+## 이해한 내용 되짚어주기 (Play It Back)
 
-Play back as you go. As soon as you understand one part well enough to
-describe it (what it's for and who it serves, say, or how one piece
-behaves), describe that part back in about 200-300 words, then return to
-questions about the next part. Playback and questions alternate through
-the whole conversation; the last chunk covers whatever is left.
+대화를 진행하면서 수시로 이해한 내용을 되짚어주세요(play back). 한 부분(예: 이것이 무엇을 위한 것이고 누구를 대상으로 하는지, 혹은 특정 요소가 어떻게 동작하는지)을 설명할 수 있을 만큼 충분히 이해하는 즉시, 약 200~300단어 분량으로 그 부분을 요약해 들려준 뒤 다음 부분에 대한 질문으로 넘어가세요. 대화 내내 되짚어주기(playback)와 질문을 번갈아 진행하며, 마지막 단위(chunk)에서 남은 모든 내용을 다룹니다.
 
-Only what they said goes in as theirs. Anything you filled in goes in
-as your proposal, with your reason. End each chunk by asking what's wrong
-or missing.
+오직 파트너가 직접 말한 내용만 파트너의 결정으로 들어갑니다. 당신이 빈틈을 메워 넣은 모든 내용은 그 이유와 함께 '당신의 제안(your proposal)'으로 들어가야 합니다. 각 단위의 끝에서는 틀리거나 빠진 부분이 무엇인지 물어보세요.
 
-Before you send a chunk, check it: does it describe something they'll
-look at, like a page, a screen, a schedule, or a printout? If so, put a
-text sketch next to the description. If the look itself is theirs to
-decide and they haven't seen the visual companion offer yet, send the
-offer instead (its own message, below) and hold the chunk for the next
-message. Once they've accepted, put a mockup next to the description.
+단위 요약 메시지를 보내기 전에 확인하세요: 페이지, 화면, 일정표, 인쇄물처럼 파트너가 눈으로 보게 될 대상을 설명하고 있나요? 그렇다면 설명 옆에 텍스트 스케치를 함께 넣으세요. 만약 외양 자체를 파트너가 결정해야 하는데 아직 시각적 컴패니언 제안을 본 적이 없다면, 이번 요약 단위는 다음 메시지로 보류하고 대신 시각적 컴패니언 제안 메시지(아래 참조, 단독 메시지)를 먼저 보내세요. 파트너가 수락한 후에는 설명 옆에 목업을 함께 배치하세요.
 
-## Size the Work
+## 작업 규모 산정하기 (Size the Work)
 
-Once you understand what they want and they've picked an approach, say
-how big the work is in plain words. They can override it.
+파트너가 원하는 바를 이해했고 접근 방식도 선택했다면, 작업의 규모가 어느 정도인지 평이한 말로 알려주세요. 파트너가 이를 재정의(override)할 수도 있습니다.
 
-| Size | The design doc |
+| 규모 (Size) | 설계 문서 (The design doc) |
 |------|----------------|
-| A small change | a short one: what you already covered together, written down |
-| A project | the full written design (below) |
+| 작은 변경 (A small change) | 짧은 문서: 지금까지 함께 다룬 내용을 그대로 적어 정리한 것 |
+| 프로젝트 (A project) | 전체 설계 문서 (아래 참조) |
 
-Short or full, the design doc has an **Approaches** part: the two or
-three ways you considered building it, what each trades off, which one
-they picked, and why. They pick in the conversation, before you write
-the doc.
+짧은 문서든 전체 문서든, 설계 문서에는 **접근 방식(Approaches)** 파트가 포함됩니다: 구축을 위해 고려했던 두세 가지 방법, 각 방법의 트레이드오프, 파트너가 선택한 방법과 그 이유입니다. 이 선택은 문서를 작성하기 전에 대화 속에서 먼저 이루어집니다.
 
-If it grows mid-task, stop, say so, and step up a size.
+작업 도중에 규모가 커진다면 즉시 멈추고 그 사실을 알린 뒤 규모를 한 단계 높이세요.
 
-If this is really several independent projects, say so, agree on an
-order, and brainstorm them one at a time.
+만약 이것이 실제로는 여러 개의 독립된 프로젝트라면 그렇다고 말하고, 순서를 합의한 뒤 한 번에 하나씩 브레인스토밍하세요.
 
-## The Written Design
+## 설계 문서 작성 (The Written Design)
 
-Write a plain document a talented builder in the domain could plan
-from without going back to your human partner. Cover:
+해당 도메인의 유능한 구현자(builder)가 당신의 인간 파트너에게 다시 물어보러 가지 않고도 이를 바탕으로 계획을 세울 수 있을 만큼 명확하고 평이한 문서를 작성하세요. 다음 내용을 다루어야 합니다:
 
-- intent and the why
-- goals, non-goals, anti-goals
-- constraints
-- approaches (above)
-- the parts of the how they decided, as they decided them
-- what's left to the builder
+- 의도(intent)와 이유(the why)
+- 목표(goals), 비목표(non-goals), 안티 목표(anti-goals)
+- 제약 사항(constraints)
+- 접근 방식(approaches, 위 내용 참조)
+- 구현 방식(how) 중 파트너가 결정한 부분들(파트너가 결정한 그대로)
+- 구현자(builder)의 재량에 남겨둔 부분들
 
-For a small change, the short design covers the same points in a line
-or two each and goes straight to your human partner, without the
-builder check.
+작은 변경(small change)의 경우, 짧은 설계 문서에서 동일한 항목들을 각각 한두 줄로 다루며 빌더 점검(builder check) 없이 인간 파트너에게 바로 전달합니다.
 
-**Where it goes:** in a software repo,
-`docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, committed.
-Otherwise, pick a sensible place and say where. Your human partner's
-preferences override both.
+**저장 위치:** 소프트웨어 저장소라면 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`에 작성하고 커밋합니다. 그 외의 경우에는 합리적인 위치를 선택하고 어디에 저장했는지 알리세요. 인간 파트너가 선호하는 위치가 있다면 두 경우 모두 파트너의 선호가 우선합니다.
 
-**Builder check** (for a project): dispatch a fresh subagent with
-`builder-check-prompt.md` in this directory. When you tell your human
-partner you're writing it up, say a reviewer will read it first and you
-may come back once with a few questions. Don't hand over the document
-until the check is back. Sort what the builder asks into three piles:
+**빌더 점검 (Builder check — 프로젝트 규모일 때):** 이 디렉터리에 있는 `builder-check-prompt.md`를 사용하여 새로운 서브에이전트를 디스패치하세요. 인간 파트너에게 설계 문서를 작성하겠다고 알릴 때, 리뷰어가 문서를 먼저 검토할 것이며 몇 가지 질문을 가지고 한 번 돌아올 수도 있다고 미리 말해주세요. 점검 결과가 돌아오기 전까지는 문서를 파트너에게 넘기지 마세요. 빌더(리뷰어)가 던진 질문들을 다음 세 가지로 분류하세요:
 
-- **Answered already** by the conversation or the project: put the answer
-  in the document.
-- **Minor:** a sensible builder could settle it without changing what gets
-  built. Settle it yourself and mark it in the document as your call.
-- **Theirs:** only your human partner can answer it, and the answer changes
-  what gets built.
+- **이미 답변됨 (Answered already):** 대화나 프로젝트 내에 이미 답이 있는 경우입니다. 그 답을 문서에 반영하세요.
+- **사소함 (Minor):** 합리적인 구현자라면 만들어질 결과물을 바꾸지 않고도 스스로 결정할 수 있는 사안입니다. 당신이 직접 결정하고 문서에 당신의 판단(your call)으로 표시하세요.
+- **파트너의 몫 (Theirs):** 오직 인간 파트너만이 답할 수 있으며, 그 답변에 따라 만들어질 결과물이 달라지는 사안입니다.
 
-Bring the "theirs" pile in one message, most important first. Update the
-document with their answers, then hand it over with a short list of the
-calls you made so they can check those while reading. That's the only
-round of questions the check produces. Without a subagent tool, read the
-document as that builder yourself.
+"파트너의 몫(theirs)"으로 분류된 질문들을 가장 중요한 것부터 순서대로 하나의 메시지에 담아 가져오세요. 파트너의 답변으로 문서를 업데이트한 뒤, 당신이 자체적으로 내린 판단(calls)들의 짧은 목록과 함께 문서를 전달하여 파트너가 문서를 읽으면서 그 판단들도 함께 확인할 수 있게 하세요. 빌더 점검을 통해 발생하는 질문 라운드는 이 한 번뿐입니다. 서브에이전트 도구가 없는 환경이라면 당신 스스로가 그 구현자의 입장이 되어 문서를 읽고 점검하세요.
 
 <HARD-GATE>
-Nothing gets built until your human partner approves the design doc:
-the short one for a small change, the full one for a project.
-Building includes writing product code, scaffolding, installing
-dependencies, creating projects, and invoking an implementation skill.
-Reading and exploring are fine.
+인간 파트너가 설계 문서(작은 변경은 짧은 설계 문서, 프로젝트는 전체 설계 문서)를 승인하기 전까지는 그 무엇도 구축(build)해서는 안 됩니다.
+구축에는 프로덕션 코드 작성, 스캐폴딩(scaffolding), 의존성 설치, 프로젝트 생성, 구현 스킬 호출이 모두 포함됩니다.
+파일을 읽고 탐색하는 것은 괜찮습니다.
 
-Two exceptions. If they opted out of the questions, the skill is done
-and the gate goes with it. A spike they said yes to may be built; it
-stays labeled throwaway, and keeping what it produced is a new request
-that comes back through this gate.
+두 가지 예외가 있습니다. 파트너가 질문 과정을 생략(opt out)하기로 했다면 이 스킬은 완료된 것이며 이 게이트도 함께 해제됩니다. 또한 파트너가 동의한 스파이크(spike)는 만들어볼 수 있습니다. 단, 스파이크는 일회용(throwaway)이라는 라벨을 유지해야 하며, 스파이크로 만든 결과물을 그대로 유지해 살리는 것은 새로운 요청으로 간주되어 다시 이 게이트를 통과해야 합니다.
 
-After the design doc is approved, the next step is the plan: invoke
-superpowers:writing-plans and no other skill.
+설계 문서가 승인된 후의 다음 단계는 계획(plan)입니다: 다른 어떤 스킬도 아닌 오직 `superpowers:writing-plans`만 호출하세요.
 </HARD-GATE>
 
-## Red Flags
+## 위험 신호 (Red Flags)
 
-| Thought | Reality |
+| 생각 (Thought) | 현실 (Reality) |
 |---------|---------|
-| "I'll offer a menu of what they might want" | Options steer. Ask them to describe it first. |
-| "I'll fill in sensible defaults" | Good. Say them out loud. A default they never heard is one they couldn't reject. |
-| "I've answered their questions, so I'll write the doc" | Lay out the approaches first, in a message of their own (or, when nothing was open from the start, in your first message's short design). |
-| "I should explain the process first" | Ask your question. The process shows itself. |
-| "They said 'sounds good' to the idea" | Approval covers what you showed them. A design doc you haven't written isn't approved. |
-| "The spike works, I'll keep building on it" | Keeping it is a new request. Back through the gate. |
+| "파트너가 원할 만한 메뉴(선택지)를 먼저 제시해야지" | 선택지는 생각을 특정 방향으로 유도합니다. 먼저 파트너가 직접 묘사하게 하세요. |
+| "합리적인 기본값(defaults)으로 알아서 채워 넣어야지" | 좋습니다. 단, 그것을 소리 내어 명시적으로 말하세요. 들어본 적 없는 기본값은 파트너가 거부할 기회조차 없었던 결정입니다. |
+| "질문에 답을 들었으니 이제 문서를 작성해야지" | 먼저 별도의 독립된 메시지로 접근 방식들을 제시하세요(또는 처음부터 미결 사항이 전혀 없었다면 첫 메시지의 짧은 설계에 포함하세요). |
+| "우선 프로세스부터 설명해야지" | 설명하지 말고 바로 질문을 던지세요. 프로세스는 진행되면서 자연스럽게 드러납니다. |
+| "아이디어에 대해 파트너가 '좋네요(sounds good)'라고 했어" | 승인은 당신이 보여준 것에 대해서만 유효합니다. 아직 작성하지도 않은 설계 문서는 승인된 것이 아닙니다. |
+| "스파이크가 잘 작동하네, 이 위에 계속 구축해야지" | 스파이크 결과물을 유지하는 것은 새로운 요청입니다. 다시 게이트를 통과하세요. |
 
-## Visual Companion
+## 시각적 컴패니언 (Visual Companion)
 
-A browser tab for showing mockups, diagrams, and prototypes. It's a
-tool, not a mode: accepting it doesn't send every question to the
-browser.
+목업, 다이어그램, 프로토타입을 보여주기 위한 브라우저 탭입니다. 이것은 도구(tool)이지 모드(mode)가 아닙니다. 파트너가 이를 수락했다고 해서 모든 질문을 브라우저로 보내는 것은 아닙니다.
 
-**Offer it just-in-time.** Offer it the first time one of the moments
-above comes up, never upfront. The offer is its own message with nothing
-else in it:
+**적시에 제안하세요 (Offer it just-in-time).** 앞서 언급한 시각적 요소가 필요한 순간이 처음 찾아왔을 때 제안하고, 절대 대화 시작부터 미리 제안하지 마세요. 제안은 다른 어떤 내용도 포함하지 않는 단독 메시지로 보냅니다:
 
-> "This might be easier if I show you. Want me to open a browser tab with some mockups?"
+> "이 부분은 직접 보여드리면 더 이해하기 쉬울 것 같습니다. 목업을 몇 개 볼 수 있도록 브라우저 탭을 열어드릴까요? (This might be easier if I show you. Want me to open a browser tab with some mockups?)"
 
-If they decline, stay in text and don't offer again unless they raise it.
+파트너가 거절하면 텍스트 대화를 유지하고, 파트너가 먼저 다시 꺼내지 않는 한 재차 제안하지 마세요.
 
-**Per question, ask: would they understand this better by seeing it?**
-Mockups, layouts, diagrams, and side-by-side designs go in the browser.
-Requirements, scope, tradeoffs, and conceptual choices stay in text. A
-question about a UI topic isn't automatically a visual question.
+**질문마다 스스로에게 물어보세요: 이것을 읽는 것보다 눈으로 볼 때 더 잘 이해할까?**
+목업, 레이아웃, 다이어그램, 나란히 비교하는 디자인은 브라우저로 갑니다.
+요구사항, 범위(scope), 트레이드오프, 개념적 선택은 텍스트에 남습니다. UI 주제를 다루는 질문이라고 해서 자동으로 시각적 질문이 되는 것은 아닙니다.
 
-If they accept, read `visual-companion.md` in this directory before
-starting the server.
+파트너가 수락하면 서버를 시작하기 전에 이 디렉터리의 `visual-companion.md`를 읽으세요.
