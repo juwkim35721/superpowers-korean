@@ -1,26 +1,11 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Quality evidence
+분석 차원(Dimension): 품질 증거 (Quality evidence)
 
-Judge the process against its own claims. This is not a code review; do
-not evaluate the code the session produced.
+세션의 프로세스를 어시스턴트 자신의 주장(claims)에 비추어 평가하세요. 이것은 코드 리뷰가 아닙니다. 세션이 만들어낸 코드 자체를 평가하지 마세요.
 
-1. Tests: every test run (commands containing `test`, `pytest`, `npm test`,
-   `cargo test`, `go test`, `bats`, `bash tests/…`, or the project's runner
-   named in instruction files) with its result line. Report runs that
-   failed and what the assistant did next.
-2. Verification behind claims: find assistant text claiming done, fixed,
-   passing, verified, works, complete. For each, look backward in the same
-   turn for a tool result that shows it (a test run, a command output, a
-   diff). Report claims with no supporting result in that turn.
-3. Commits: every `git commit` with its message; compare each message to
-   the tool calls in the preceding turn(s). Report commits whose message
-   claims work that no tool call performed, and work performed that was
-   never committed when the agreed plan said it would be.
-4. Review feedback: where a reviewer (human or subagent) raised points,
-   find the response. Report points acknowledged but not acted on, and
-   points dismissed without a stated reason.
-5. Acceptance criteria: if the case file's problem statement or the
-   agreed plan states criteria, report each as met / not met /
-   not checked with the evidence line.
+1. 테스트(Tests): 모든 테스트 실행(`test`, `pytest`, `npm test`, `cargo test`, `go test`, `bats`, `bash tests/…`를 포함하는 명령어 또는 지침 파일에 명시된 프로젝트의 테스트 러너)과 그 결과 줄을 찾으세요. 실패한 실행과 그 직후 어시스턴트가 무엇을 했는지 보고하세요.
+2. 주장을 뒷받침하는 검증(Verification behind claims): 완료됨(done), 수정됨(fixed), 통과함(passing), 검증됨(verified), 작동함(works), 완성됨(complete)을 주장하는 어시스턴트 텍스트를 찾으세요. 각 주장에 대해 동일한 턴 내에서 이전 기록을 거슬러 올라가 이를 증명하는 도구 결과(테스트 실행, 명령어 출력, diff 등)가 있는지 확인하세요. 해당 턴 내에 뒷받침하는 결과가 없는 주장을 보고하세요.
+3. 커밋(Commits): 모든 `git commit`과 그 커밋 메시지를 찾고, 각 메시지를 직전 턴(들)의 도구 호출들과 비교하세요. 어떤 도구 호출로도 수행하지 않은 작업을 주장하는 커밋 메시지와, 합의된 계획에서는 커밋하기로 했으나 실제로는 수행만 되고 커밋되지 않은 작업을 보고하세요.
+4. 리뷰 피드백(Review feedback): 리뷰어(인간 또는 서브에이전트)가 지적 사항을 제기한 곳에서 그에 대한 응답을 찾으세요. 인정(acknowledged)했지만 실제로는 조치하지 않은 항목과, 이유를 밝히지 않고 묵살(dismissed)한 항목을 보고하세요.
+5. 인수 기준(Acceptance criteria): 케이스 파일의 문제 정의(problem statement)나 합의된 계획에 인수 기준이 명시되어 있다면, 각 기준의 충족(met) / 미충족(not met) / 미확인(not checked) 여부를 증거 줄 번호와 함께 보고하세요.

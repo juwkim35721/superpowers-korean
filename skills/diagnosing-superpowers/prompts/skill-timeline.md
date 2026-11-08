@@ -1,30 +1,16 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Skill timeline
+분석 차원(Dimension): 스킬 타임라인 (Skill timeline)
 
-Build the per-human-turn record of skill and plugin use, then look for gaps.
+인간 턴(human turn) 단위로 스킬 및 플러그인 사용 기록을 구축한 뒤, 누락이나 공백(gaps)을 찾으세요.
 
-1. List the human prompts with line numbers and timestamps.
-2. Using the skill-invocation and attribution meanings established in the case
-   file, list every explicit invocation, active-skill attribution, or read of a
-   file named `SKILL.md`. Record the line, the skill name, and the human turn it
-   happened in.
-3. List every non-superpowers plugin, skill, agent type, MCP server, or
-   hook used. Use only the evidenced tool, attribution, agent-dispatch, MCP,
-   and hook meanings recorded in the case file; identify values associated
-   with something other than `superpowers`.
-4. For each human turn, compare the request text against the trigger
-   descriptions of the superpowers skills installed (read
-   `<install root>/skills/*/SKILL.md` frontmatter `description` lines; the
-   install root is in the case file). Report as findings:
-   - a skill invoked, with the request that preceded it (one finding per
-     invocation is fine when there are few; group by skill when many);
-   - a turn whose request matches a skill's trigger description with no
-     invocation in that turn (state which description matched and quote
-     the request);
-   - a skill invoked one or more turns after the matching request (late);
-   - each non-superpowers plugin/skill/tool used, with where.
+1. 줄 번호 및 타임스탬프와 함께 인간 프롬프트들을 나열하세요.
+2. 케이스 파일에서 확립된 스킬 호출 및 출처(attribution) 의미를 사용하여, 모든 명시적 스킬 호출, 활성 스킬 출처 표시, 또는 `SKILL.md`라는 이름의 파일 읽기를 나열하세요. 줄 번호, 스킬 이름, 그리고 해당 동작이 발생한 인간 턴을 기록하세요.
+3. 사용된 모든 비-Superpowers(non-superpowers) 플러그인, 스킬, 에이전트 유형, MCP 서버 또는 훅(hook)을 나열하세요. 케이스 파일에 기록된 증거가 확인된 도구, 출처, 에이전트 디스패치, MCP, 훅 의미만 사용하되, `superpowers` 이외의 것과 연관된 값들을 식별하세요.
+4. 각 인간 턴에 대해 요청 텍스트를 설치된 Superpowers 스킬들의 트리거 설명(`description`)과 비교하세요(`<설치 루트>/skills/*/SKILL.md`의 프론트매터 `description` 줄을 읽으세요; 설치 루트는 케이스 파일에 있음). 다음 항목들을 분석 결과(findings)로 보고하세요:
+   - 호출된 스킬과 그에 앞선 요청(호출 횟수가 적을 때는 호출당 하나의 결과로 작성해도 좋으며, 많을 때는 스킬별로 그룹화하세요);
+   - 요청 텍스트가 특정 스킬의 트리거 설명과 일치하지만 해당 턴에서 호출이 일어나지 않은 턴(어떤 설명과 일치했는지 명시하고 요청 원문을 인용하세요);
+   - 일치하는 요청이 있은 후 1턴 이상 지나서 뒤늦게 호출된 스킬(late);
+   - 사용된 각 비-Superpowers 플러그인/스킬/도구와 사용된 위치.
 
-Do not say whether a missed or late trigger was wrong. Report the match
-and the absence; the reader decides.
+트리거 누락이나 지연이 잘못된 것이었는지 평가하지 마세요. 설명과의 일치 여부와 호출 부재 사실만 보고하면 판단은 독자가 내립니다.

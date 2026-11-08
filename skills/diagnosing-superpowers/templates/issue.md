@@ -4,17 +4,11 @@ Title: <skill or symptom>: <one-line observable> (<harness>)
 
 ## Who's filing this report? (required)
 
-<model and harness of this session>, filing on behalf of <how your
-partner wants to be named, or "my human partner">, who asked: "<their
-request from this session that led to the diagnosis or the issue,
-scrubbed>"
+<이 세션의 모델 및 하네스>, filing on behalf of <인간 파트너(human partner)가 표기되길 원하는 이름, 또는 "my human partner">, who asked: "<진단이나 이슈 등록으로 이어진 이 세션에서의 파트너 요청 원문, 민감정보 제거됨(scrubbed)>"
 
 ## Human-authored summary (required, under 200 words)
 
-<Your partner's own words on what went wrong and what should have
-happened, pasted as written. Ask for them; a placeholder here means the
-issue is not ready to file. If they run long, ask them to trim rather
-than editing their words.>
+<무엇이 잘못되었고 어떻게 작동했어야 하는지에 대해 인간 파트너(human partner)가 직접 자신의 말로 작성한 내용을 그대로 붙여넣으세요. 파트너에게 작성을 요청하세요. 여기에 플레이스홀더가 남아 있다는 것은 아직 이슈를 제출할 준비가 되지 않았다는 뜻입니다. 내용이 너무 길다면 직접 문장을 고치지 말고 파트너에게 줄여달라고 요청하세요.>
 
 ## Environment (required)
 
@@ -32,39 +26,32 @@ than editing their words.>
 - [ ] I confirmed this issue does not occur without Superpowers installed
 
 How I verified that this issue does not reproduce without Superpowers:
-<"Not tried", or what your partner ran without superpowers and what
-happened, with the transcript path if there is one. Tick the box above
-only when a transcript shows the problem did not recur.>
+<"Not tried", 또는 인간 파트너(human partner)가 Superpowers 없이 무엇을 실행했고 어떤 결과가 나왔는지(해당 트랜스크립트 경로가 있다면 함께) 적으세요. 위 체크박스는 문제가 재발하지 않았음을 보여주는 트랜스크립트가 있을 때만 체크하세요.>
 
-Evidence for involvement is below; it does not establish cause.
+관여도(involvement)에 대한 증거는 아래에 있으며, 이는 인과관계(cause)를 단정하지 않습니다.
 
 ## What happened?
 
-<Problem statement, then the triage verdict, with `path:line` citations
-rewritten as `transcript line <n>`.>
+<문제 정의(Problem statement), 그리고 `path:line` 인용을 `transcript line <n>`으로 다시 작성한 트리아지 판정(triage verdict).>
 
 ## Steps to reproduce
 
-1. <first human prompt, scrubbed>
-2. <the turns leading to the problem, one line each>
-3. <the observable>
+1. <첫 번째 인간 프롬프트, 민감정보 제거됨(scrubbed)>
+2. <문제로 이어진 턴들, 각 한 줄씩>
+3. <관측된 현상(the observable)>
 
 ## Expected behavior
 
-<from the problem statement>
+<문제 정의에서 가져온 기대 동작>
 
 ## Actual behavior
 
-<from the triage verdict>
+<트리아지 판정에서 가져온 실제 동작>
 
 ## Debug log or conversation transcript
 
-Session id(s): <ids>. Delivered local archive: <path, redaction level <level>
-| none built>. Attached bundle: <no claim; attach only after approval>.
-Superpowers involvement per the diagnosis report: <possible | likely>, with
-evidence at <transcript lines>. This report does not propose a fix.
+Session id(s): <ids>. Delivered local archive: <path, redaction level <level> | none built>. Attached bundle: <no claim; attach only after approval>.
+Superpowers involvement per the diagnosis report: <possible | likely>, with evidence at <transcript lines>. This report does not propose a fix.
 
 ---
-Filed with the `diagnosing-superpowers` skill. The filing model and
-harness are under "Who's filing"; the diagnosed session's model, harness,
-versions, and plugins are in the Environment table.
+Filed with the `diagnosing-superpowers` skill. The filing model and harness are under "Who's filing"; the diagnosed session's model, harness, versions, and plugins are in the Environment table.

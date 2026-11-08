@@ -1,130 +1,130 @@
-# Prime Radiant Community Code of Conduct
+# Prime Radiant 커뮤니티 행동 강령 (Code of Conduct)
 
-## Our Pledge
+## 우리의 서약 (Our Pledge)
 
-We pledge to make our community welcoming, safe, and equitable for all.
+우리는 우리 커뮤니티를 모든 사람에게 환영받고, 안전하며, 공평한 공간으로 만들 것을 서약합니다.
 
-We are committed to fostering an environment that respects and promotes the dignity, rights, and contributions of all individuals, regardless of characteristics including race, ethnicity, caste, color, age, physical characteristics, neurodiversity, disability, sex or gender, gender identity or expression, sexual orientation, language, philosophy or religion, national or social origin, socio-economic position, level of education, or other status. The same privileges of participation are extended to everyone who participates in good faith and in accordance with this Covenant.
+우리는 인종, 민족, 카스트, 피부색, 연령, 신체적 특성, 신경다양성, 장애, 성별 또는 젠더, 성 정체성이나 표현, 성적 지향, 언어, 철학이나 종교, 국적이나 사회적 출신, 사회경제적 지위, 교육 수준 또는 기타 지위를 포함한 특성과 관계없이 모든 개인의 존엄성, 권리 및 기여를 존중하고 증진하는 환경을 조성하기 위해 최선을 다합니다. 선의를 가지고 이 규약에 따라 참여하는 모든 사람에게는 동등한 참여 특권이 부여됩니다.
 
-The guidelines within and enforcement of the Prime Radiant Community Code of Conduct apply equally to everyone participating in the Prime Radiant community, including members of the Prime Radiant team.
+Prime Radiant 커뮤니티 행동 강령 내의 가이드라인과 그 집행은 Prime Radiant 팀 구성원을 포함하여 Prime Radiant 커뮤니티에 참여하는 모든 사람에게 동등하게 적용됩니다.
 
-## Encouraged Behaviors
+## 권장되는 행동 (Encouraged Behaviors)
 
-While acknowledging differences in social norms, we all strive to meet our community's expectations for positive behavior. We also understand that our words and actions may be interpreted differently than we intend based on culture, background, or native language.
+사회적 규범의 차이를 인정하면서도, 우리 모두는 긍정적인 행동에 대한 커뮤니티의 기대치를 충족하기 위해 노력합니다. 또한 우리는 문화, 배경 또는 모국어에 따라 우리의 말과 행동이 의도한 것과 다르게 해석될 수 있음을 이해합니다.
 
-With these considerations in mind, we agree to behave mindfully toward each other and act in ways that center our shared values, including:
+이러한 점들을 염두에 두고, 우리는 서로를 배려하며 행동하고 다음과 같이 우리가 공유하는 가치를 중심에 두는 방식으로 행동하기로 동의합니다:
 
-1. Respecting the **purpose of our community**, our activities, and our ways of gathering.
-2. Engaging **kindly and honestly** with others.
-3. Respecting **different viewpoints** and experiences.
-4. **Taking responsibility** for our actions and contributions.
-5. Gracefully giving and accepting **constructive feedback**.
-6. Committing to **repairing harm** when it occurs.
-7. Behaving in other ways that promote and sustain the **well-being of our community**.
+1. **커뮤니티의 목적**, 활동 및 모임 방식을 존중합니다.
+2. 다른 사람들과 **친절하고 정직하게** 소통합니다.
+3. **다양한 관점**과 경험을 존중합니다.
+4. 우리의 행동과 기여에 대해 **책임을 집니다**.
+5. **건설적인 피드백**을 품위 있게 주고받습니다.
+6. 피해가 발생했을 때 **피해를 복구**하기 위해 노력합니다.
+7. 그 밖에 **커뮤니티의 안녕(well-being)**을 증진하고 유지하는 방식으로 행동합니다.
 
-## Restricted Behaviors
+## 제한되는 행동 (Restricted Behaviors)
 
-We agree to restrict the following behaviors in our community. Instances, threats, and promotion of these behaviors are violations of this Code of Conduct.
+우리는 커뮤니티에서 다음 행동들을 제한하기로 동의합니다. 이러한 행동의 사례, 위협 및 조장은 본 행동 강령의 위반입니다.
 
-1. **Harassment.** Violating explicitly expressed boundaries or engaging in unnecessary personal attention after any clear request to stop.
-2. **Character attacks.** Making insulting, demeaning, or pejorative comments directed at a community member or group of people.
-3. **Inciting conflict.** Deliberately engaging in discussions meant to cause arguments or a hostile environment.
-4. **Stereotyping or discrimination.** Characterizing anyone’s personality or behavior on the basis of immutable identities or traits.
-5. **Sexualization.** Behaving in a way that would generally be considered inappropriately intimate in the context or purpose of the community.
-6. **Violating confidentiality.** Sharing or acting on someone's personal or private information without their permission.
-7. **Endangerment.** Causing, encouraging, or threatening violence or other harm toward any person or group.
-8. Behaving in other ways that **threaten the well-being** of our community.
+1. **괴롭힘(Harassment).** 명시적으로 표현된 경계를 침범하거나, 중단해 달라는 명확한 요청이 있은 후에도 불필요한 개인적 관심을 지속하는 행위.
+2. **인신공격(Character attacks).** 커뮤니티 구성원이나 특정 집단을 향해 모욕적이거나 비하하거나 경멸적인 발언을 하는 행위.
+3. **갈등 조장(Inciting conflict).** 논쟁이나 적대적인 환경을 유발할 목적으로 의도적인 토론을 벌이는 행위.
+4. **고정관념 부여 또는 차별(Stereotyping or discrimination).** 불변의 정체성이나 특성을 근거로 타인의 성격이나 행동을 규정짓는 행위.
+5. **성적 대상화(Sexualization).** 커뮤니티의 맥락이나 목적에 비추어 일반적으로 부적절하게 친밀하다고 여겨질 수 있는 방식으로 행동하는 행위.
+6. **기밀 침해(Violating confidentiality).** 타인의 허락 없이 개인적이거나 사적인 정보를 공유하거나 이를 바탕으로 행동하는 행위.
+7. **위험 초래(Endangerment).** 특정 개인이나 집단에 대해 폭력이나 기타 해악을 유발, 장려 또는 위협하는 행위.
+8. 그 밖에 우리 커뮤니티의 **안녕을 위협하는** 방식으로 행동하는 행위.
 
-### Other Restrictions
+### 기타 제한 사항 (Other Restrictions)
 
-1. **Divisive topics.** Discussing inflammatory topics that are unrelated to the community as a whole.
-2. **Offensive content.** Any text or image that is offensive or violates any of the other restricted behaviors, including as part of a username, profile, status, avatar, or other publicly displayed identifier.
-3. **Misleading identity.** Impersonating someone else for any reason, misrepresenting yourself as associated with Prime Radiant or any company, or pretending to be someone else to evade enforcement actions.
-4. **Failing to credit sources.** Not properly crediting the sources of content you contribute, or representing work created by someone else as your own.
-5. **Advertising and promotional materials.** Sharing marketing or other commercial content, invite links, or irrelevant self-promotion, as well as buying, trading, or asking for donations.
-6. **Spam posts.** Spamming, including, but not limited to, posting a flood of messages in a short period of time, irrelevant content, or excessive links.
-7. **Unsolicited mentions and direct messages.** Engaging in harassment by excessively mentioning someone by username or replying, or direct messaging someone without explicit invitation.
-8. **Irresponsible communication.** Failing to responsibly present content which includes, links, or describes any other restricted behaviors.
-9. Other conduct that could reasonably be considered **unprofessional** or **inappropriate**.
+1. **분열을 조장하는 주제(Divisive topics).** 커뮤니티 전체와 무관하며 감정을 자극하는 주제에 대해 논의하는 행위.
+2. **불쾌감을 주는 콘텐츠(Offensive content).** 사용자 이름, 프로필, 상태 메시지, 아바타 또는 기타 공개적으로 표시되는 식별자의 일부를 포함하여, 불쾌감을 주거나 다른 제한된 행동을 위반하는 모든 텍스트 또는 이미지.
+3. **오해를 유발하는 신원(Misleading identity).** 이유를 불문하고 타인을 사칭하거나, 자신이 Prime Radiant 또는 특정 회사와 관련이 있는 것처럼 허위로 표시하거나, 제재 조치를 회피하기 위해 다른 사람인 척하는 행위.
+4. **출처 미표기(Failing to credit sources).** 기여하는 콘텐츠의 출처를 적절히 밝히지 않거나, 타인이 만든 작업물을 자신의 것처럼 표현하는 행위.
+5. **광고 및 홍보성 자료(Advertising and promotional materials).** 마케팅이나 기타 상업적 콘텐츠, 초대 링크 또는 맥락과 무관한 자기 홍보를 공유하는 행위, 그리고 물품을 구매, 거래하거나 기부를 요청하는 행위.
+6. **스팸 게시물(Spam posts).** 짧은 시간 내에 대량의 메시지를 게시하거나, 무관한 콘텐츠나 과도한 링크를 올리는 것 등을 포함한 스팸 행위.
+7. **원치 않는 멘션 및 다이렉트 메시지(Unsolicited mentions and direct messages).** 사용자 이름으로 누군가를 과도하게 멘션하거나 답글을 달고, 명시적인 요청 없이 다이렉트 메시지를 보내 괴롭히는 행위.
+8. **무책임한 소통(Irresponsible communication).** 제한된 다른 행동들을 포함하거나 링크하거나 묘사하는 콘텐츠를 책임감 있게 제시하지 못하는 행위.
+9. 그 밖에 합리적으로 보기에 **비전문적**이거나 **부적절**하다고 간주될 수 있는 기타 행위.
 
-## Reporting an Issue
+## 문제 신고하기 (Reporting an Issue)
 
-Tensions can occur between community members even when they are trying their best to collaborate. Not every conflict represents a code of conduct violation, and this Code of Conduct reinforces encouraged behaviors and norms that can help avoid conflicts and minimize harm. You are welcome to report concerns, even if they seem minor, as they can be helpful in identifying patterns of behavior that may not be concerning in isolation, but when viewed collectively may be more significant.
+커뮤니티 구성원들이 최선을 다해 협력하려 할 때조차도 구성원 간에 긴장이 발생할 수 있습니다. 모든 갈등이 행동 강령 위반을 의미하는 것은 아니며, 본 행동 강령은 갈등을 피하고 피해를 최소화하는 데 도움이 되는 권장 행동과 규범을 강화합니다. 사소해 보이는 우려 사항이라도 언제든 신고해 주시기 바랍니다. 개별적으로는 큰 문제가 아닌 것처럼 보일지라도 전체적으로 보면 중요한 의미를 가질 수 있는 행동 패턴을 파악하는 데 도움이 될 수 있습니다.
 
-When an incident does occur, it is important to report it promptly. To report a possible violation anywhere in the community, email [conduct@primeradiant.com](mailto:conduct@primeradiant.com). On the Prime Radiant Discord server, you can mention `@moderators` in a public channel, or report via a support ticket, created through the `#support-ticket` channel. In the event that you need to report a member of the Prime Radiant team, you can contact Kattni at [kattni@primeradiant.com](mailto:kattni@primeradiant.com) or Drew at [drew@primeradiant.com](mailto:drew@primeradiant.com).
+사건이 발생했을 때는 신속하게 신고하는 것이 중요합니다. 커뮤니티 내 어디에서든 발생 가능한 위반 사항을 신고하려면 [conduct@primeradiant.com](mailto:conduct@primeradiant.com)으로 이메일을 보내주세요. Prime Radiant Discord 서버에서는 공개 채널에서 `@moderators`를 멘션하거나, `#support-ticket` 채널을 통해 생성된 지원 티켓으로 신고할 수 있습니다. 만약 Prime Radiant 팀 구성원을 신고해야 하는 경우에는 Kattni([kattni@primeradiant.com](mailto:kattni@primeradiant.com)) 또는 Drew([drew@primeradiant.com](mailto:drew@primeradiant.com))에게 연락하실 수 있습니다.
 
-Community Moderators take reports of violations seriously and will make every effort to respond in a timely manner. They will investigate all reports of code of conduct violations, reviewing messages, logs, and recordings, or interviewing witnesses and other participants. Community Moderators will keep investigation and enforcement actions as transparent as possible while prioritizing safety and confidentiality. In order to honor these values, enforcement actions are carried out in private with the involved parties, but communicating to the whole community may be part of a mutually agreed upon resolution. If moderators determine that a public statement needs to be made, the identities of all victims and reporters will remain confidential unless those individuals instruct otherwise.
+커뮤니티 운영진(Community Moderators)은 위반 신고를 진지하게 받아들이며 적시에 응답하기 위해 모든 노력을 기울일 것입니다. 운영진은 메시지, 로그, 기록물을 검토하거나 목격자 및 기타 참여자와 면담하며 모든 행동 강령 위반 신고를 조사합니다. 커뮤니티 운영진은 안전과 기밀성을 최우선으로 하면서 조사 및 집행 조치를 가능한 한 투명하게 유지할 것입니다. 이러한 가치를 존중하기 위해 집행 조치는 관련 당사자들과 비공개로 진행되지만, 상호 합의된 해결책의 일환으로 커뮤니티 전체에 공유될 수도 있습니다. 운영진이 공개 성명이 필요하다고 판단하더라도, 모든 피해자와 신고자의 신원은 당사자가 달리 요청하지 않는 한 기밀로 유지됩니다.
 
-In your report, please include:
+신고 시 다음 사항을 포함해 주세요:
 
-- **Your contact info** so the team can get in touch with you if they need to follow up.
-- **Names (real, nicknames, or pseudonyms) of any individuals involved.** If there were other witnesses besides you, please try to include them as well.
-- **When and where the incident occurred.** Please be as specific as possible.
-- **Your account of what occurred.** If there is a publicly available record (e.g. a Discord or GitHub message) please include a link.
-- **Any extra context** you believe existed for the incident.
-- **If you believe this incident is ongoing.**
-- **If you believe any member of the team has a conflict of interest** in adjudicating the incident.
-- **What, if any, corrective response** you believe would be appropriate.
-- **Any other information** you believe the team should have.
+- 후속 조치가 필요할 때 팀이 연락할 수 있는 **귀하의 연락처 정보**.
+- **관련된 모든 개인의 이름(실명, 닉네임 또는 가명).** 귀하 외에 다른 목격자가 있었다면 가능한 한 함께 기재해 주세요.
+- **사건이 발생한 시간과 장소.** 가능한 한 구체적으로 작성해 주세요.
+- **발생한 일에 대한 귀하의 설명.** 공개적으로 확인 가능한 기록(예: Discord 또는 GitHub 메시지)이 있다면 링크를 포함해 주세요.
+- 해당 사건과 관련하여 존재했다고 생각되는 **추가적인 맥락**.
+- **이 사건이 현재 진행 중이라고 생각하는지 여부.**
+- 사건을 판정하는 데 있어 **팀 구성원 중 이해 상충이 있다고 생각되는 사람이 있는지 여부**.
+- 적절하다고 생각하는 **시정 조치(있는 경우)**.
+- 그 밖에 팀이 알아야 한다고 생각하는 **기타 모든 정보**.
 
-Moderators are obligated to maintain confidentiality with regard to the reporter and details of an incident.
+운영진은 신고자 및 사건의 세부 사항과 관련하여 기밀을 유지할 의무가 있습니다.
 
-## Report Followup
+## 신고 후속 조치 (Report Followup)
 
-You will receive a response acknowledging receipt of your report within 24 business hours.
+신고가 접수되었음을 확인하는 응답을 영업일 기준 24시간 이내에 받으실 수 있습니다.
 
-If a member of the team is one of the named parties, they will not be included in any discussions, and will not be provided with any confidential details from the reporter.
+만약 팀 구성원 중 한 명이 지목된 당사자인 경우, 해당 구성원은 어떠한 논의에도 참여하지 않으며 신고자로부터 제공된 기밀 세부 정보도 전달받지 못합니다.
 
-If anyone on the moderation team believes they have a conflict of interest in adjudicating on a reported issue, they will inform the other team members, and recuse themselves from any discussion about the issue. Following this declaration, they will not be provided with any confidential details from the reporter.
+운영팀의 누군가가 신고된 문제를 판정하는 데 있어 이해 상충이 있다고 판단하는 경우, 다른 팀원들에게 이를 알리고 해당 문제에 대한 모든 논의에서 스스로 회피(recuse)할 것입니다. 이러한 선언 이후에는 해당 구성원에게 신고자의 기밀 세부 정보가 일절 제공되지 않습니다.
 
-The team will immediately review the incident and determine:
+팀은 즉시 사건을 검토하여 다음 사항을 판단합니다:
 
-- What happened.
-- Whether this event constitutes a code of conduct violation.
-- Who the reported person is.
-- Whether this is an ongoing situation, or if there is a threat to anyone's physical safety. 
+- 무슨 일이 있었는지.
+- 이 사건이 행동 강령 위반에 해당하는지 여부.
+- 피신고인이 누구인지.
+- 현재 진행 중인 상황인지, 또는 누군가의 신체적 안전에 대한 위협이 있는지 여부.
 
-If this is determined to be an ongoing incident or a threat to physical safety, the team's immediate priority will be to protect everyone involved. This means they may delay an official response until they believe that the situation has concluded and that everyone is physically safe.
+만약 현재 진행 중인 사건이거나 신체적 안전에 대한 위협이 있다고 판단되면, 팀의 최우선 과제는 관련된 모든 사람을 보호하는 것이 됩니다. 이는 상황이 종료되고 모든 사람이 신체적으로 안전하다고 판단될 때까지 공식적인 응답을 연기할 수 있음을 의미합니다.
 
-The moderation team will respond within one week to the person who filed the report with either a resolution or an explanation of why the situation is not yet resolved.
+운영팀은 신고서를 제출한 사람에게 1주일 이내에 해결 결과 또는 상황이 아직 해결되지 않은 이유에 대한 설명을 회신할 것입니다.
 
-Once the team has determined their final action, they'll contact the reporter to let them know what action (if any) they'll be taking. They'll take into account feedback from the reporter on the appropriateness of the response, but do not guarantee they'll act on it.
+팀이 최종 조치를 결정하면 신고자에게 연락하여 어떤 조치(있는 경우)를 취할 것인지 알려드립니다. 응답의 적절성에 대한 신고자의 피드백을 고려하겠지만, 반드시 그에 따라 조치한다고 보장하지는 않습니다.
 
-Finally, to maintain transparency in the reporting and enforcement process, whenever possible, a public transparency report of the incident will be made. A public report may not be made if the specifics of the incident do not allow the team to preserve anonymity, or if there is potential for ongoing harm.
+마지막으로, 신고 및 집행 과정의 투명성을 유지하기 위해 가능한 한 사건에 대한 공개 투명성 보고서가 작성됩니다. 단, 사건의 구체적인 내용상 팀이 익명성을 보장할 수 없거나 지속적인 피해가 발생할 가능성이 있는 경우에는 공개 보고서가 작성되지 않을 수 있습니다.
 
-## Addressing and Repairing Harm
+## 피해 대처 및 복구 (Addressing and Repairing Harm)
 
-If an investigation by the Community Moderators finds that this Code of Conduct has been violated, the following enforcement ladder may be used to determine how best to repair harm, based on the incident's impact on the individuals involved and the community as a whole. Depending on the severity of a violation, lower rungs on the ladder may be skipped.
+커뮤니티 운영진의 조사 결과 본 행동 강령이 위반된 것으로 밝혀지면, 사건이 관련 개인들과 커뮤니티 전체에 미친 영향을 바탕으로 피해를 가장 잘 복구할 방법을 결정하기 위해 다음과 같은 집행 단계(enforcement ladder)가 사용될 수 있습니다. 위반의 심각성에 따라 하위 단계는 생략될 수 있습니다.
 
-1) Warning
-   1) Event: A violation involving a single incident or series of incidents.
-   2) Consequence: A private, written warning from the Community Moderators.
-   3) Repair: Examples of repair include a private written apology, acknowledgement of responsibility, and seeking clarification on expectations.
-2) Temporarily Limited Activities
-   1) Event: A repeated incidence of a violation that previously resulted in a warning, or the first incidence of a more serious violation.
-   2) Consequence: A private, written warning with a time-limited cooldown period designed to underscore the seriousness of the situation and give the community members involved time to process the incident. The cooldown period may be limited to particular communication channels or interactions with particular community members.
-   3) Repair: Examples of repair may include making an apology, using the cooldown period to reflect on actions and impact, and being thoughtful about re-entering community spaces after the period is over.
-3) Temporary Suspension
-   1) Event: A pattern of repeated violation which the Community Moderators have tried to address with warnings, or a single serious violation.
-   2) Consequence: A private written warning with conditions for return from suspension. In general, temporary suspensions give the person being suspended time to reflect upon their behavior and possible corrective actions.
-   3) Repair: Examples of repair include respecting the spirit of the suspension, meeting the specified conditions for return, and being thoughtful about how to reintegrate with the community when the suspension is lifted.
-4) Permanent Ban
-   1) Event: A pattern of repeated code of conduct violations that other steps on the ladder have failed to resolve, or a violation so serious that the Community Moderators determine there is no way to keep the community safe with this person as a member.
-   2) Consequence: Access to all community spaces, tools, and communication channels is removed. In general, permanent bans should be rarely used, should have strong reasoning behind them, and should only be resorted to if working through other remedies has failed to change the behavior.
-   3) Repair: There is no possible repair in cases of this severity.
+1) 경고 (Warning)
+   1) 상황: 단일 사건 또는 일련의 사건이 관련된 위반.
+   2) 결과: 커뮤니티 운영진의 비공개 서면 경고.
+   3) 복구: 복구의 예로는 비공개 서면 사과, 책임 인정, 기대치에 대한 명확한 확인 요청 등이 있습니다.
+2) 일시적 활동 제한 (Temporarily Limited Activities)
+   1) 상황: 이전에 경고를 받았던 위반이 반복되거나, 보다 심각한 위반이 처음 발생한 경우.
+   2) 결과: 상황의 심각성을 강조하고 관련 커뮤니티 구성원들에게 사건을 추스를 시간을 주기 위해 고안된, 기한이 정해진 냉각기(cooldown period)가 포함된 비공개 서면 경고. 냉각기는 특정 소통 채널이나 특정 커뮤니티 구성원과의 상호작용으로 제한될 수 있습니다.
+   3) 복구: 복구의 예로는 사과하기, 냉각기를 활용해 자신의 행동과 그 영향을 성찰하기, 기간이 끝난 후 커뮤니티 공간에 다시 복귀할 때 신중하게 행동하기 등이 포함될 수 있습니다.
+3) 일시적 자격 정지 (Temporary Suspension)
+   1) 상황: 커뮤니티 운영진이 경고로 해결하려 했으나 반복되는 위반 패턴이 나타나거나, 단일한 심각한 위반이 발생한 경우.
+   2) 결과: 정지 해제 조건이 명시된 비공개 서면 경고. 일반적으로 일시적 자격 정지는 대상자에게 자신의 행동과 가능한 시정 조치에 대해 성찰할 시간을 줍니다.
+   3) 복구: 복구의 예로는 자격 정지의 취지를 존중하기, 명시된 복귀 조건을 충족하기, 자격 정지가 해제되었을 때 커뮤니티에 어떻게 다시 융화될지 신중하게 고민하기 등이 있습니다.
+4) 영구 추방 (Permanent Ban)
+   1) 상황: 이전 단계들로 해결하지 못한 반복적인 행동 강령 위반 패턴이 나타나거나, 위반이 너무 심각하여 해당 인물이 구성원으로 남아 있는 한 커뮤니티를 안전하게 지킬 방법이 없다고 커뮤니티 운영진이 판단한 경우.
+   2) 결과: 모든 커뮤니티 공간, 도구 및 소통 채널에 대한 접근 권한이 박탈됩니다. 일반적으로 영구 추방은 드물게 사용되어야 하며, 강력한 근거가 뒷받침되어야 하고, 다른 구제책을 통한 행동 개선 시도가 실패했을 때만 최후의 수단으로 사용되어야 합니다.
+   3) 복구: 이 정도 심각성의 사례에서는 가능한 복구 방법이 없습니다.
 
-This enforcement ladder is intended as a guideline. It does not limit the ability of Community Managers to use their discretion and judgment, in keeping with the best interests of our community.
+이 집행 단계는 가이드라인으로 제공됩니다. 이는 우리 커뮤니티의 최선의 이익에 부합하도록 커뮤니티 매니저들이 재량권과 판단력을 발휘하는 것을 제한하지 않습니다.
 
-## Scope
+## 적용 범위 (Scope)
 
-This Code of Conduct applies within all community spaces, including GitHub and the Prime Radiant Discord server. It also applies when an individual is officially representing the community in public or other spaces. Examples of representing the community include using an official email address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
+본 행동 강령은 GitHub와 Prime Radiant Discord 서버를 포함한 모든 커뮤니티 공간 내에서 적용됩니다. 또한 개인이 공개석상이나 기타 공간에서 커뮤니티를 공식적으로 대표할 때도 적용됩니다. 커뮤니티를 대표하는 예로는 공식 이메일 주소 사용, 공식 소셜 미디어 계정을 통한 게시물 작성, 온라인 또는 오프라인 행사에서 임명된 대표자로 활동하는 것 등이 있습니다.
 
-Behavior outside of official Prime Radiant spaces may also be considered as supporting evidence for a report if that behavior establishes a pattern, or represents a potential risk to the Prime Radiant community.
+공식 Prime Radiant 공간 외부에서의 행동이라 할지라도, 그 행동이 특정 패턴을 형성하거나 Prime Radiant 커뮤니티에 잠재적인 위험을 초래하는 경우 신고를 뒷받침하는 증거로 고려될 수 있습니다.
 
-## Attribution
+## 출처 표기 (Attribution)
 
-This Code of Conduct is adapted from the Contributor Covenant, version 3.0, permanently available at [https://www.contributor-covenant.org/version/3/0/](https://www.contributor-covenant.org/version/3/0/).
+본 행동 강령은 Contributor Covenant 버전 3.0을 바탕으로 각색되었으며, 원문은 [https://www.contributor-covenant.org/version/3/0/](https://www.contributor-covenant.org/version/3/0/)에서 영구적으로 확인할 수 있습니다.
 
-Contributor Covenant is stewarded by the Organization for Ethical Source and licensed under CC BY-SA 4.0. To view a copy of this license, visit [https://creativecommons.org/licenses/by-sa/4.0/](https://creativecommons.org/licenses/by-sa/4.0/)
+Contributor Covenant는 Organization for Ethical Source에서 관리하며 CC BY-SA 4.0 라이선스하에 배포됩니다. 이 라이선스의 사본을 보려면 [https://creativecommons.org/licenses/by-sa/4.0/](https://creativecommons.org/licenses/by-sa/4.0/)을 방문하세요.
 
-For answers to common questions about Contributor Covenant, see the FAQ at [https://www.contributor-covenant.org/faq](https://www.contributor-covenant.org/faq). Translations are provided at [https://www.contributor-covenant.org/translations](https://www.contributor-covenant.org/translations). Additional enforcement and community guideline resources can be found at [https://www.contributor-covenant.org/resources](https://www.contributor-covenant.org/resources). The enforcement ladder was inspired by the work of [Mozilla’s code of conduct team](https://github.com/mozilla/inclusion).
+Contributor Covenant에 대한 자주 묻는 질문의 답변은 [https://www.contributor-covenant.org/faq](https://www.contributor-covenant.org/faq)의 FAQ를 참조하세요. 번역본은 [https://www.contributor-covenant.org/translations](https://www.contributor-covenant.org/translations)에서 제공됩니다. 추가적인 집행 및 커뮤니티 가이드라인 리소스는 [https://www.contributor-covenant.org/resources](https://www.contributor-covenant.org/resources)에서 찾을 수 있습니다. 집행 단계(enforcement ladder)는 [Mozilla 행동 강령 팀(Mozilla’s code of conduct team)](https://github.com/mozilla/inclusion)의 작업에서 영감을 받았습니다.

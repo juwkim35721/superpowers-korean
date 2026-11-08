@@ -1,28 +1,12 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Cost and time
+분석 차원(Dimension): 비용 및 시간 (Cost and time)
 
-Account for where tokens and wall-clock went.
+토큰과 실제 소요 시간(wall-clock)이 어디에 쓰였는지 산출하세요.
 
-1. Tokens. Use only the usage records and counter meanings established in the
-   case file. State whether each counter is incremental or cumulative before
-   calculating totals; difference cumulative observations without turning a
-   missing observation into zero. Report the five turns with the largest
-   supported totals and the supported totals per associated session.
-2. Wall-clock. Use the evidenced timestamp fields, event boundaries, and units
-   recorded in the case file. Report the five longest supported turns and any
-   gap longer than ten minutes between consecutive events (idle, waiting on an
-   associated session, or waiting on your human partner; say which only when
-   the records show it).
-3. Largest tool results: use the case file's evidenced tool-result records to
-   report the ten largest results with their tool and turn. Measure records
-   before extracting bounded content.
-4. Compactions: count and locate records whose meaning as compaction events was
-   established during discovery. Report available before/after counters and
-   what the session was doing when each fired; mark unsupported fields absent.
-5. Associated sessions: count them and report supported usage, duration, and
-   dispatching turn for each.
-6. Report the turns, subagents, tools, or repeats that dominate the
-   totals, with numbers. Do not speculate about why a
-   turn was expensive beyond what the transcript shows.
+1. 토큰(Tokens). 케이스 파일에서 확립된 사용량 레코드와 카운터 의미만 사용하세요. 합계를 계산하기 전에 각 카운터가 증분(incremental) 값인지 누적(cumulative) 값인지 명시하세요. 누적 관측값의 차이를 구할 때는 누락된 관측값을 0으로 바꾸지 마세요. 뒷받침되는 근거가 있는 합계 기준으로 가장 큰 상위 5개 턴과, 연관된 세션(associated session)별 합계를 보고하세요.
+2. 실제 소요 시간(Wall-clock). 케이스 파일에 기록된 증거가 있는 타임스탬프 필드, 이벤트 경계, 단위를 사용하세요. 근거가 뒷받침되는 가장 긴 상위 5개 턴과, 연속된 이벤트 사이에 10분 이상 벌어진 모든 공백(유휴 상태, 연관된 세션 대기, 또는 인간 파트너(human partner) 대기 중 무엇인지 레코드에 나타난 경우에만 명시)을 보고하세요.
+3. 가장 큰 도구 결과(Largest tool results): 케이스 파일의 증거가 확인된 도구 결과 레코드를 사용하여 가장 큰 상위 10개 결과를 해당 도구 이름 및 턴과 함께 보고하세요. 제한된 길이의 내용을 추출하기 전에 먼저 레코드 크기를 측정하세요.
+4. 컴팩션(Compactions): 탐색(discovery) 단계에서 컴팩션 이벤트로 의미가 확립된 레코드들의 개수를 세고 위치를 찾으세요. 확인 가능한 전후(before/after) 카운터 값과 각 컴팩션이 발생했을 때 세션이 무엇을 하고 있었는지 보고하고, 지원되지 않는 필드는 없음(absent)으로 표시하세요.
+5. 연관된 세션(Associated sessions): 개수를 세고 각 세션에 대해 근거가 뒷받침되는 사용량, 소요 시간, 디스패치한 턴을 보고하세요.
+6. 전체 합계에서 큰 비중을 차지하는 턴, 서브에이전트, 도구 또는 반복 작업을 수치와 함께 보고하세요. 트랜스크립트가 보여주는 것 이상으로 특정 턴이 왜 비쌌는지 추측하지 마세요.

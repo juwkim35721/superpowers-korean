@@ -1,22 +1,14 @@
-# Context safety for session transcripts
+# 세션 트랜스크립트를 위한 컨텍스트 안전 규칙 (Context safety for session transcripts)
 
-One transcript record can exceed a megabyte or embed a whole history. Printing
-one whole record can overflow the context of the session doing the diagnosis.
-Every reader of a session file, controller or subagent, follows these rules for
-every file, every time.
+트랜스크립트 레코드 하나가 1메가바이트를 넘거나 전체 대화 히스토리를 내장하고 있을 수 있습니다. 레코드 하나를 통째로 출력하면 진단을 수행 중인 세션의 컨텍스트가 오버플로우될 수 있습니다. 컨트롤러든 서브에이전트든 세션 파일을 읽는 모든 주체는 매번 모든 파일에 대해 다음 규칙을 반드시 따라야 합니다.
 
-1. **Measure before reading.**
+1. **읽기 전에 크기부터 측정하세요 (Measure before reading).**
 
    ```bash
    wc -lc "$F"
-   awk '{ if (length($0) > 100000) print NR, length($0) }' "$F"   # long lines
+   awk '{ if (length($0) > 100000) print NR, length($0) }' "$F"   # 긴 줄 확인
    ```
 
-2. **Never `cat` or `grep` for content.** Get line numbers and counts
-   first (`grep -n … | cut -d: -f1`, `jq -r '.type' | sort | uniq -c`),
-   then small fields from specific lines (`sed -n Np | jq -c '{…}'` or
-   `| cut -c1-500`). Use the field-extraction commands established during
-   discovery for the source in front of you.
-3. **Narrow anything over 500 characters.** If a command returns more than
-   500 characters for one record, tighten the field or the slice.
-4. **Read-only.** Never modify, move, or delete a session file.
+2. **내용을 보려고 바로 `cat`이나 `grep`을 실행하지 마세요.** 먼저 줄 번호와 개수를 파악한 뒤(`grep -n … | cut -d: -f1`, `jq -r '.type' | sort | uniq -c`), 특정 줄에서 작은 필드만 추출하세요(`sed -n Np | jq -c '{…}'` 또는 `| cut -c1-500`). 분석 중인 소스에 대해 탐색(discovery) 단계에서 확립된 필드 추출 명령어를 사용하세요.
+3. **500자를 넘는 출력은 범위를 좁히세요.** 하나의 레코드에 대해 명령어 출력이 500자를 초과하면 추출할 필드를 더 좁히거나 문자열을 자르세요(slice).
+4. **읽기 전용(Read-only)을 유지하세요.** 세션 파일을 절대 수정하거나, 이동하거나, 삭제하지 마세요.

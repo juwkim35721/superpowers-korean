@@ -1,31 +1,13 @@
-# Discover the session history
+# 세션 히스토리 탐색 (Discover the session history)
 
-Resolve the session your human partner named using the tools and information
-available in this environment. Your knowledge can suggest where to look; verify
-the result against the actual history.
+이 환경에서 사용할 수 있는 도구와 정보를 활용하여 인간 파트너(human partner)가 지목한 세션을 찾으세요. 배경지식을 활용해 어디를 살펴볼지 추정할 수는 있지만, 결과는 반드시 실제 히스토리와 대조하여 검증해야 합니다.
 
-Use the harness's exposed session tools, configured storage, local help,
-documentation, or bounded filesystem inspection. Measure files before reading
-their content and follow context-safety.md. Inspect archives or indexes when the
-environment points to them. A supplied usable path does not need another search.
+하네스가 노출하는 세션 도구, 설정된 저장소, 로컬 도움말, 문서 또는 범위가 제한된 파일시스템 검사를 사용하세요. 파일 내용을 읽기 전에 크기를 먼저 측정하고 `context-safety.md`를 따르세요. 환경이 가리키는 아카이브나 인덱스가 있다면 검사하세요. 이미 사용 가능한 경로가 제공되었다면 다시 검색할 필요가 없습니다.
 
-Confirm identity using the available session id, working directory, timestamps,
-and matching conversation content. Recency alone is not confirmation. Distinguish
-the requested session from its children and unrelated candidates. Ask for a
-missing identifying fact when the available evidence cannot distinguish them.
+확인 가능한 세션 ID, 작업 디렉터리, 타임스탬프, 일치하는 대화 내용을 사용하여 대상 세션의 정체(identity)를 확인하세요. 단순히 가장 최근 세션이라는 것만으로는 확인 근거가 되지 않습니다. 요청된 세션을 그 자식 세션들이나 관련 없는 후보 세션들과 구별하세요. 가용한 증거만으로 구별할 수 없을 때는 식별에 필요한 추가 사실을 인간 파트너(human partner)에게 물어보세요.
 
-For each filesystem source, obtain its full absolute path from the environment,
-with home-directory shorthand and variables expanded. Use that same path in the
-case record and in the discovery answer you give your human partner.
+각 파일시스템 소스에 대해 홈 디렉터리 단축 표기(`~`)와 환경 변수를 모두 전개한 전체 절대 경로를 환경으로부터 확보하세요. 케이스 기록(`case.md`)과 인간 파트너(human partner)에게 전달하는 탐색 결과 답변 모두에서 그 동일한 절대 경로를 사용하세요.
 
-Establish the record meanings needed for the requested investigation from
-observed records or documentation. Distinguish human messages from injected
-messages, tool results, and a parent agent's dispatch. Match tool calls to their
-results. Establish usage-counter semantics before calculating totals. Do not
-infer a format from another harness or turn a missing field into a zero.
+관찰된 레코드나 문서를 바탕으로, 요청된 조사에 필요한 레코드 의미(record meanings)를 확립하세요. 인간이 입력한 메시지를 주입된(injected) 메시지, 도구 결과, 부모 에이전트의 디스패치와 구별하세요. 도구 호출을 그에 대응하는 도구 결과와 매칭하세요. 합계를 계산하기 전에 사용량 카운터의 의미(증분인지 누적 등)를 확립하세요. 다른 하네스의 포맷을 임의로 추론해 적용하거나 누락된 필드를 0으로 바꾸지 마세요.
 
-Record the exact sources, relevant field meanings, supporting record locations,
-associated sessions, rejected plausible candidates, and unresolved information
-in the case file. Subsequent readers use that record rather than repeating
-discovery. If history is missing, inaccessible, or ambiguous, state the specific
-limitation and ask for the missing path, export, or identifying detail.
+정확한 소스, 관련 필드 의미, 뒷받침하는 레코드 위치, 연관된 세션, 제외된 유력 후보, 미해결 정보를 케이스 파일에 기록하세요. 이후에 이 케이스를 읽는 에이전트들은 탐색을 반복하는 대신 이 기록을 사용합니다. 히스토리가 누락되었거나, 접근할 수 없거나, 모호한 경우 구체적인 한계점을 명시하고 누락된 경로, 내보내기 파일(export) 또는 식별 세부 정보를 요청하세요.

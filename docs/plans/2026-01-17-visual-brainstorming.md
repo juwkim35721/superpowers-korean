@@ -1,22 +1,22 @@
-# Visual Brainstorming Companion Implementation Plan
+# 시각적 브레인스토밍 컴패니언(Visual Brainstorming Companion) 구현 계획
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **에이전트 작업자를 위한 안내:** 필수 하위 스킬: 이 계획을 작업 단위로 구현하려면 `superpowers:executing-plans`를 사용하세요.
 
-**Goal:** Give Claude a browser-based visual companion for brainstorming sessions - show mockups, prototypes, and interactive choices alongside terminal conversation.
+**목표:** 브레인스토밍 세션을 위해 Claude에게 브라우저 기반의 시각적 컴패니언을 제공하여 터미널 대화와 함께 목업, 프로토타입, 대화형 선택지를 보여줄 수 있게 합니다.
 
-**Architecture:** Claude writes HTML to a temp file. A local Node.js server watches that file and serves it with an auto-injected helper library. User interactions flow via WebSocket to server stdout, which Claude sees in background task output.
+**아키텍처:** Claude가 임시 파일에 HTML을 작성합니다. 로컬 Node.js 서버가 해당 파일을 감시하고 자동으로 주입된 헬퍼 라이브러리와 함께 서빙합니다. 사용자의 상호작용은 WebSocket을 통해 서버의 stdout으로 전달되며, Claude는 백그라운드 작업 출력에서 이를 확인합니다.
 
-**Tech Stack:** Node.js, Express, ws (WebSocket), chokidar (file watching)
+**기술 스택:** Node.js, Express, ws (WebSocket), chokidar (파일 감시)
 
 ---
 
-## Task 1: Create the Server Foundation
+## 작업 1: 서버 기반 구축
 
-**Files:**
-- Create: `lib/brainstorm-server/index.js`
-- Create: `lib/brainstorm-server/package.json`
+**파일:**
+- 생성: `lib/brainstorm-server/index.js`
+- 생성: `lib/brainstorm-server/package.json`
 
-**Step 1: Create package.json**
+**1단계: package.json 생성**
 
 ```json
 {
@@ -32,7 +32,7 @@
 }
 ```
 
-**Step 2: Create minimal server that starts**
+**2단계: 시작 가능한 최소한의 서버 생성**
 
 ```javascript
 const express = require('express');
@@ -121,17 +121,17 @@ server.listen(PORT, '127.0.0.1', () => {
 });
 ```
 
-**Step 3: Run npm install**
+**3단계: npm install 실행**
 
-Run: `cd lib/brainstorm-server && npm install`
-Expected: Dependencies installed
+실행: `cd lib/brainstorm-server && npm install`
+예상 결과: 의존성 패키지 설치됨
 
-**Step 4: Test server starts**
+**4단계: 서버 시작 테스트**
 
-Run: `cd lib/brainstorm-server && timeout 3 node index.js || true`
-Expected: See JSON with `server-started` and port info
+실행: `cd lib/brainstorm-server && timeout 3 node index.js || true`
+예상 결과: `server-started` 및 포트 정보가 포함된 JSON 출력 확인
 
-**Step 5: Commit**
+**5단계: 커밋**
 
 ```bash
 git add lib/brainstorm-server/
@@ -140,12 +140,12 @@ git commit -m "feat: add brainstorm server foundation"
 
 ---
 
-## Task 2: Create the Helper Library
+## 작업 2: 헬퍼 라이브러리 생성
 
-**Files:**
-- Create: `lib/brainstorm-server/helper.js`
+**파일:**
+- 생성: `lib/brainstorm-server/helper.js`
 
-**Step 1: Create helper.js with event auto-capture**
+**1단계: 이벤트 자동 캡처 기능이 있는 helper.js 생성**
 
 ```javascript
 (function() {
@@ -247,12 +247,12 @@ git commit -m "feat: add brainstorm server foundation"
 })();
 ```
 
-**Step 2: Verify helper.js is syntactically valid**
+**2단계: helper.js 구문 유효성 확인**
 
-Run: `node -c lib/brainstorm-server/helper.js`
-Expected: No syntax errors
+실행: `node -c lib/brainstorm-server/helper.js`
+예상 결과: 구문 오류 없음
 
-**Step 3: Commit**
+**3단계: 커밋**
 
 ```bash
 git add lib/brainstorm-server/helper.js
@@ -261,13 +261,13 @@ git commit -m "feat: add browser helper library for event capture"
 
 ---
 
-## Task 3: Write Tests for the Server
+## 작업 3: 서버 테스트 작성
 
-**Files:**
-- Create: `tests/brainstorm-server/server.test.js`
-- Create: `tests/brainstorm-server/package.json`
+**파일:**
+- 생성: `tests/brainstorm-server/server.test.js`
+- 생성: `tests/brainstorm-server/package.json`
 
-**Step 1: Create test package.json**
+**1단계: 테스트용 package.json 생성**
 
 ```json
 {
@@ -279,7 +279,7 @@ git commit -m "feat: add browser helper library for event capture"
 }
 ```
 
-**Step 2: Write server tests**
+**2단계: 서버 테스트 작성**
 
 ```javascript
 const { spawn } = require('child_process');
@@ -390,12 +390,12 @@ runTests().catch(err => {
 });
 ```
 
-**Step 3: Run tests**
+**3단계: 테스트 실행**
 
-Run: `cd tests/brainstorm-server && npm install ws && node server.test.js`
-Expected: All tests pass
+실행: `cd tests/brainstorm-server && npm install ws && node server.test.js`
+예상 결과: 모든 테스트 통과
 
-**Step 4: Commit**
+**4단계: 커밋**
 
 ```bash
 git add tests/brainstorm-server/
@@ -404,17 +404,17 @@ git commit -m "test: add brainstorm server integration tests"
 
 ---
 
-## Task 4: Add Visual Companion to Brainstorming Skill
+## 작업 4: 브레인스토밍 스킬에 시각적 컴패니언 추가
 
-**Files:**
-- Modify: `skills/brainstorming/SKILL.md`
-- Create: `skills/brainstorming/visual-companion.md` (supporting doc)
+**파일:**
+- 수정: `skills/brainstorming/SKILL.md`
+- 생성: `skills/brainstorming/visual-companion.md` (보조 문서)
 
-**Step 1: Create the supporting documentation**
+**1단계: 보조 문서 생성**
 
-Create `skills/brainstorming/visual-companion.md`:
+`skills/brainstorming/visual-companion.md` 파일을 생성합니다:
 
-```markdown
+````markdown
 # Visual Companion Reference
 
 ## Starting the Server
@@ -487,11 +487,11 @@ Event types:
 ```html
 <button onclick="brainstorm.choice('custom', {extra: 'data'})">Custom</button>
 ```
-```
+````
 
-**Step 2: Add visual companion section to brainstorming skill**
+**2단계: 브레인스토밍 스킬에 시각적 컴패니언 섹션 추가**
 
-Add after "Key Principles" in `skills/brainstorming/SKILL.md`:
+`skills/brainstorming/SKILL.md`의 "Key Principles" 뒤에 다음을 추가합니다:
 
 ```markdown
 
@@ -516,12 +516,12 @@ The terminal remains the primary conversation interface. The browser is a visual
 **Reference:** See `visual-companion.md` in this skill directory for HTML patterns and API details.
 ```
 
-**Step 3: Verify the edits**
+**3단계: 수정 내용 확인**
 
-Run: `grep -A5 "Visual Companion" skills/brainstorming/SKILL.md`
-Expected: Shows the new section
+실행: `grep -A5 "Visual Companion" skills/brainstorming/SKILL.md`
+예상 결과: 새로 추가된 섹션이 표시됨
 
-**Step 4: Commit**
+**4단계: 커밋**
 
 ```bash
 git add skills/brainstorming/
@@ -530,23 +530,23 @@ git commit -m "feat: add visual companion to brainstorming skill"
 
 ---
 
-## Task 5: Add Server to Plugin Ignore (Optional Cleanup)
+## 작업 5: 플러그인 Ignore에 서버 추가 (선택적 정리 작업)
 
-**Files:**
-- Check if `.gitignore` needs node_modules exclusion for lib/brainstorm-server
+**파일:**
+- `lib/brainstorm-server`의 `node_modules` 제외를 위해 `.gitignore` 수정이 필요한지 확인
 
-**Step 1: Check current gitignore**
+**1단계: 현재 gitignore 확인**
 
-Run: `cat .gitignore 2>/dev/null || echo "No .gitignore"`
+실행: `cat .gitignore 2>/dev/null || echo "No .gitignore"`
 
-**Step 2: Add node_modules if needed**
+**2단계: 필요한 경우 node_modules 추가**
 
-If not already present, add:
+아직 없다면 다음을 추가합니다:
 ```
 lib/brainstorm-server/node_modules/
 ```
 
-**Step 3: Commit if changed**
+**3단계: 변경된 경우 커밋**
 
 ```bash
 git add .gitignore
@@ -555,17 +555,17 @@ git commit -m "chore: ignore brainstorm-server node_modules"
 
 ---
 
-## Summary
+## 요약
 
-After completing all tasks:
+모든 작업을 완료한 후의 상태:
 
-1. **Server** at `lib/brainstorm-server/` - Node.js server that watches HTML file and relays events
-2. **Helper library** auto-injected - captures clicks, forms, inputs
-3. **Tests** at `tests/brainstorm-server/` - verifies server behavior
-4. **Brainstorming skill** updated with visual companion section and `visual-companion.md` reference doc
+1. **서버** (`lib/brainstorm-server/`) - HTML 파일을 감시하고 이벤트를 중계하는 Node.js 서버
+2. **헬퍼 라이브러리** (자동 주입) - 클릭, 폼 제출, 입력 이벤트 캡처
+3. **테스트** (`tests/brainstorm-server/`) - 서버 동작 검증
+4. **브레인스토밍 스킬** - 시각적 컴패니언 섹션 및 `visual-companion.md` 참조 문서로 업데이트됨
 
-**To use:**
-1. Start server as background job: `node lib/brainstorm-server/index.js &`
-2. Tell user to open `http://localhost:3333`
-3. Write HTML to `/tmp/brainstorm/screen.html`
-4. Check task output for user events
+**사용 방법:**
+1. 백그라운드 작업으로 서버 시작: `node lib/brainstorm-server/index.js &`
+2. 사용자에게 `http://localhost:3333`을 열도록 안내
+3. `/tmp/brainstorm/screen.html`에 HTML 작성
+4. 작업 출력에서 사용자 이벤트 확인

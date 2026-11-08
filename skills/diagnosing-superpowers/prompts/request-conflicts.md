@@ -1,20 +1,11 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Request conflicts
+분석 차원(Dimension): 요청 충돌 (Request conflicts)
 
-1. List every human prompt with line and turn. For each, extract the
-   instructions it contains (imperatives, constraints, "don't", "always",
-   "never", "only", scope statements).
-2. Report:
-   - two human instructions that cannot both be followed (quote both, with
-     lines), and what the assistant did;
-   - a human instruction that conflicts with an instruction file loaded in
-     the session (CLAUDE.md, AGENTS.md, GEMINI.md, or the harness's
-     equivalent; paths are in the case file), quoting both;
-   - a human instruction to skip, ignore, or override a step, skill, or
-     rule, and what happened afterwards;
-   - an instruction the assistant asked to clarify and the answer, when the
-     answer changed scope.
-3. Do not judge whether your human partner was right. Report the conflict
-   and the assistant's resolution.
+1. 모든 인간 프롬프트를 줄 번호 및 턴과 함께 나열하세요. 각 프롬프트에서 포함된 지시사항(명령형 표현, 제약 조건, "하지 마(don't)", "항상(always)", "절대(never)", "오직(only)", 범위 지정 문구 등)을 추출하세요.
+2. 다음 사항들을 보고하세요:
+   - 동시에 둘 다 따를 수 없는 두 개의 인간 지시사항(줄 번호와 함께 양쪽 모두 인용)과 어시스턴트가 실제로 한 행동;
+   - 세션에 로드된 지침 파일(`CLAUDE.md`, `AGENTS.md`, `GEMINI.md` 또는 하네스의 대응 파일; 경로는 케이스 파일에 있음)과 충돌하는 인간 지시사항(양쪽 모두 인용);
+   - 특정 단계, 스킬 또는 규칙을 건너뛰거나 무시하거나 재정의(override)하라는 인간 지시사항과 그 이후에 일어난 일;
+   - 어시스턴트가 명확히 해달라고 질문한 지시사항과 그에 대한 답변(해당 답변으로 인해 작업 범위가 변경된 경우).
+3. 인간 파트너(human partner)가 옳았는지 판단하지 마세요. 발생한 충돌과 어시스턴트의 해결 방식만 보고하세요.

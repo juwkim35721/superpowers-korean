@@ -1,1611 +1,1611 @@
-# Superpowers Release Notes
+# Superpowers 릴리스 노트
 
 ## v7.0.2 (2026-11-03)
 
-This release further tunes brainstorming's questions. It asks fewer of them, starts by asking why, and when there's a choice to make it gives you options to pick from. It also fixes bootstrap problems on six harnesses, and makes the SDD and executing-plans helper scripts much harder to point at the wrong repository or the wrong task.
+이번 릴리스는 브레인스토밍(brainstorming)의 질문을 한층 더 세밀하게 조율합니다. 질문 횟수를 줄이고, 먼저 '왜(why)' 필요한지 묻는 것으로 시작하며, 선택해야 할 사항이 있을 때는 고를 수 있는 선택지를 제시합니다. 또한 6개 하네스(harness)에서 발생하던 부트스트랩(bootstrap) 문제를 수정하고, SDD 및 `executing-plans` 헬퍼 스크립트가 잘못된 저장소나 잘못된 태스크를 가리키기 훨씬 어렵게 만들었습니다.
 
-### Brainstorming
+### 브레인스토밍 (Brainstorming)
 
-- **It asks a question only when the answer would change what gets built and nothing already answers it.** Otherwise it states its call as a proposal you can correct. It also stops asking about process: writing things up, where files go, whether to look further, and how to show you something are its own calls, and it tells you what it decided. (#2644)
-- **When you haven't said why you want something, that's the first thing it asks.** It asks openly, with no example answers to pick from. (#2644)
-- **When there's a choice it can name, it shows you the options with a recommendation.** In one of our test scenarios, where a spec gives Ctrl+K to two features, 7.0.1 found the conflict every time but asked a bare "which one?" in 8 of 8 runs. This release laid out the options and recommended one in 8 of 8. (#2644)
-- **It reads from how you talk whether you want to discuss the technical choices,** and when your request leaves nothing open, its first message is a short design for you to approve. (#2644)
-- In blind-graded test conversations, filler questions dropped from 41 with 7.0.1 to 23, the reason behind the request came out before any approach in 33 of 33 conversations (28 of 33 before), and nothing got built before approval (4 times before). Against 6.4.2's brainstorming in the same scenarios, it had fewer filler questions (23 against 34), drew out the why far more often (33 of 33 against 19 of 33), and matched it at building nothing before approval. (#2644)
-- **`start-server.sh --project-dir .` now works.** The script `cd`s into its own directory before starting the server, so every path it derived from a relative `--project-dir` pointed to the wrong place, and the server never started. It now resolves the directory first. Thanks @anchore-jesset for the report. (#2524, #2608)
+- **답변에 따라 실제로 만들어질 결과물이 달라지고 기존 맥락에서 답을 찾을 수 없는 경우에만 질문합니다.** 그렇지 않은 경우에는 자체적인 판단을 수정 가능한 제안 형태로 먼저 밝힙니다. 또한 프로세스에 관한 질문(문서 작성 여부, 파일 저장 위치, 추가 조사 여부, 시각적 표시 방식 등)을 멈추고 스스로 판단한 뒤 무엇을 결정했는지 알려줍니다. (#2644)
+- **무언가를 원하는 이유를 아직 말하지 않았다면, 그 이유부터 가장 먼저 묻습니다.** 이때 선택지 예시 없이 열린 질문으로 묻습니다. (#2644)
+- **명확히 제시할 수 있는 선택지가 있다면 추천안과 함께 옵션들을 보여줍니다.** 명세서에서 두 기능에 모두 Ctrl+K를 할당한 테스트 시나리오에서, 7.0.1은 매번 충돌을 찾아냈지만 8번의 실행 중 8번 모두 단순히 "어느 것으로 할까요?"라고만 물었습니다. 이번 릴리스에서는 8번 중 8번 모두 선택지를 나열하고 그중 하나를 추천했습니다. (#2644)
+- **대화 방식에서 기술적 선택사항을 직접 논의하고 싶어 하는지 파악하며,** 요청 내용에 더 이상 결정할 여지가 없다면 첫 메시지로 승인받을 짧은 설계안을 바로 제시합니다. (#2644)
+- 블라인드 채점으로 진행된 테스트 대화에서 불필요한 질문(filler questions)은 7.0.1의 41개에서 23개로 줄었고, 접근 방식을 논의하기 전에 요청의 이유를 먼저 이끌어낸 비율은 33건 중 33건(이전에는 33건 중 28건)이었으며, 승인 전에 무언가를 먼저 만들어버린 경우는 한 건도 없었습니다(이전에는 4건). 동일한 시나리오에서 6.4.2의 브레인스토밍과 비교했을 때도 불필요한 질문이 더 적었고(23개 대 34개), 이유를 훨씬 더 자주 이끌어냈으며(33건 중 33건 대 33건 중 19건), 승인 전 구현 방지도 동일한 수준을 유지했습니다. (#2644)
+- **`start-server.sh --project-dir .`이 이제 정상 작동합니다.** 이 스크립트는 서버를 시작하기 전에 자기 자신의 디렉토리로 `cd`하기 때문에, 상대 경로인 `--project-dir`로부터 파생된 모든 경로가 잘못된 곳을 가리켜 서버가 시작되지 않았습니다. 이제 디렉토리 경로를 먼저 절대 경로로 해석(resolve)합니다. 제보해 주신 @anchore-jesset님께 감사드립니다. (#2524, #2608)
 
-Thanks to @mbcrawfo and everyone on #2530 who sent transcripts and tested 7.0.1. If brainstorming still asks you something it shouldn't, please tell us there, with what you asked and what it asked back.
+트랜스크립트를 보내주시고 7.0.1을 테스트해 주신 @mbcrawfo님과 #2530의 모든 분께 감사드립니다. 브레인스토밍이 여전히 묻지 말아야 할 질문을 한다면, 무엇을 요청했고 어떤 질문을 받았는지 #2530에 남겨주세요.
 
-### Hooks
+### 훅 (Hooks)
 
-- **Copilot on Windows now gets the bootstrap.** Copilot CLI and VS Code Copilot run hook commands through PowerShell, which rejected the SessionStart command with a ParserError. `hooks.json` now has a `powershell` form of the command. Thanks @ronpieper-engcp and @orty for the reports. (#2189, #1225, #2592)
-- **The SessionStart hook starts no child processes.** On Git Bash, each one costs tens of milliseconds, and the hook started six of them on every startup, `/clear` and compaction. Thanks @midirectiekade14-debug for the report and measurements. (#2081, #2593)
-- **On a Unix system without bash, `run-hook.cmd` falls back to zsh, or exits quietly.** It used to exit 127 with `bash: not found`, and the bootstrap was lost. (#2503, #2594)
+- **Windows의 Copilot에서도 이제 부트스트랩이 정상 로드됩니다.** Copilot CLI와 VS Code Copilot은 PowerShell을 통해 훅 명령을 실행하는데, PowerShell이 SessionStart 명령을 ParserError로 거부했었습니다. 이제 `hooks.json`에 PowerShell 형식의 명령이 추가되었습니다. 제보해 주신 @ronpieper-engcp님과 @orty님께 감사드립니다. (#2189, #1225, #2592)
+- **SessionStart 훅이 자식 프로세스를 생성하지 않습니다.** Git Bash에서는 자식 프로세스 하나당 수십 밀리초가 소요되는데, 기존에는 시작할 때마다, 그리고 `/clear`와 컴팩션(compaction) 시마다 6개의 자식 프로세스를 실행했습니다. 제보와 측정을 해주신 @midirectiekade14-debug님께 감사드립니다. (#2081, #2593)
+- **bash가 없는 Unix 시스템에서 `run-hook.cmd`는 zsh로 폴백(fallback)하거나 조용히 종료됩니다.** 이전에는 `bash: not found`와 함께 종료 코드 127로 종료되어 부트스트랩이 유실되었습니다. (#2503, #2594)
 
 ### Pi
 
-- **Every prompt now gets the bootstrap.** The extension turned the bootstrap off after the first prompt of a session, so every later prompt went without it. Because the first message of the request changed, Anthropic prompt caching also rewrote the whole conversation's cache on the second prompt. Over a day of sessions, @sjawhar measured 83% of first-to-second-prompt transitions rewriting the cache. Thanks @DKnight927 for the report. (#2083, #2595)
-- **The `skills` filter on the Superpowers package entry works.** The extension re-added the whole `skills/` directory after pi applied the filter, so `"skills": []` still loaded all 15 skills. Thanks @adrian-85 for the report and @m2dumpling for the fix. (#2394, #2402, #2598)
+- **모든 프롬프트가 부트스트랩을 받습니다.** 기존 확장 프로그램은 세션의 첫 번째 프롬프트 이후에 부트스트랩을 껐기 때문에 이후의 모든 프롬프트에 부트스트랩이 누락되었습니다. 또한 요청의 첫 번째 메시지가 바뀌면서 Anthropic 프롬프트 캐싱이 두 번째 프롬프트에서 대화 전체의 캐시를 다시 작성하는 문제가 있었습니다. @sjawhar님이 하루 동안의 세션을 측정한 결과, 첫 번째에서 두 번째 프롬프트로 넘어갈 때의 83%가 캐시를 다시 작성하고 있었습니다. 제보해 주신 @DKnight927님께 감사드립니다. (#2083, #2595)
+- **Superpowers 패키지 항목의 `skills` 필터가 정상 작동합니다.** pi가 필터를 적용한 후 확장 프로그램이 전체 `skills/` 디렉토리를 다시 추가했기 때문에 `"skills": []`로 설정해도 15개 스킬이 모두 로드되었습니다. 제보해 주신 @adrian-85님과 수정해 주신 @m2dumpling님께 감사드립니다. (#2394, #2402, #2598)
 
 ### Hermes Agent
 
-- **`delegate_task` subagents no longer get the controller's bootstrap.** Every child started with an empty history, so each one looked like a new session and got the full bootstrap, and some started by loading `using-superpowers` instead of doing their task. Thanks @thealps01-netizen for the report. (#2536, #2596)
+- **`delegate_task` 서브에이전트가 더 이상 컨트롤러의 부트스트랩을 받지 않습니다.** 모든 자식 에이전트가 빈 히스토리로 시작하여 새 세션처럼 보였기 때문에 전체 부트스트랩을 전달받았고, 일부는 맡은 태스크를 수행하는 대신 `using-superpowers`를 로드하는 것으로 시작하곤 했습니다. 제보해 주신 @thealps01-netizen님께 감사드립니다. (#2536, #2596)
 
 ### OpenCode
 
-- **The bootstrap tells the model to use bare skill ids.** OpenCode registers skills as `brainstorming`, not `superpowers:brainstorming`, so a model that copied the namespaced form from the bootstrap got "skill not found" and went on without the skill. Thanks @shiluoluo16 for the report. (#2583, #2597)
-- **A prompt that mentions `EXTREMELY_IMPORTANT` no longer turns the bootstrap off.** The plugin decided the bootstrap was already there if the first message contained that word, so asking "is there an EXTREMELY_IMPORTANT block in your context?" was enough to drop it. It now looks for the bootstrap's own first line. Thanks @Swift22 for the report. (#2197, #2600)
-- **OpenCode 2's compaction and generate requests carry the bootstrap.** Without it, the compaction request, the largest of the session, missed the prompt cache. Thanks @tpischke for the report and measurements. (#2391, #2601)
+- **부트스트랩이 모델에게 네임스페이스 없는 기본 스킬 ID(bare skill id)를 사용하도록 안내합니다.** OpenCode는 스킬을 `superpowers:brainstorming`이 아닌 `brainstorming`으로 등록하기 때문에, 부트스트랩에서 네임스페이스가 포함된 형태를 복사해 호출한 모델은 "skill not found" 오류를 받고 스킬 없이 작업을 진행했습니다. 제보해 주신 @shiluoluo16님께 감사드립니다. (#2583, #2597)
+- **`EXTREMELY_IMPORTANT`를 언급하는 프롬프트 때문에 부트스트랩이 꺼지지 않습니다.** 플러그인이 첫 번째 메시지에 해당 단어가 포함되어 있으면 부트스트랩이 이미 주입된 것으로 판단했기 때문에, "컨텍스트에 EXTREMELY_IMPORTANT 블록이 있나요?"라고 묻는 것만으로도 부트스트랩이 누락되었습니다. 이제 부트스트랩 고유의 첫 번째 줄을 확인합니다. 제보해 주신 @Swift22님께 감사드립니다. (#2197, #2600)
+- **OpenCode 2의 컴팩션(compaction) 및 생성(generate) 요청에도 부트스트랩이 포함됩니다.** 부트스트랩이 빠지면 세션에서 가장 큰 요청인 컴팩션 요청이 프롬프트 캐시를 놓치게 됩니다. 제보와 측정을 해주신 @tpischke님께 감사드립니다. (#2391, #2601)
 
 ### Muse
 
-- **The SessionStart hook now runs on Debian and Ubuntu.** Muse's manifest ran `hooks/session-start`, a bash script, with `sh`. Where `sh` is dash, the hook failed with exit 2 and the bootstrap never loaded. It now runs with `bash`. Thanks @rahul05ranjan for the report and @twotnguyen for the fix. (#2528, #2533)
+- **Debian 및 Ubuntu에서 SessionStart 훅이 정상 실행됩니다.** Muse의 매니페스트가 bash 스크립트인 `hooks/session-start`를 `sh`로 실행하고 있었습니다. `sh`가 dash인 환경에서는 훅이 종료 코드 2로 실패하며 부트스트랩이 전혀 로드되지 않았습니다. 이제 `bash`로 실행됩니다. 제보해 주신 @rahul05ranjan님과 수정해 주신 @twotnguyen님께 감사드립니다. (#2528, #2533)
 
-### Subagent-Driven Development and Executing Plans
+### 서브에이전트 기반 개발 (Subagent-Driven Development) 및 계획 실행 (Executing Plans)
 
-- **The helpers act on the repository of the current directory, as `git` does, and take `-C DIR` to point at another.** Outside a repository, `sdd-workspace` used to write its workspace into whatever directory the agent was in, often the plugin cache. All five helpers now stop with exit 2 and a message that tells your agent what to do. In a new project with no commits yet, your agent will need to run `git init` and make a first commit before it can start. `-C` also lets a controller review a worktree without a `cd … ;` prefix that Claude Code can't allowlist. Thanks @abat-kek, @rz1989s, and @jiyimeta for the reports. (#2429, #2242, #1799, #2606)
-- **The skills say to run the helpers by absolute path from your working tree.** They used to say "from this skill's directory", and agents that `cd`'d there ran the helpers against the plugin's own files. A test now fails if a skill names a helper by a relative path. Thanks @anchore-jesset for the report. (#2525, #2607)
-- **`task-brief` finds tasks with IDs like `A1`, `6b`, and `2.1`.** It used to reject letter-first IDs entirely, and asking for Task 6 also picked up Task 6b. When a plan's task headings aren't in English, it now says they must use the word "Task" and shows the headings it found. Thanks @rhuthik, @jnrod03-rgb, @christopherpconway, and @ferrous26 for the reports. (#2459, #2496, #2175, #2405, #2604)
-- **`task-brief` refuses a brief that an unclosed code fence ran to the end of the plan.** One missing closing fence hid every later task heading, and the reporter's 177-line task came back as a 1,159-line brief holding five tasks. Thanks @bobbykim89 for the report. (#2436, #2605)
-- **On Windows, the helpers print paths PowerShell can open.** They printed `/c/Users/…`, which PowerShell reads as `C:\c\Users\…`. Thanks @sean-parent for the report. (#2307, #2602)
+- **헬퍼 스크립트들이 `git`처럼 현재 디렉토리의 저장소를 대상으로 작동하며, `-C DIR` 옵션으로 다른 저장소를 가리킬 수 있습니다.** 저장소 외부에서 실행할 경우 기존 `sdd-workspace`는 에이전트가 위치한 디렉토리(종종 플러그인 캐시 디렉토리)에 워크스페이스를 생성하곤 했습니다. 이제 다섯 개의 헬퍼 모두 종료 코드 2와 함께 에이전트가 무엇을 해야 하는지 알려주는 메시지를 출력하며 멈춥니다. 아직 커밋이 없는 새 프로젝트에서는 에이전트가 시작하기 전에 `git init`을 실행하고 첫 커밋을 만들어야 합니다. 또한 `-C` 옵션을 통해 컨트롤러는 Claude Code의 허용 목록(allowlist)에 등록할 수 없는 `cd … ;` 접두사 없이도 워크트리(worktree)를 리뷰할 수 있습니다. 제보해 주신 @abat-kek님, @rz1989s님, @jiyimeta님께 감사드립니다. (#2429, #2242, #1799, #2606)
+- **스킬들이 작업 트리(working tree)에서 절대 경로로 헬퍼를 실행하도록 안내합니다.** 이전에는 "이 스킬의 디렉토리에서" 실행하라고 되어 있어, 해당 위치로 `cd`한 에이전트들이 플러그인 자체 파일들을 대상으로 헬퍼를 실행하는 문제가 있었습니다. 이제 스킬이 상대 경로로 헬퍼를 지칭하면 테스트가 실패합니다. 제보해 주신 @anchore-jesset님께 감사드립니다. (#2525, #2607)
+- **`task-brief`가 `A1`, `6b`, `2.1`과 같은 ID를 가진 태스크도 찾습니다.** 이전에는 문자로 시작하는 ID를 아예 거부했고, Task 6을 요청하면 Task 6b까지 함께 가져왔습니다. 또한 계획서의 태스크 제목이 영어가 아닐 경우, 이제 "Task"라는 단어를 사용해야 한다고 안내하며 발견된 제목들을 보여줍니다. 제보해 주신 @rhuthik님, @jnrod03-rgb님, @christopherpconway님, @ferrous26님께 감사드립니다. (#2459, #2496, #2175, #2405, #2604)
+- **`task-brief`가 닫히지 않은 코드 펜스(code fence)로 인해 계획서 끝까지 이어진 브리프(brief)를 거부합니다.** 닫는 코드 펜스 하나가 누락되면 그 뒤의 모든 태스크 제목이 가려져서, 제보자의 177줄짜리 태스크가 5개의 태스크를 포함한 1,159줄짜리 브리프로 반환된 사례가 있었습니다. 제보해 주신 @bobbykim89님께 감사드립니다. (#2436, #2605)
+- **Windows에서 헬퍼들이 PowerShell이 열 수 있는 형식의 경로를 출력합니다.** 이전에는 `/c/Users/…` 형식으로 출력하여 PowerShell이 이를 `C:\c\Users\…`로 읽는 문제가 있었습니다. 제보해 주신 @sean-parent님께 감사드립니다. (#2307, #2602)
 
-### Systematic Debugging
+### 체계적 디버깅 (Systematic Debugging)
 
-- **The skill no longer installs its own test scenarios.** `CREATION-LOG.md` and four pressure-test prompts, which open with "This is a real scenario. You must choose and act", installed next to `SKILL.md` and could be found by an agent mid-task. They now live under `tests/`, and a test keeps files like these out of every skill. Thanks @Caarles00 for the report. (#2277, #2654)
+- **스킬이 자체 테스트 시나리오를 함께 설치하지 않습니다.** `CREATION-LOG.md`와 "This is a real scenario. You must choose and act"로 시작하는 4개의 압박 테스트(pressure-test) 프롬프트가 `SKILL.md` 옆에 설치되어 에이전트가 작업 도중 이를 발견할 수 있었습니다. 이제 이 파일들은 `tests/` 아래에 위치하며, 테스트를 통해 모든 스킬에 이러한 파일이 포함되지 않도록 유지합니다. 제보해 주신 @Caarles00님께 감사드립니다. (#2277, #2654)
 
-### Maintenance
+### 유지보수 (Maintenance)
 
-- `scripts/package-codex-plugin.sh` and `scripts/sync-to-codex-plugin.sh` work from a linked git worktree. (#2609)
+- `scripts/package-codex-plugin.sh` 및 `scripts/sync-to-codex-plugin.sh`가 연결된(linked) git 워크트리에서도 작동합니다. (#2609)
 
 ## v7.0.1 (2026-10-21)
 
-This release retunes brainstorming after its rebuild in v7.0.0. Many of you told us, rightly, that the new default questions got annoying fast and felt formulaic. Brainstorming now digs for context before it asks anything, and tries to ask better questions. We expect to keep tuning it, but we think it's better than it was.
+이번 릴리스는 v7.0.0에서 재구축된 브레인스토밍을 다시 조율합니다. 많은 분께서 새로운 기본 질문들이 금세 성가셔지고 기계적으로 느껴진다는 정당한 피드백을 주셨습니다. 이제 브레인스토밍은 무언가를 질문하기 전에 먼저 컨텍스트를 파악하고, 더 나은 질문을 던지도록 노력합니다. 앞으로도 계속 조율해 나갈 예정이지만 이전보다 한결 나아졌다고 생각합니다.
 
-It also trims three long skills so they better survive compaction on Claude Code, and changes the issue and PR templates to ask for a summary written by a human.
+또한 길이가 긴 세 개의 스킬을 다듬어 Claude Code에서 컴팩션(compaction) 이후에도 내용이 잘 유지되도록 했으며, 이슈 및 PR 템플릿에서 인간이 직접 작성한 요약을 요구하도록 변경했습니다.
 
-### Brainstorming
+### 브레인스토밍 (Brainstorming)
 
-- **It digs for context first.** In an existing project, or when you point it at a spec, plan, or files, it reads them before its first message and doesn't ask what they already answer. (#2560)
-- **It tries to ask better questions.** v7.0.0 opened every session the same way: an offer to skip the questions, then a generic question about "the moment you wished this existed." Now, when you've already said what you want, it plays your request back with what it found in the project and asks about the one thing still open. Later questions build on your answers and on what it found, and say what the answer would change. (#2560, #2571)
-- **It offers to skip the questions only when it started on its own.** If you asked for brainstorming by name or with `/brainstorming`, it no longer offers to skip it. (#2560)
-- **It lays out the approaches and writes a design doc before building.** It presents two or three ways to build the thing, recommends one, and asks you to pick. Then it writes a design doc, a short one for a small change, and builds nothing until you approve it. Some of you saw it skip the doc and start building; in one of our test scenarios, it skipped the doc without asking in 24 of 24 runs before this change and 3 of 24 after. (#2571)
+- **먼저 컨텍스트를 파악합니다.** 기존 프로젝트에서 작업하거나 명세서, 계획서, 파일을 가리키면 첫 메시지를 보내기 전에 해당 파일들을 먼저 읽고, 이미 답이 나와 있는 내용은 질문하지 않습니다. (#2560)
+- **더 나은 질문을 던지려 노력합니다.** v7.0.0은 모든 세션을 똑같은 방식(질문을 건너뛰겠다는 제안과 "이 기능이 있었으면 좋겠다고 생각한 순간"에 대한 일반적인 질문)으로 시작했습니다. 이제는 원하는 바를 이미 말했다면 프로젝트에서 파악한 내용과 함께 요청 사항을 되짚어 주고, 아직 열려 있는 핵심 질문 하나를 묻습니다. 이후의 질문들은 사용자의 답변과 프로젝트에서 파악한 내용을 바탕으로 이어지며, 그 답변에 따라 무엇이 달라지는지 함께 설명합니다. (#2560, #2571)
+- **스스로 트리거된 경우에만 질문 건너뛰기를 제안합니다.** 스킬 이름을 직접 언급하거나 `/brainstorming`으로 브레인스토밍을 명시적으로 요청한 경우에는 더 이상 건너뛰기를 제안하지 않습니다. (#2560)
+- **구현하기 전에 접근 방식들을 제시하고 설계 문서를 작성합니다.** 구현할 수 있는 두세 가지 방법을 제시하고 그중 하나를 추천한 뒤 선택을 요청합니다. 그런 다음 설계 문서(작은 변경 사항의 경우 짧은 문서)를 작성하며, 사용자가 승인하기 전까지는 아무것도 구현하지 않습니다. 일부 사용자분들이 문서를 건너뛰고 바로 구현을 시작하는 현상을 겪으셨는데, 테스트 시나리오 중 하나에서 이 변경 전에는 24번 중 24번 모두 묻지 않고 문서를 건너뛰었으나 변경 후에는 24번 중 3번으로 줄어들었습니다. (#2571)
 
-Thanks to @mbcrawfo for opening #2530, and to @katyatitkova, @ertra, @blorenz, @Biomaj, @fsalum, @technicalpickles, @orochi235, @alexxburg, @fcavalieri, @CelesteCunha, and @zzzzz9999 for the reports, transcripts, and testing there.
+#2530을 열어주신 @mbcrawfo님, 그리고 그곳에서 제보와 트랜스크립트 공유 및 테스트에 참여해 주신 @katyatitkova, @ertra, @blorenz, @Biomaj, @fsalum, @technicalpickles, @orochi235, @alexxburg, @fcavalieri, @CelesteCunha, @zzzzz9999님께 감사드립니다.
 
-If brainstorming's questions in 7.0.1 still don't feel right, please comment on #2530. Examples help most: what you asked, what it asked back, and what you wish it had asked.
+7.0.1에서도 브레인스토밍의 질문이 여전히 어색하게 느껴진다면 #2530에 코멘트를 남겨주세요. 무엇을 요청했고, 어떤 질문을 받았으며, 어떤 질문을 했기를 바랐는지 구체적인 예시를 들어주시면 가장 큰 도움이 됩니다.
 
-### Skills better survive compaction on Claude Code
+### Claude Code 컴팩션 이후에도 스킬이 온전히 유지되도록 개선
 
-After a compaction, Claude Code re-attaches each skill cut off at 20,000 characters, so anything past that point is gone for the rest of the session. In one reported session, subagent-driven development lost its five-round limit and ran 18 fix rounds on one task. Thanks @dan-1492 for the report. (#2481)
+컴팩션이 실행된 후 Claude Code는 각 스킬을 20,000자에서 잘라 다시 첨부하기 때문에, 그 이후의 내용은 남은 세션 동안 사라지게 됩니다. 제보된 한 세션에서는 서브에이전트 기반 개발(`subagent-driven-development`)이 5라운드 제한 규칙을 잃어버려 단일 태스크에서 18번의 수정 라운드를 실행하기도 했습니다. 제보해 주신 @dan-1492님께 감사드립니다. (#2481)
 
-- **`subagent-driven-development`** moves the fix loop, final review, report handling, resuming, preflight, batching, and cannot-verify guidance into `references/`. It reads each file from disk at the step that needs it. (#2565)
-- **`writing-skills`** moves its supporting docs, the SKILL.md template and discovery guidance, bulletproofing, and flowchart conventions into `references/`. (#2564)
-- **`executing-plans`** drops its Example Workflow, which repeated rules stated above it. (#2563)
-- `tests/skill-size/test-skill-size.sh` fails when any `SKILL.md` reaches 20,000 bytes. (#2565)
+- **`subagent-driven-development`**는 수정 루프(fix loop), 최종 리뷰, 리포트 처리, 재개(resuming), 사전 점검(preflight), 일괄 처리(batching), 검증 불가(cannot-verify) 가이드를 `references/`로 이동했습니다. 각 단계에서 필요할 때 디스크에서 해당 파일을 읽어들입니다. (#2565)
+- **`writing-skills`**는 보조 문서, `SKILL.md` 템플릿 및 탐색(discovery) 가이드, 방탄화(bulletproofing), 플로우차트 규칙을 `references/`로 이동했습니다. (#2564)
+- **`executing-plans`**는 상단에 이미 명시된 규칙을 반복하던 Example Workflow 섹션을 제거했습니다. (#2563)
+- `tests/skill-size/test-skill-size.sh`는 어떤 `SKILL.md`든 20,000바이트에 도달하면 실패 처리합니다. (#2565)
 
-### Contributing
+### 기여하기 (Contributing)
 
-- **Issue and PR templates now ask who is filing and what their human partner asked for, plus a summary of under 200 words written by a human.** The bug report also asks how you confirmed the problem doesn't happen without Superpowers. (#2569)
-- **We don't accept agent-written PRs that fix someone else's issue unless a maintainer asked for one.** If your human partner hit the same problem, add their report to the existing issue. The PR template, `AGENTS.md`, and the README say so. (#2569)
-- **`diagnosing-superpowers` adds the same two sections to the issues it drafts** and won't file one while the summary is a placeholder. Its prefilled link now opens the Bug Report template; we removed the Session Diagnosis Report template. (#2569)
+- **이슈 및 PR 템플릿에서 누가 제출하는지, 인간 파트너가 무엇을 요청했는지, 그리고 인간이 직접 작성한 200단어 이내의 요약을 요구합니다.** 버그 리포트에서는 Superpowers 없이도 동일한 문제가 발생하지 않는다는 것을 어떻게 확인했는지도 묻습니다. (#2569)
+- **메인테이너가 요청하지 않은 한, 다른 사람의 이슈를 수정하는 에이전트 작성 PR은 받지 않습니다.** 인간 파트너가 동일한 문제를 겪었다면 기존 이슈에 파트너의 사례 리포트를 추가하세요. PR 템플릿, `AGENTS.md`, README에 이 내용이 명시되었습니다. (#2569)
+- **`diagnosing-superpowers`가 초안을 작성하는 이슈에도 동일한 두 섹션을 추가하며,** 요약이 플레이스홀더 상태인 동안에는 이슈를 등록하지 않습니다. 미리 채워진(prefilled) 링크는 이제 Bug Report 템플릿을 열며, Session Diagnosis Report 템플릿은 제거되었습니다. (#2569)
 
 ## v7.0.0 (2026-10-09)
 
-We rebuilt brainstorming from scratch so it does a much better job of what it was always for: helping you work out what you actually want and put it into words before anything gets built. The new skill asks you to describe what you're after and why, plays back what it heard so you can correct it, and keeps asking good questions until the picture is clear. Then it matches the process to the work, from just doing it to writing a full design. 
+브레인스토밍이 원래의 목적을 훨씬 더 잘 수행할 수 있도록 처음부터 다시 만들었습니다. 그 목적이란 무언가를 만들기 전에 사용자가 실제로 원하는 것이 무엇인지 함께 구체화하고 말로 풀어내는 것입니다. 새로운 스킬은 무엇을 왜 원하는지 설명해 달라고 요청하고, 이해한 내용을 되짚어 주어 사용자가 바로잡을 수 있게 하며, 전체 그림이 명확해질 때까지 좋은 질문을 계속 던집니다. 그런 다음 바로 실행하는 것부터 전체 설계 문서를 작성하는 것까지 작업 규모에 맞춰 프로세스를 조정합니다.
 
-This release also adds a native plugin manifest for the Antigravity Marketplace and fixes Windows hook discovery, Git Bash paths, Hermes skill descriptions, and several smaller bugs.
+이번 릴리스에서는 Antigravity Marketplace용 네이티브 플러그인 매니페스트도 추가되었으며, Windows 훅 탐색, Git Bash 경로, Hermes 스킬 설명 및 여러 자잘한 버그를 수정했습니다.
 
-### Brainstorming
+### 브레인스토밍 (Brainstorming)
 
-- **Brainstorming draws out what you want before it proposes anything.** Its first message offers to skip the questions and asks one open question about a real moment or a concrete picture. It offers a menu only when you're stuck. Along the way, it offers to look at prior art, your project, or the web. As it understands each part, it plays that part back in a few hundred words and marks its guesses as guesses. (#2463)
-- **It sizes the work after it understands what you want, and says so in plain words.** It does a quick, clear task right away, agrees a small change with you in chat, and writes a design document for a project. You can override its call, and it steps up a size if the work grows. (#2463)
-- **A builder check replaces the spec-document reviewer.** A fresh subagent reads the design as the person who'll build it and lists what they'd still need to ask. Brainstorming answers what it can, makes the minor calls itself and marks them as its own, and brings you the questions that change what gets built, in one round. (#2463)
-- **It finds out which choices about how the thing gets made you want to own.** Platform, language, libraries, medium: if you have strong views, it talks them through; if you hand them over, it picks sensible defaults and tells you what it picked. It does this even when you skip the questions. We made this change after a session designed an iOS app, never asked about platform, and built a web app. (#2482, #2483)
-- **It offers the visual companion whenever seeing would help more than reading:** screens, layouts, flows, options that look different, diagrams. The offer drops its token-cost warning. (#2463)
-- **The visual companion now shows screens containing `$'`, `$&`, and similar sequences intact.** The server inserted content with `String.replace`, which treats those sequences as replacement patterns. It now inserts content literally. Thanks @andrew-yian for the report and @luochen211 for the fix. (#2362, #2364)
+- **브레인스토밍은 무언가를 제안하기 전에 사용자가 원하는 바를 먼저 이끌어냅니다.** 첫 메시지는 질문을 건너뛸 수 있는 선택권을 제공하고, 실제 순간이나 구체적인 그림에 관한 열린 질문 하나를 던집니다. 사용자가 막혀 있을 때만 선택 메뉴를 제공합니다. 진행 과정에서 기존 사례(prior art), 현재 프로젝트, 또는 웹을 찾아볼지 제안합니다. 각 부분을 이해할 때마다 몇백 단어 내외로 이해한 내용을 되짚어 주며 추측한 부분은 추측임을 표시합니다. (#2463)
+- **무엇을 원하는지 이해한 후에 작업 규모를 판단하고 이를 평이한 말로 알립니다.** 빠르고 명확한 작업은 즉시 처리하고, 작은 변경 사항은 채팅에서 합의하며, 프로젝트 단위의 작업은 설계 문서를 작성합니다. 사용자는 이 판단을 재정의(override)할 수 있으며, 작업이 커지면 규모 단계를 높입니다. (#2463)
+- **빌더 점검(builder check)이 명세 문서 리뷰어(spec-document reviewer)를 대체합니다.** 새로운 서브에이전트가 실제로 이를 구현할 사람의 관점에서 설계를 읽고, 여전히 물어봐야 할 사항들을 나열합니다. 브레인스토밍은 스스로 답할 수 있는 것은 답하고, 사소한 결정은 직접 내린 뒤 자신의 결정임을 표시하며, 실제 만들어질 결과물을 바꾸는 질문들만 한 번에 모아서 사용자에게 가져옵니다. (#2463)
+- **구현 방식에 관한 선택 중 사용자가 직접 결정하고 싶은 것이 무엇인지 파악합니다.** 플랫폼, 언어, 라이브러리, 매체 등에 대해 확고한 의견이 있다면 함께 논의하고, 결정을 위임한다면 합리적인 기본값을 선택한 뒤 무엇을 골랐는지 알려줍니다. 질문을 건너뛸 때에도 이 과정은 수행합니다. iOS 앱을 설계하는 세션에서 플랫폼에 대해 한 번도 묻지 않고 웹 앱을 만들어버린 사례를 겪은 후 이 변경 사항을 적용했습니다. (#2482, #2483)
+- **글로 읽는 것보다 눈으로 보는 것이 더 도움이 될 때마다 비주얼 컴패니언(visual companion)을 제안합니다:** 화면, 레이아웃, 흐름, 생김새가 다른 선택지들, 다이어그램 등이 해당됩니다. 제안 시 출력되던 토큰 비용 경고는 제거되었습니다. (#2463)
+- **비주얼 컴패니언이 `$'`, `$&` 및 유사한 시퀀스를 포함한 화면을 깨짐 없이 그대로 보여줍니다.** 서버가 콘텐츠를 삽입할 때 해당 시퀀스들을 치환 패턴으로 취급하는 `String.replace`를 사용했기 때문인데, 이제 콘텐츠를 문자 그대로(literally) 삽입합니다. 제보해 주신 @andrew-yian님과 수정해 주신 @luochen211님께 감사드립니다. (#2362, #2364)
 
 ### Antigravity
 
-- **`agy plugin install https://github.com/obra/superpowers` now installs Superpowers as a native Antigravity plugin.** We added `.antigravity-plugin/plugin.json` with the Marketplace display name, logo, and suggested prompts. Previously, agy fell back to importing the repo as a Gemini CLI extension, then rejected the copied Claude-format hooks file on every session with `invalid hook "hooks": command hook must specify 'command'`. The install command stays the same. (#2479)
-- **Superpowers bootstraps on Antigravity through skill discovery.** Antigravity has no session-start hook event, but it shows the model each installed skill's description, and `using-superpowers`' "Use when starting any conversation" prompts the model to load it. We verified this on agy 1.3.1 across 12 runs: "Let's make a react todo list" and "add a settings page" triggered brainstorming before any code, and a failing test triggered systematic-debugging before any edit. We also corrected the README and porting guide, which described a session-start hook and install script that never existed. (#2479)
+- **`agy plugin install https://github.com/obra/superpowers` 명령이 이제 Superpowers를 네이티브 Antigravity 플러그인으로 설치합니다.** Marketplace 표시 이름, 로고, 추천 프롬프트가 포함된 `.antigravity-plugin/plugin.json`을 추가했습니다. 이전에는 agy가 저장소를 Gemini CLI 확장 프로그램으로 가져오는 폴백을 수행한 뒤, 복사된 Claude 형식의 훅 파일을 매 세션마다 `invalid hook "hooks": command hook must specify 'command'` 오류와 함께 거부했습니다. 설치 명령어는 동일하게 유지됩니다. (#2479)
+- **Superpowers가 Antigravity에서 스킬 탐색(skill discovery)을 통해 부트스트랩됩니다.** Antigravity에는 세션 시작 훅 이벤트가 없지만 모델에게 설치된 각 스킬의 설명(description)을 보여주며, `using-superpowers`의 "Use when starting any conversation" 설명이 모델로 하여금 해당 스킬을 로드하도록 유도합니다. agy 1.3.1에서 12번의 실행을 통해 이를 검증했습니다: "Let's make a react todo list"와 "add a settings page"는 코드를 작성하기 전에 브레인스토밍을 트리거했고, 실패하는 테스트는 코드를 수정하기 전에 `systematic-debugging`을 트리거했습니다. 또한 실제로 존재하지 않았던 세션 시작 훅과 설치 스크립트를 설명하던 README 및 포팅 가이드도 바로잡았습니다. (#2479)
 
-### Hooks
+### 훅 (Hooks)
 
-- **SessionStart now works when the harness launches it with a broken `PATH`.** The hooks no longer look up `dirname`, `cat`, or `bash` on `PATH`, so a startup `PATH` that can't resolve them (anthropics/claude-code#43127) no longer drops the bootstrap. Thanks @kannan983 for the report and Ada Sen for the fix. (#2310, #2349)
-- **Windows: `run-hook.cmd` finds per-user Git for Windows installs and skips WSL launchers.** It now checks `%LOCALAPPDATA%\Programs\Git`, and when it searches `PATH`, it skips the WSL `bash.exe` launchers, which fail without a Linux distro. Thanks @jp5247 for the report, and @citizen204 (#1864) and @KaiyiQuan (#2365) for the fixes we combined here. (#1863, #2393)
-- **Windows: `run-hook.cmd` ignores `bash` and `where` in the current directory.** Previously, a repository could plant `bash.cmd` or `where.bat` and have it run at session start. (#2393)
-- **Windows: `run-hook.cmd` now passes hook exit codes to the harness.** It used to report success even when the hook failed. (#2393)
+- **하네스가 깨진 `PATH`로 SessionStart를 실행하더라도 정상 작동합니다.** 훅이 더 이상 `PATH`에서 `dirname`, `cat`, `bash`를 찾지 않으므로, 시작 시점의 `PATH`에서 이를 찾지 못하는 환경(anthropics/claude-code#43127)에서도 부트스트랩이 누락되지 않습니다. 제보해 주신 @kannan983님과 수정해 주신 Ada Sen님께 감사드립니다. (#2310, #2349)
+- **Windows: `run-hook.cmd`가 사용자별(per-user) Git for Windows 설치 경로를 찾고 WSL 런처는 건너뜁니다.** 이제 `%LOCALAPPDATA%\Programs\Git`을 확인하며, `PATH`를 검색할 때 Linux 배포판이 없으면 실패하는 WSL `bash.exe` 런처를 건너뜁니다. 제보해 주신 @jp5247님, 그리고 여기에 결합된 수정안을 제공해 주신 @citizen204님(#1864)과 @KaiyiQuan님(#2365)께 감사드립니다. (#1863, #2393)
+- **Windows: `run-hook.cmd`가 현재 디렉토리의 `bash`와 `where`를 무시합니다.** 이전에는 저장소에 `bash.cmd`나 `where.bat`을 심어두면 세션 시작 시 실행될 수 있었습니다. (#2393)
+- **Windows: `run-hook.cmd`가 이제 훅의 종료 코드를 하네스에 전달합니다.** 이전에는 훅이 실패하더라도 성공으로 보고했습니다. (#2393)
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-- **`sdd-workspace` leaves a repo's own `.superpowers/sdd/.gitignore` alone.** It used to overwrite the file with `*` on every run, reverting any version a repo committed (for example, to track `progress.md` ledgers). It now writes the default only when no file exists. Thanks @aruizcu1989 for the fix. (#2161, #2399)
-- **Plan markers stay repo-relative on Windows.** On Git Bash, `sdd-workspace` compared `git rev-parse`'s `C:/…` root with the plan's `/c/…` path, so every workspace marker recorded an absolute, machine-specific path. It now resolves the root the same way as the plan path. We found this while landing @t0domanh's Windows test fixes (#2149).
+- **`sdd-workspace`가 저장소 고유의 `.superpowers/sdd/.gitignore`를 건드리지 않습니다.** 이전에는 실행할 때마다 해당 파일을 `*`로 덮어써서, 저장소에서 커밋해 둔 버전(예: `progress.md` 원장을 추적하기 위한 설정)을 되돌려버렸습니다. 이제 파일이 없을 때만 기본값을 작성합니다. 수정해 주신 @aruizcu1989님께 감사드립니다. (#2161, #2399)
+- **Windows에서 계획 마커(plan marker)가 저장소 상대 경로로 유지됩니다.** Git Bash에서 `sdd-workspace`가 `git rev-parse`의 `C:/…` 루트와 계획서의 `/c/…` 경로를 비교했기 때문에, 모든 워크스페이스 마커가 머신에 종속된 절대 경로를 기록했습니다. 이제 계획서 경로와 동일한 방식으로 루트를 해석합니다. 이 문제는 @t0domanh님의 Windows 테스트 수정(#2149)을 반영하는 과정에서 발견하여 수정했습니다.
 
-### Executing Plans
+### 계획 실행 (Executing Plans)
 
-- **`task-done` now records tasks whose test command passes silently.** When a passing command printed nothing, `task-done` exited 1 without writing the ledger line, so a finished task looked unfinished. It now records `→ (no output)`. Thanks @KenM-BT for the report and Ada Sen for the fix. (#2385, #2388)
+- **`task-done`이 아무 출력 없이 통과하는 테스트 명령을 가진 태스크도 정상 기록합니다.** 통과한 명령이 아무것도 출력하지 않으면 `task-done`이 원장(ledger) 줄을 기록하지 않고 종료 코드 1로 종료되어, 완료된 태스크가 미완료처럼 보였습니다. 이제 `→ (no output)`으로 기록합니다. 제보해 주신 @KenM-BT님과 수정해 주신 Ada Sen님께 감사드립니다. (#2385, #2388)
 
-### Requesting Code Review
+### 코드 리뷰 요청하기 (Requesting Code Review)
 
-- **The example's base-SHA command survives skill arguments.** Claude Code replaces `$1` in a skill body with the second argument word, so invoking the skill with arguments turned `awk '{print $1}'` into `awk '{print <word>}'`. The example now uses `cut -d' ' -f1`, which contains no `$`. Thanks @errmakov for the report and @klemens-floege for the fix. (#2311, #2361)
+- **예시의 base-SHA 명령이 스킬 인자가 전달되어도 깨지지 않습니다.** Claude Code는 스킬 본문의 `$1`을 두 번째 인자 단어로 치환하기 때문에, 인자와 함께 스킬을 호출하면 `awk '{print $1}'`이 `awk '{print <word>}'`로 바뀌었습니다. 이제 예시에서 `$`를 포함하지 않는 `cut -d' ' -f1`을 사용합니다. 제보해 주신 @errmakov님과 수정해 주신 @klemens-floege님께 감사드립니다. (#2311, #2361)
 
-### Systematic Debugging
+### 체계적 디버깅 (Systematic Debugging)
 
-- **The multi-layer diagnostic example no longer prints the secret it checks for.** `${IDENTITY:+SET}${IDENTITY:-UNSET}` and `env | grep IDENTITY` both echoed the signing identity's value into logs. The example now reports only whether the variable is set. Thanks @kennyg-g for the report and @m2dumpling for the fix. (#2375, #2380)
+- **다계층 진단(multi-layer diagnostic) 예시가 더 이상 확인 대상 시크릿 값을 출력하지 않습니다.** `${IDENTITY:+SET}${IDENTITY:-UNSET}`와 `env | grep IDENTITY` 모두 서명 ID의 실제 값을 로그에 그대로 출력했습니다. 이제 예시에서는 변수가 설정되어 있는지 여부만 보고합니다. 제보해 주신 @kennyg-g님과 수정해 주신 @m2dumpling님께 감사드립니다. (#2375, #2380)
 
 ### Hermes Agent
 
-- **Hermes' skill list now shows Superpowers skill descriptions.** Hermes lists each plugin skill with the description passed to `register_skill`, which defaults to empty. The plugin passed only a name and path, so every skill appeared blank and the model had nothing to choose from. The plugin now passes each skill's frontmatter description. Thanks @pepijn-blom for the fix. (#2284)
+- **Hermes의 스킬 목록에 이제 Superpowers 스킬 설명이 표시됩니다.** Hermes는 각 플러그인 스킬을 `register_skill`에 전달된 설명(기본값은 빈 문자열)과 함께 나열합니다. 기존 플러그인은 이름과 경로만 전달했기 때문에 모든 스킬 설명이 비어 있었고 모델이 선택할 기준이 없었습니다. 이제 플러그인이 각 스킬의 프론트매터(frontmatter) 설명을 전달합니다. 수정해 주신 @pepijn-blom님께 감사드립니다. (#2284)
 
 ## v6.4.2 (2026-09-25)
 
-`writing-plans` produces leaner plans, faster. Plans now record the decisions an implementer needs (signatures, test assertions, the spec's values) instead of writing out the code. Some frontier models, including Opus 5.5, could get overzealous during plan writing and, with certain prompting, would sometimes try to implement the entire project while designing the plan. The new skill keeps planning focused on the plan. When we reproduced the original report, the scratch builds went away, and plans took a quarter of the time and about a third of the tokens. Thanks to Harper Reed for the report and session bundle. (#2333)
+`writing-plans`가 더 군더더기 없는 계획을 더 빠르게 생성합니다. 이제 계획서는 코드를 전부 풀어쓰는 대신 구현자에게 필요한 결정 사항(시그니처, 테스트 단언문, 명세서의 값)을 기록합니다. Opus 5.5를 비롯한 일부 프론티어 모델들은 계획 작성 중에 의욕이 지나쳐, 특정 프롬프트가 주어지면 계획을 설계하는 도중에 프로젝트 전체를 구현하려 들곤 했습니다. 새로운 스킬은 계획 단계가 계획 자체에 집중하도록 유지합니다. 원본 제보 사례를 재현했을 때 임시 구현(scratch builds) 시도가 사라졌으며, 계획 작성에 걸리는 시간은 1/4로, 토큰 사용량은 약 1/3로 줄어들었습니다. 제보와 세션 번들을 공유해 주신 Harper Reed님께 감사드립니다. (#2333)
 
-### Writing Plans
+### 계획 작성하기 (Writing Plans)
 
-- **A plan records decisions. It's not a transcript of the code.** "What a Step Contains" replaces the "No Placeholders" section. A test step names the test and its assertions. A code step gives the exact signature, the file, and the spec's values, and includes a body only for an algorithm those don't determine. A verification step gives the command and its passing output. A reference to another task goes through that task's Interfaces block. Placeholders are still called out as the opposite failure. (#2333)
-- **Self-review checks proportion.** The plan compares its own length to the spec's. A plan several times longer than the spec is a transcript, and when code blocks dominate, bodies get replaced with signatures and test assertions. (#2333)
-- **The plan's reader is described as capable:** an engineer who writes idiomatic code once they know the exact interface and test. This replaces "zero context, questionable taste." Steps are now sized as "one action with a checkable result" instead of "2-5 minutes." (#2333)
-- Every plan written by the new skill executed 9/9 against planted-defect probes on Sonnet 5, the same result as full-code plans. (#2333)
-- Removed `plan-document-reviewer-prompt.md`. Nothing referenced it. (#2333)
+- **계획은 결정 사항을 기록하며, 코드를 그대로 옮겨 적은 전사본(transcript)이 아닙니다.** "No Placeholders" 섹션이 "What a Step Contains"로 대체되었습니다. 테스트 단계는 테스트 이름과 단언문(assertions)을 명시합니다. 코드 단계는 정확한 시그니처, 파일, 명세서의 값을 제시하며, 이것들만으로 결정되지 않는 알고리즘에 대해서만 본문 코드를 포함합니다. 검증 단계는 명령어와 통과 시 출력을 제시합니다. 다른 태스크에 대한 참조는 해당 태스크의 Interfaces 블록을 통해 이루어집니다. 플레이스홀더는 여전히 정반대의 실패 사례로 명시됩니다. (#2333)
+- **셀프 리뷰(Self-review)에서 비율을 점검합니다.** 계획서 자체의 길이를 명세서 길이와 비교합니다. 명세서보다 몇 배나 긴 계획서는 코드 전사본으로 간주하며, 코드 블록이 주를 이루는 경우 본문 코드를 시그니처와 테스트 단언문으로 대체합니다. (#2333)
+- **계획서의 독자를 유능한 엔지니어로 정의합니다:** 정확한 인터페이스와 테스트만 알면 관용적인(idiomatic) 코드를 작성할 수 있는 엔지니어로 상정합니다. 기존의 "맥락을 전혀 모르고 감각도 미심쩍은(zero context, questionable taste)"이라는 표현을 대체합니다. 각 단계의 규모도 "2~5분" 대신 "확인 가능한 결과를 내는 하나의 행동(one action with a checkable result)"으로 정의됩니다. (#2333)
+- 새로운 스킬로 작성된 모든 계획은 Sonnet 5에서 의도적으로 심어둔 결함 탐색(planted-defect probes) 테스트에서 9/9를 기록하여 전체 코드가 포함된 계획과 동일한 결과를 보였습니다. (#2333)
+- 어디에서도 참조하지 않던 `plan-document-reviewer-prompt.md`를 제거했습니다. (#2333)
 
-### Documentation
+### 문서 (Documentation)
 
-- Removed `CLAUDE.md`. Claude Code now reads `AGENTS.md` directly, but only when no `CLAUDE.md` exists, so keeping the one-line pointer would have hidden the real guidelines.
+- `CLAUDE.md`를 제거했습니다. Claude Code는 이제 `CLAUDE.md`가 없을 때만 `AGENTS.md`를 직접 읽으므로, 한 줄짜리 포인터 파일을 남겨두면 오히려 실제 가이드라인이 가려지게 됩니다.
 
 ## v6.4.1 (2026-09-18)
 
-v6.4.0 was never shipped. v6.4.1 is the first release with these changes. It holds back the new `proving-it-works-with-a-movie` skill, which is getting cleanup and robustness work and will return in a later release.
+v6.4.0은 배포되지 않았으며, v6.4.1이 아래 변경 사항들을 포함한 첫 릴리스입니다. 새로운 `proving-it-works-with-a-movie` 스킬은 정리 및 안정성 보강 작업을 거쳐 추후 릴리스에 포함될 예정입니다.
 
-The new `diagnosing-superpowers` skill figures out what went wrong in a session. `executing-plans` is rebuilt as Native execution, a cheaper alternative to subagent-driven development. This release also adds support for three new harnesses: OpenCode 2.0, Muse, and Qwen Code.
+새로운 `diagnosing-superpowers` 스킬은 세션에서 무엇이 잘못되었는지 파악해 줍니다. `executing-plans`는 서브에이전트 기반 개발의 저렴한 대안인 네이티브(Native) 실행 모드로 재구축되었습니다. 또한 이번 릴리스에서는 OpenCode 2.0, Muse, Qwen Code의 세 가지 새로운 하네스에 대한 지원을 추가합니다.
 
-### New Skills
+### 새로운 스킬 (New Skills)
 
-- **`diagnosing-superpowers`**: when a session goes wrong (repeated work, an ignored plan, a skill that didn't fire, a surprising bill), ask your agent to "figure out what went wrong with superpowers in this session." It pins down the problem with you, reads the transcripts on disk, and reports what happened with `path:line` evidence for every finding. On request it builds a scrubbed bundle or drafts a GitHub issue for your approval, with the cited evidence left intact. Works on the current session or a past one. (#2236, #2287)
+- **`diagnosing-superpowers`**: 세션이 잘못되었을 때(반복 작업, 무시된 계획, 트리거되지 않은 스킬, 예상치 못한 과금 등), 에이전트에게 "이 세션에서 superpowers에 무슨 문제가 있었는지 파악해 줘(figure out what went wrong with superpowers in this session)"라고 요청하세요. 사용자와 함께 문제를 특정하고, 디스크의 트랜스크립트를 읽은 뒤, 모든 발견 사항에 대해 `path:line` 근거를 들어 무슨 일이 있었는지 보고합니다. 요청 시 인용된 근거는 그대로 유지하면서 민감 정보를 제거한 번들(scrubbed bundle)을 생성하거나 사용자의 승인을 거쳐 GitHub 이슈 초안을 작성합니다. 현재 세션이나 과거 세션 모두에서 작동합니다. (#2236, #2287)
 
-### Executing Plans
+### 계획 실행 (Executing Plans)
 
-**Heads up:** `executing-plans` no longer stops every few tasks to check in with you. It runs the whole plan, then gets one review at the end.
+**참고하세요:** `executing-plans`는 더 이상 몇 개의 태스크마다 멈춰서 사용자에게 확인을 구하지 않습니다. 전체 계획을 실행한 뒤 마지막에 한 번의 리뷰를 받습니다.
 
-- **Native (inline) execution is now a real mode.** `executing-plans` was a 64-line stub that measured the same as running with no plugin at all. It is rebuilt: the session implements every task itself under the same workspace, ledger, and stopping rules as subagent-driven development, then dispatches one fresh whole-branch review on the most capable model. `task-start` and `task-done` helpers keep the ledger and test log honest. It is the cheapest way to run a plan and runs well on a mid-tier session model. (#2318)
-- **The plan handoff offers two approaches, Subagent-driven and Native,** says what each costs, and recommends one for this plan with a reason drawn from the plan. If you already chose one, it keeps your choice. (#2258, #2318)
+- **네이티브(인라인) 실행이 이제 실질적인 모드로 작동합니다.** 기존 `executing-plans`는 플러그인이 아예 없는 상태와 측정 결과가 동일했던 64줄짜리 스텁(stub)이었습니다. 이제 새롭게 재구축되어, 세션이 서브에이전트 기반 개발과 동일한 워크스페이스, 원장(ledger), 중단 규칙 아래에서 모든 태스크를 직접 구현한 뒤, 가장 성능이 뛰어난 모델로 전체 브랜치에 대한 새로운 리뷰를 한 번 디스패치합니다. `task-start` 및 `task-done` 헬퍼가 원장과 테스트 로그를 정직하게 유지합니다. 계획을 실행하는 가장 저렴한 방법이며 중간 등급(mid-tier)의 세션 모델에서도 잘 작동합니다. (#2318)
+- **계획 핸드오프(handoff)가 Subagent-driven과 Native의 두 가지 접근 방식을 제안하며,** 각각의 비용을 설명하고 계획서에서 도출한 근거를 바탕으로 현재 계획에 적합한 방식을 추천합니다. 사용자가 이미 하나를 선택했다면 그 선택을 유지합니다. (#2258, #2318)
 
-### Writing Plans
+### 계획 작성하기 (Writing Plans)
 
-- **You review the saved plan before anything runs.** Approving an idea or a scope no longer counts as approving a plan you haven't seen. (#2258)
-- **Plans carry a Review Focus section**: up to five inputs or failure modes the spec implies but no task's tests exercise, each pinned by a test in the task that owns the code. In evals, every implementer shipped the same crash on an input the spec implied but never named; this section exists to catch that. (#2319)
+- **무언가 실행되기 전에 저장된 계획서를 사용자가 먼저 검토합니다.** 아이디어나 범위를 승인한 것이 아직 보지도 못한 계획서를 승인한 것으로 간주되지 않습니다. (#2258)
+- **계획서에 Review Focus 섹션이 포함됩니다**: 명세서가 암시하고 있지만 어떤 태스크의 테스트도 검증하지 않는 최대 5개의 입력값이나 실패 모드를 나열하며, 각각은 해당 코드를 담당하는 태스크의 테스트로 고정(pin)됩니다. 평가(eval) 과정에서 모든 구현자가 명세서에 암시만 되고 명시되지 않은 입력값에서 동일한 크래시를 냈는데, 이를 잡아내기 위해 이 섹션이 도입되었습니다. (#2319)
 
-### Brainstorming
+### 브레인스토밍 (Brainstorming)
 
-- **Brainstorming finds out why you want the thing before proposing features,** reflects your intent back for correction, and ties your approval to the actual design and planning stages. The motivating session took "that scope is ok" as permission to scaffold. (#2258)
+- **브레인스토밍은 기능을 제안하기 전에 사용자가 왜 그것을 원하는지 먼저 파악하고,** 사용자의 의도를 되짚어 주어 교정받으며, 사용자의 승인을 실제 설계 및 계획 단계와 명확히 연결합니다. 이 변경의 계기가 된 세션에서는 "그 정도 범위면 괜찮다"는 말을 스캐폴딩(scaffolding)을 시작해도 좋다는 허락으로 받아들였습니다. (#2258)
 
-### Code Review
+### 코드 리뷰 (Code Review)
 
-- **Reviewers judge behavior the spec doesn't mention by what a reasonable user would expect,** so a crash on an unnamed input no longer slides through as Minor. A "Declined to judge" list shows what the reviewer skipped, and the session running the plan decides each one. (#2319)
-- The multi-commit `BASE_SHA` alternative is now `git merge-base origin/main HEAD`. A bare `origin/main` showed main's newer files as phantom deletions once main moved past the branch point. (#2133, #2118)
+- **리뷰어는 명세서에 언급되지 않은 동작을 합리적인 사용자가 기대할 법한 기준으로 판단합니다.** 따라서 명시되지 않은 입력값에서 발생하는 크래시가 더 이상 사소한(Minor) 문제로 넘어가지 않습니다. "판단 보류(Declined to judge)" 목록은 리뷰어가 건너뛴 항목을 보여주며, 계획을 실행하는 세션이 각 항목을 결정합니다. (#2319)
+- 다중 커밋 `BASE_SHA` 대안 명령이 이제 `git merge-base origin/main HEAD`로 변경되었습니다. 단순히 `origin/main`을 사용하면 main이 분기점(branch point)을 지나 앞서 나갔을 때 main의 새로운 파일들이 유령 삭제(phantom deletions)로 표시되곤 했습니다. (#2133, #2118)
 
-### Test-Driven Development
+### 테스트 주도 개발 (Test-Driven Development)
 
-- **The project's suite defines green, not just your test file.** When a task named one test file, sessions ran only that file in 11 of 12 probe runs, so a broken test next door went unseen. The skill now says to run the project's test command and report every failure by name, including ones you didn't cause. (#2110)
+- **단일 테스트 파일이 아니라 프로젝트의 전체 테스트 스위트가 그린(green) 상태를 정의합니다.** 태스크에 테스트 파일 하나가 명시되었을 때, 12번의 탐색 실행 중 11번에서 세션이 해당 파일만 실행하여 바로 옆의 깨진 테스트를 발견하지 못했습니다. 이제 스킬은 프로젝트의 테스트 명령을 실행하고 본인이 유발하지 않은 실패를 포함해 모든 실패를 이름과 함께 보고하도록 지시합니다. (#2110)
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-- **Plans with the same basename no longer share a workspace.** `docs/alpha/plan.md` and `docs/beta/plan.md` resolved to one directory and `task-brief` silently overwrote the other plan's brief. Each workspace now records its owning plan; a collision gets its own directory. Existing workspaces are adopted in place. (#2138, #2045)
-- **`review-package` rejects empty or non-descendant `BASE..HEAD` ranges** (exit 3), so an implementer that committed to the wrong branch can't produce a "clean" review of nothing. (#2136, #2050)
-- **On Claude Code, the controller can run one layer down,** as a nested subagent on a mid-tier model. It measured about half the cost and wall clock. It's opt-in: ask for it, or tell your agent your session model is too expensive to spend on coordination. (#2320)
+- **동일한 파일명(basename)을 가진 계획서들이 더 이상 워크스페이스를 공유하지 않습니다.** 기존에는 `docs/alpha/plan.md`와 `docs/beta/plan.md`가 하나의 디렉토리로 해석되어 `task-brief`가 다른 계획서의 브리프를 소리 없이 덮어썼습니다. 이제 각 워크스페이스는 소유한 계획서를 기록하며, 충돌이 발생하면 별도의 디렉토리를 부여받습니다. 기존 워크스페이스는 그 자리에서 그대로 채택됩니다. (#2138, #2045)
+- **`review-package`가 비어 있거나 자손(descendant) 관계가 아닌 `BASE..HEAD` 범위를 거부합니다**(종료 코드 3). 따라서 잘못된 브랜치에 커밋한 구현자가 아무 내용도 없는 상태에 대해 "깨끗함(clean)" 리뷰를 받아낼 수 없습니다. (#2136, #2050)
+- **Claude Code에서 컨트롤러가 한 단계 아래 계층에서 실행될 수 있습니다**(중간 등급 모델의 중첩 서브에이전트 형태). 측정 결과 비용과 소요 시간(wall clock)이 약 절반으로 줄었습니다. 이는 선택 사항(opt-in)이므로 직접 요청하거나, 에이전트에게 세션 모델이 너무 비싸서 조율(coordination) 작업에 쓰기 아깝다고 말하면 됩니다. (#2320)
 
-### New Harness Support
+### 새로운 하네스 지원 (New Harness Support)
 
-- **OpenCode 2.0.4+** is supported alongside V1. Skills register through V2's native API, and the bootstrap survives continuation, restart, forks, and compaction. Delegated child sessions no longer receive the controller's bootstrap. (#2106, #2306)
-- **Muse**: native plugin manifest and SessionStart hook. `muse plugins install ./` then `muse plugins approve superpowers`. (#2317)
-- **Qwen Code** added to the install docs: `qwen extensions install obra/superpowers`. (#2132)
+- **OpenCode 2.0.4+**가 V1과 함께 지원됩니다. 스킬은 V2의 네이티브 API를 통해 등록되며, 부트스트랩은 이어하기(continuation), 재시작, 포크, 컴팩션 이후에도 유지됩니다. 위임된 자식 세션은 더 이상 컨트롤러의 부트스트랩을 받지 않습니다. (#2106, #2306)
+- **Muse**: 네이티브 플러그인 매니페스트 및 SessionStart 훅을 지원합니다. `muse plugins install ./` 실행 후 `muse plugins approve superpowers`를 실행하세요. (#2317)
+- **Qwen Code**가 설치 문서에 추가되었습니다: `qwen extensions install obra/superpowers`. (#2132)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-- **Skills work when a packager strips executable bits.** The Codex marketplace and MiniMax Code's repackage both shipped our scripts non-executable, so every documented command failed with `Permission denied`. Skill prose now invokes bundled scripts through their interpreter (`bash scripts/foo.sh`, `node render-graphs.js`), and the SDD helpers call each other the same way. (#2301, #2134, #2040)
-- The platform-support issue template applies a label that exists (`new-harness`). (#2250)
+- **패키저가 실행 권한 비트(executable bits)를 제거하더라도 스킬이 정상 작동합니다.** Codex 마켓플레이스와 MiniMax Code의 리패키징 모두 스크립트의 실행 권한을 제거한 채 배포하여 문서화된 모든 명령이 `Permission denied`로 실패하곤 했습니다. 이제 스킬 본문은 번들된 스크립트를 인터프리터를 통해 호출하며(`bash scripts/foo.sh`, `node render-graphs.js`), SDD 헬퍼들도 서로를 동일한 방식으로 호출합니다. (#2301, #2134, #2040)
+- 플랫폼 지원 이슈 템플릿이 실제로 존재하는 라벨(`new-harness`)을 적용합니다. (#2250)
 
-### Documentation
+### 문서 (Documentation)
 
-- `docs/testing.md` describes the Quorum eval lab, replacing stale Drill references and commands. (#2135)
-- README: a "When Something Goes Wrong" section pointing at `diagnosing-superpowers`.
-- **`AGENTS.md` is now the canonical contributor guidelines.** `CLAUDE.md` is a one-line reference to it. `AGENTS.md` used to be a symlink to `CLAUDE.md`, which Muse's installer rejects. (#2317)
-- Adopted the Prime Radiant Community Code of Conduct. (#2122)
+- `docs/testing.md`가 오래된 Drill 참조 및 명령어를 대체하고 Quorum 평가 랩(eval lab)을 설명합니다. (#2135)
+- README: `diagnosing-superpowers`를 안내하는 "When Something Goes Wrong" 섹션이 추가되었습니다.
+- **이제 `AGENTS.md`가 정식 기여자 가이드라인 문서입니다.** `CLAUDE.md`는 이를 가리키는 한 줄짜리 참조였으며(기존에는 `AGENTS.md`가 `CLAUDE.md`를 가리키는 심볼릭 링크였으나 Muse 설치 관리자가 이를 거부하여 변경됨), 이후 v6.4.2에서 완전히 제거되었습니다. (#2317)
+- Prime Radiant 커뮤니티 행동 강령(Code of Conduct)을 채택했습니다. (#2122)
 
 ## v6.3.0 (2026-08-12)
 
-### Harness Support
+### 하네스 지원 (Harness Support)
 
-- **Devin CLI**: `devin plugins install obra/superpowers` now works, and skills auto-trigger at session start. (#1995)
-- **Hermes Agent**: install from a git clone; skills register with Hermes' native loader and the bootstrap loads on the first turn. (#1922, #2025)
-- **Grok Build CLI** added to the install docs. (#1919)
+- **Devin CLI**: `devin plugins install obra/superpowers`가 이제 작동하며, 세션 시작 시 스킬이 자동으로 트리거됩니다. (#1995)
+- **Hermes Agent**: git 클론으로부터 설치하며, 스킬이 Hermes의 네이티브 로더에 등록되고 첫 번째 턴에 부트스트랩이 로드됩니다. (#1922, #2025)
+- **Grok Build CLI**가 설치 문서에 추가되었습니다. (#1919)
 
-### Brainstorming
+### 브레인스토밍 (Brainstorming)
 
-- **Ceremony now scales to the task.** Requests are classified as spike, bounded, or architectural; small tasks skip the two-document ritual. Every path still stops for your approval before implementation. (#2063)
+- **절차의 격식(ceremony)이 태스크 규모에 맞게 조절됩니다.** 요청 사항은 스파이크(spike), 범위가 명확한 작업(bounded), 아키텍처 작업(architectural)으로 분류되며, 작은 태스크는 두 개의 문서를 작성하는 의식을 건너뜁니다. 모든 경로는 여전히 구현 전에 사용자의 승인을 받기 위해 멈춥니다. (#2063)
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-- **Controllers no longer stall on plan conflicts.** Non-catastrophic conflicts and ambiguities get a recorded ruling and work continues; only destructive or irreversible actions still stop for a human. One donated session had sat blocked for almost nine hours on a question the controller could have decided. (#2077)
-- **The pre-dispatch conflict scan records its checks in the ledger** instead of just asserting the plan is clean. (#2080)
-- **Small same-shape tasks batch into one dispatch**, cutting subagent cost sharply on micro-task plans; batch reviews verify every file in the brief made it into the diff. (#2078)
-- **Implementers and reviewers may not spawn their own subagents**, which was producing duplicate reviews. (#2059)
-- **Plans carry a `Spec:` pointer** and SDD reads the spec at setup, so plan conflicts get resolved against the design instead of guessed at. (#2086)
-- Reviewers re-read evidence they find illegible instead of re-running the test suite (#2089), and circuit-breaker rulings now show up in the Finish report.
+- **컨트롤러가 계획 충돌 앞에서 더 이상 멈춰 서 있지 않습니다.** 치명적이지 않은 충돌과 모호함은 결정을 기록한 뒤 작업을 계속 진행하며, 파괴적이거나 되돌릴 수 없는 작업만 인간을 위해 멈춥니다. 기증받은 한 세션에서는 컨트롤러가 스스로 결정할 수 있었던 질문 하나 때문에 거의 9시간 동안 블로킹되어 있었습니다. (#2077)
+- **디스패치 전 충돌 스캔(pre-dispatch conflict scan)이 단순히 계획이 깨끗하다고 단언하는 대신 원장(ledger)에 점검 내역을 기록합니다.** (#2080)
+- **동일한 형태의 작은 태스크들을 한 번의 디스패치로 묶어 처리(batch)하여**, 마이크로 태스크 계획에서 서브에이전트 비용을 대폭 절감합니다. 일괄 리뷰는 브리프에 명시된 모든 파일이 diff에 반영되었는지 검증합니다. (#2078)
+- **구현자와 리뷰어는 자체 서브에이전트를 생성할 수 없습니다.** 이로 인해 중복 리뷰가 발생하고 있었습니다. (#2059)
+- **계획서가 `Spec:` 포인터를 포함하며** SDD가 설정 단계에서 명세서를 읽으므로, 계획 충돌이 추측이 아닌 설계를 기준으로 해결됩니다. (#2086)
+- 리뷰어는 읽기 어려운 근거를 발견했을 때 테스트 스위트를 다시 실행하는 대신 근거를 다시 읽으며(#2089), 서킷 브레이커(circuit-breaker) 판정이 이제 Finish 리포트에 표시됩니다.
 
 ### Codex
 
-- Subagent waits are event-driven instead of poll-heavy, spawns pin model and reasoning effort explicitly, and the multi-agent reference is corrected against Codex source. (#2060, #2061, #2062)
+- 서브에이전트 대기가 폴링 위주에서 이벤트 기반으로 변경되었고, 에이전트 생성 시 모델과 추론 강도(reasoning effort)를 명시적으로 고정하며, 다중 에이전트 참조 문서가 Codex 소스에 맞게 수정되었습니다. (#2060, #2061, #2062)
 
-### Finishing a Development Branch
+### 개발 브랜치 마무리하기 (Finishing a Development Branch)
 
-- **Worktree removal no longer destroys untracked files.** When `git worktree remove` refuses because the tree holds uncommitted work, the skill stops, names the files, and asks — instead of reaching for `--force`. (#2016, #1223, #2024)
+- **워크트리 제거가 더 이상 추적되지 않는 파일(untracked files)을 파괴하지 않습니다.** 커밋되지 않은 작업이 남아 있어 `git worktree remove`가 거부될 때, 스킬이 `--force`에 손을 대는 대신 멈춰서 파일 이름을 나열하고 사용자에게 묻습니다. (#2016, #1223, #2024)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-- `render-graphs.js` in writing-skills works on Windows.
-- Corrected Copilot CLI backgrounding guidance for Windows. (#1929, #2006)
-- `bump-version.sh` covers the Hermes manifest.
+- `writing-skills`의 `render-graphs.js`가 Windows에서 작동합니다.
+- Windows용 Copilot CLI 백그라운드 실행 가이드를 수정했습니다. (#1929, #2006)
+- `bump-version.sh`가 Hermes 매니페스트도 함께 업데이트합니다.
 
-### Documentation
+### 문서 (Documentation)
 
-- README: added a table of contents and reorganized Getting Started.
+- README: 목차를 추가하고 Getting Started 섹션을 재구성했습니다.
 
 ## v6.2.0 (2026-07-23)
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-Two structural changes to how SDD tracks progress and closes out review findings, both developed against live eval campaigns.
+실제 평가(eval) 캠페인을 바탕으로 개발된, SDD가 진행 상황을 추적하고 리뷰 발견 사항을 마무리하는 방식에 대한 두 가지 구조적 변경입니다.
 
-- **The workspace is now plan-scoped.** `.superpowers/sdd/` had no plan identity and no end-of-life: a follow-up plan in the same working tree could read the previous plan's ledger as its own progress (observed in the wild, with multiple contamination rounds and ad-hoc workarounds). `sdd-workspace` now requires the plan file and resolves a per-plan directory, `.superpowers/sdd/<plan-basename>/`; `task-brief` and `review-package` write into their plan's directory (`review-package` gains the plan file as its first argument); the ledger names its plan on its first line; and the workspace is deleted once the final review is clean — git history is the durable record. Baseline evals showed controllers already refused foreign ledgers, but at a cost of 6–13 tool calls of cross-plan git forensics per resume; plan-scoping makes the answer structural instead. (25/25 baseline and GREEN eval runs documented in `docs/specs/` and `docs/plans/`.)
-- **The review-fix loop resumes the implementer.** The lifecycle restructure gives fix rounds resume-the-implementer semantics instead of fresh dispatches, adds a scoped re-review prompt (`re-review-prompt.md`) so the re-reviewer checks the fixes rather than re-reading the whole task, and installs a five-round circuit breaker with controller adjudication when it trips. SKILL.md reorganizes by lifecycle, and its Red Flags convert to the house rationalization-table form.
+- **워크스페이스가 이제 계획 단위로 범위가 지정(plan-scoped)됩니다.** 기존 `.superpowers/sdd/`에는 계획 식별자도 없었고 수명 주기 종료(end-of-life)도 없었습니다. 따라서 동일한 작업 트리에서 후속 계획을 실행하면 이전 계획의 원장(ledger)을 자신의 진행 상황으로 읽는 문제가 있었습니다(실제 환경에서 여러 차례의 오염 라운드와 임시방편 우회 사례가 관찰됨). 이제 `sdd-workspace`는 계획 파일을 필수로 요구하며 계획별 디렉토리인 `.superpowers/sdd/<plan-basename>/`을 해석합니다. `task-brief`와 `review-package`는 해당 계획의 디렉토리에 기록하고(`review-package`는 첫 번째 인자로 계획 파일을 받음), 원장은 첫 번째 줄에 계획 이름을 명시하며, 최종 리뷰가 깨끗하게 끝나면 워크스페이스는 삭제됩니다(영구적인 기록은 git 히스토리가 담당). 베이스라인 평가에서 컨트롤러들이 이미 외부 원장을 거부하긴 했지만, 재개(resume)할 때마다 계획 간 git 포렌식에 6~13회의 도구 호출 비용을 치르고 있었습니다. 계획 단위 범위 지정은 이 문제를 구조적으로 해결합니다. (`docs/specs/` 및 `docs/plans/`에 25/25 베이스라인 및 GREEN 평가 실행이 문서화되어 있습니다.)
+- **리뷰-수정 루프가 구현자를 재개(resume)합니다.** 수명 주기 재구성을 통해 수정 라운드가 매번 새로운 서브에이전트를 디스패치하는 대신 기존 구현자를 재개하는 의미를 갖게 되었으며, 재리뷰어가 전체 태스크를 다시 읽는 대신 수정 사항만 점검하도록 범위가 지정된 재리뷰 프롬프트(`re-review-prompt.md`)를 추가했고, 5라운드 서킷 브레이커와 작동 시 컨트롤러가 직권 판정(adjudication)하는 체계를 도입했습니다. `SKILL.md`는 수명 주기별로 재구성되었으며, Red Flags는 하우스 스타일의 합리화 표(rationalization-table) 형태로 변환되었습니다.
 
-### Skills
+### 스킬 (Skills)
 
-A branch-wide compression campaign: recap sections, social proof, and benefits-selling prose aimed at a reader who has already invoked the skill are gone, with every load-bearing argument folded into a rationalization-table row or moved to its point of use. Each cut was micro-tested with subagent probes, and the one cut that measurably degraded behavior was reworked rather than shipped.
+브랜치 전반에 걸친 압축 캠페인을 진행했습니다: 이미 스킬을 호출한 독자를 대상으로 한 요약 섹션, 사회적 증거(social proof), 효용성 홍보 문구들을 제거하고, 핵심적인 논거들은 모두 합리화 표의 행으로 통합하거나 실제로 사용되는 위치로 이동시켰습니다. 각각의 삭제는 서브에이전트 탐색(probe)을 통해 마이크로 테스트를 거쳤으며, 행동을 눈에 띄게 저하시킨 한 건의 삭제는 그대로 배포하는 대신 재작업을 거쳤습니다.
 
-- **`testing-anti-patterns.md` is now `writing-good-tests.md`.** The TDD reference doc is rebuilt as a positive catalog — six rules that lead with the GOOD example — and absorbs a falsifiability discipline: name the production change that would fail the test, derive expectations independently of the code under test, and a closing mutation check. It closes two holes by name: the string-presence trap (grep-style tests on scripts, skills, and prompts counterfeit falsifiability — the observable is behavior, never text) and the change-detector trap (a constant assertion can fail and still protect nothing), each with a hard stop in the gate function. Trivial code and human prose earn no test; the trigger broadens from "adding mocks" to any test writing.
-- **TDD's "Why Order Matters" rebuttals survive as rationalization rows.** Deleting the section outright measurably degraded test-first behavior under "just write it, tests after" pressure (control 8/10 → treatment 5/10, corroborated on Claude and Codex), so each prose rebuttal now lives in its Common Rationalizations row — the section is gone but the arguments fire where an agent hits them mid-rationalization.
-- **`finishing-a-development-branch` no longer offers to discard your work.** The completion menu dates from when throwing away branches was routine; "Discard this work" next to "Merge" advertised destroying finished, passing work. Discard survives as an explicit-request-only path with the same typed-confirmation ritual. The same pass made PR creation forge-agnostic (your forge's CLI or the URL printed on push, not a blessed list of tools) and fixed a real bug: the worktree path was recomputed after cleanup had already changed directory, so provenance checks never matched and cleanup silently no-oped.
-- **Recap and persuasion prose removed across the library.** `brainstorming`, `systematic-debugging`, `dispatching-parallel-agents`, `verification-before-completion`, `executing-plans`, `subagent-driven-development`, `requesting-code-review`, `receiving-code-review`, `using-git-worktrees`, `writing-plans`, and `writing-skills` all drop their Bottom Line / Key Principles / Real-World Impact / Advantages sections; `using-git-worktrees` and `finishing-a-development-branch` convert their guard sections to the house Excuse/Reality rationalization table.
+- **`testing-anti-patterns.md`가 이제 `writing-good-tests.md`로 변경되었습니다.** TDD 참조 문서가 긍정적인 카탈로그(GOOD 예시를 앞세운 6가지 규칙)로 재구축되었으며, 반증 가능성(falsifiability) 규율을 흡수했습니다: 테스트를 실패하게 만들 프로덕션 변경 사항을 명시하고, 테스트 대상 코드와 독립적으로 기대값을 도출하며, 마지막에 변이 점검(mutation check)을 수행합니다. 또한 두 가지 허점을 구체적으로 명시하여 차단합니다: 문자열 존재 함정(스크립트, 스킬, 프롬프트에 대한 grep 스타일 테스트는 반증 가능성을 위조함 — 관찰 대상은 언제나 동작이지 텍스트가 아님)과 변경 감지기 함정(상수 단언문은 실패할 수는 있어도 아무것도 보호하지 못함)이며, 각각 게이트 함수에 강제 중단(hard stop) 조건이 포함됩니다. 사소한 코드와 인간이 읽는 산문에는 테스트가 필요 없으며, 트리거 조건이 "모킹(mock) 추가 시"에서 모든 테스트 작성 시로 넓어졌습니다.
+- **TDD의 "Why Order Matters" 반박 논거들이 합리화 표의 행으로 살아남았습니다.** 해당 섹션을 통째로 삭제하자 "일단 코드부터 짜고 테스트는 나중에 하자"는 압박 아래에서 테스트 우선(test-first) 행동이 눈에 띄게 저하되었습니다(대조군 8/10 → 실험군 5/10, Claude와 Codex 모두에서 확인됨). 따라서 각 산문 반박 논거는 이제 Common Rationalizations 행 안에 자리 잡아, 섹션 자체는 사라졌지만 에이전트가 합리화에 빠지는 바로 그 지점에서 논거가 작동합니다.
+- **`finishing-a-development-branch`가 더 이상 작업 폐기(discard)를 기본 선택지로 제안하지 않습니다.** 완료 메뉴는 브랜치를 버리는 것이 일상이던 시절에 만들어졌습니다. "Merge" 바로 옆에 있는 "Discard this work"는 이미 완료되고 테스트를 통과한 작업을 파괴하도록 유도하는 꼴이었습니다. 이제 작업 폐기는 명시적으로 요청한 경우에만 동일한 타이핑 확인 절차를 거쳐 실행되는 경로로 남습니다. 이번 작업에서 PR 생성 또한 특정 포지(forge)에 종속되지 않도록 변경했으며(특정 도구 목록이 아닌 사용자의 포지 CLI 또는 푸시 시 출력되는 URL 사용), 실제 버그도 하나 수정했습니다: 정리(cleanup) 작업이 이미 디렉토리를 변경한 후에 워크트리 경로를 다시 계산하는 바람에 출처 확인(provenance checks)이 한 번도 일치하지 않아 정리 작업이 소리 없이 아무 일도 하지 않던(no-op) 문제였습니다.
+- **라이브러리 전반에서 요약 및 설득용 산문을 제거했습니다.** `brainstorming`, `systematic-debugging`, `dispatching-parallel-agents`, `verification-before-completion`, `executing-plans`, `subagent-driven-development`, `requesting-code-review`, `receiving-code-review`, `using-git-worktrees`, `writing-plans`, `writing-skills`에서 모두 Bottom Line / Key Principles / Real-World Impact / Advantages 섹션을 제거했으며, `using-git-worktrees`와 `finishing-a-development-branch`는 가드(guard) 섹션을 하우스 스타일의 Excuse/Reality 합리화 표로 변환했습니다.
 
 ### Windows
 
-- **The SessionStart hook now dispatches via Git Bash.** The hook's command string starts with a quoted path, which broke both shells Claude Code might hand it to: PowerShell parsed the quoted string as an expression and died with a parser error (#1751), and cmd.exe's quote-stripping rule truncated the command when the profile path contained a metacharacter like `(` (#1918) — either way the bootstrap silently never loaded. The hook now declares `shell: "bash"`, which Claude Code ≥ 2.1.81 resolves to Git for Windows directly, and which surfaces an actionable install prompt when Git Bash is missing. Older Claude Code versions ignore the unknown key and behave as before. Verified end-to-end on Linux, Windows 11 with Git Bash under a hostile path, and Windows 11 without Git Bash.
+- **SessionStart 훅이 이제 Git Bash를 통해 디스패치됩니다.** 훅의 명령 문자열이 따옴표로 감싼 경로로 시작하는데, 이는 Claude Code가 명령을 전달할 수 있는 두 셸 모두에서 문제를 일으켰습니다: PowerShell은 따옴표로 감싼 문자열을 표현식으로 파싱하다 파서 오류로 죽어버렸고(#1751), `cmd.exe`의 따옴표 제거 규칙은 프로필 경로에 `(` 같은 메타문자가 포함될 때 명령을 잘라버렸습니다(#1918) — 어느 쪽이든 부트스트랩은 소리 없이 로드되지 않았습니다. 이제 훅은 `shell: "bash"`를 선언하며, Claude Code ≥ 2.1.81은 이를 Git for Windows로 직접 연결하고 Git Bash가 없을 때는 실행 가능한 설치 안내 프롬프트를 띄웁니다. 이전 버전의 Claude Code는 알 수 없는 키를 무시하고 기존처럼 동작합니다. Linux, 까다로운 경로 아래에 Git Bash가 설치된 Windows 11, 그리고 Git Bash가 없는 Windows 11에서 엔드투엔드 검증을 마쳤습니다.
 
-### Harness Support
+### 하네스 지원 (Harness Support)
 
-- **Gemini CLI support is restored.** The v6.1.0 removal (on the news that Google had EOLed the Gemini CLI) was premature; the install docs and the `gemini-tools.md` tool-mapping reference are back while permanent removal gets a proper evaluation. (#1959)
+- **Gemini CLI 지원이 복원되었습니다.** v6.1.0에서의 제거(Google이 Gemini CLI를 단종(EOL)했다는 소식에 따른 조치)는 시기상조였습니다. 영구 제거에 대한 적절한 평가가 이루어지는 동안 설치 문서와 `gemini-tools.md` 도구 매핑 참조 문서가 다시 복원됩니다. (#1959)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-- **`find-polluter.sh` actually finds test files now.** `find .` emits `./`-prefixed paths, so the documented `-path "src/**/*.test.ts"` pattern matched nothing — and `wc -l` on empty input then reported "Found 1". Fixed the prefix mismatch (#2008, #2011), plus two follow-ups: a caller-supplied `./`-prefixed pattern no longer double-prefixes into a never-matching form, and `**/` is also matched collapsed so tests directly under the base directory (`src/top.test.ts` vs `src/**/*.test.ts`) aren't silently skipped. The script gains a deterministic test suite.
-- **The Codex package script works beyond macOS.** Deterministic-metadata tar flags were bsdtar-only spellings, staged file modes depended on two umasks canceling out, and the test's timestamp assertion parsed bsdtar's column layout in a US timezone. GNU tar now gets equivalent flags producing byte-identical headers, modes are pinned canonical, and the test asserts mtime via `tarfile`.
-- **SDD's skill test no longer flakes.** The file's worst case exceeded the runner's per-file ceiling (raised to 900s), and the assert helpers matched free-form model prose case-sensitively; matching is now case-insensitive and `assert_order` dumps output on failure so the next flake is diagnosable.
-- **Docs and test cleanup after the v6.1.0 reference pruning.** Dead links to the deleted `claude-code-tools.md`/`copilot-tools.md` are replaced with the current architecture (#1969), a dangling `#subagent-support` anchor in the Antigravity reference is dropped (#2010), and the Antigravity/Pi mapping tests assert only the surviving harness-specific mappings — scoped to the table so they fail again if it's deleted.
+- **`find-polluter.sh`가 이제 실제로 테스트 파일을 찾습니다.** `find .`은 `./` 접두사가 붙은 경로를 출력하기 때문에 문서화된 `-path "src/**/*.test.ts"` 패턴은 아무것도 매칭하지 못했고, 빈 입력에 대한 `wc -l`이 "Found 1"을 보고하고 있었습니다. 접두사 불일치를 수정했으며(#2008, #2011), 두 가지 후속 조치를 추가했습니다: 호출자가 `./` 접두사를 붙여 전달한 패턴이 이중 접두사가 되어 매칭에 실패하는 문제를 막았고, 기본 디렉토리 바로 아래에 있는 테스트(`src/top.test.ts` 대 `src/**/*.test.ts`)가 소리 없이 건너뛰어지지 않도록 `**/`가 축약된(collapsed) 형태로도 매칭되게 했습니다. 스크립트에 결정론적(deterministic) 테스트 스위트도 추가되었습니다.
+- **Codex 패키지 스크립트가 macOS 이외의 환경에서도 작동합니다.** 결정론적 메타데이터를 위한 tar 플래그들이 bsdtar 전용 표기법이었고, 스테이징된 파일 모드가 두 개의 umask가 상쇄되는 것에 의존하고 있었으며, 테스트의 타임스탬프 단언문은 미국 시간대 기준의 bsdtar 열 레이아웃을 파싱하고 있었습니다. 이제 GNU tar에도 바이트 단위로 동일한 헤더를 생성하는 동등한 플래그가 적용되며, 파일 모드는 표준(canonical) 값으로 고정되고, 테스트는 `tarfile`을 통해 mtime을 검증합니다.
+- **SDD의 스킬 테스트가 더 이상 간헐적으로 실패(flake)하지 않습니다.** 파일의 최악 실행 시간이 러너의 파일당 제한 시간(900초로 상향)을 초과했었고, 단언 헬퍼들이 자유 형식의 모델 산문을 대소문자를 구분하여 매칭하고 있었습니다. 이제 대소문자를 구분하지 않고 매칭하며, 다음 간헐적 실패를 진단할 수 있도록 실패 시 `assert_order`가 출력을 덤프합니다.
+- **v6.1.0 참조 문서 정리 이후의 문서 및 테스트 정리.** 삭제된 `claude-code-tools.md`/`copilot-tools.md`를 가리키던 끊어진 링크들을 현재 아키텍처에 맞게 교체했고(#1969), Antigravity 참조 문서에서 대상을 잃은 `#subagent-support` 앵커를 제거했으며(#2010), Antigravity/Pi 매핑 테스트는 남아 있는 하네스별 매핑만 검증하도록 수정했습니다(표가 삭제되면 다시 실패하도록 범위를 표로 한정).
 
 ## v6.1.1 (2026-07-02)
 
 ### Codex
 
-- **Codex no longer re-registers the Claude SessionStart hook.** v6.1.0 removed the Codex hook config and its manifest `hooks` pointer, meaning to stop Codex from installing a SessionStart hook — but with no `hooks` field, Codex fell back to auto-discovering `hooks/hooks.json`, the Claude Code SessionStart hook that the marketplace ships from the repo root, and re-registered it along with its install-time trust prompt. The Codex manifest now declares an explicit empty hooks object (`hooks: {}`), which Codex reads as "no hooks" instead of reaching the auto-discovery fallback. An absent field, `[]`, and an empty inline list all collapse back to the fallback, so the value has to be exactly `{}`.
-- **Removed orphaned Codex session-start dead code.** `hooks/session-start-codex` had no caller once the Codex hook config was deleted, so it and its redundant test cases are gone. The worked shell-hook example in `docs/porting-to-a-new-harness.md` moves from Codex — now native skill discovery with no session-start hook — to Cursor, a live shell-hook harness, and the stale `hooks-codex.json` pointer in `docs/windows/polyglot-hooks.md` is corrected. The Codex plugin category is also fixed to "Developer Tools".
+- **Codex가 더 이상 Claude SessionStart 훅을 다시 등록하지 않습니다.** v6.1.0에서 Codex가 SessionStart 훅을 설치하지 않도록 Codex 훅 설정과 매니페스트의 `hooks` 포인터를 제거했었습니다. 하지만 `hooks` 필드가 아예 없으면 Codex는 저장소 루트에서 마켓플레이스가 배포하는 Claude Code용 SessionStart 훅인 `hooks/hooks.json`을 자동 탐색하는 폴백을 수행하여, 설치 시점의 신뢰 확인 프롬프트와 함께 이를 다시 등록해 버렸습니다. 이제 Codex 매니페스트는 명시적인 빈 훅 객체(`hooks: {}`)를 선언하며, Codex는 자동 탐색 폴백으로 넘어가는 대신 이를 "훅 없음"으로 읽습니다. 필드가 생략되거나 `[]` 또는 빈 인라인 리스트인 경우 모두 폴백으로 돌아가므로 값은 정확히 `{}`여야 합니다.
+- **고아가 된 Codex 세션 시작 불필요 코드(dead code)를 제거했습니다.** Codex 훅 설정이 삭제되면서 `hooks/session-start-codex`를 호출하는 곳이 없어졌으므로 해당 파일과 중복 테스트 케이스들을 제거했습니다. `docs/porting-to-a-new-harness.md`의 셸 훅 실전 예시는 이제 세션 시작 훅 없이 네이티브 스킬 탐색을 사용하는 Codex에서 실제 셸 훅 하네스인 Cursor로 변경되었으며, `docs/windows/polyglot-hooks.md`의 오래된 `hooks-codex.json` 포인터도 수정되었습니다. 또한 Codex 플러그인 카테고리가 "Developer Tools"로 수정되었습니다.
 
-### Packaging
+### 패키징 (Packaging)
 
-- **New `package-codex-plugin.sh` for building the Codex portal package.** A maintainer script produces a deterministic Codex "portal" archive — `.zip` by default, `tar.gz` on request — that normalizes entry timestamps, preserves executable modes, verifies every packaged skill ships its OpenAI metadata, includes the app and composer icons, and refuses to run against a dirty worktree. The packaged manifest keeps the source `hooks: {}` object so a portal-installed plugin avoids the same SessionStart auto-discovery, and the script can rebuild a byte-identical archive from a saved metadata source. Covered by a new test suite.
+- **Codex 포털 패키지 빌드를 위한 새로운 `package-codex-plugin.sh` 추가.** 메인테이너 스크립트가 결정론적인 Codex "포털" 아카이브(기본값 `.zip`, 요청 시 `tar.gz`)를 생성합니다. 이 스크립트는 항목 타임스탬프를 정규화하고, 실행 권한 모드를 보존하며, 패키징된 모든 스킬에 OpenAI 메타데이터가 포함되어 있는지 검증하고, 앱 및 컴포저 아이콘을 포함하며, 작업 트리가 깨끗하지 않으면(dirty worktree) 실행을 거부합니다. 패키징된 매니페스트는 소스의 `hooks: {}` 객체를 유지하여 포털에서 설치된 플러그인도 동일한 SessionStart 자동 탐색을 피할 수 있게 하며, 저장된 메타데이터 소스로부터 바이트 단위로 동일한 아카이브를 다시 빌드할 수 있습니다. 새로운 테스트 스위트로 검증됩니다.
 
 ## v6.1.0 (2026-06-30)
 
-### Lower Per-Session Token Cost
+### 세션당 토큰 비용 절감 (Lower Per-Session Token Cost)
 
-The `using-superpowers` bootstrap is injected into every session, so its size is paid for constantly. This release trims it and the per-harness references it points to, without dropping behavior-shaping content.
+`using-superpowers` 부트스트랩은 모든 세션에 주입되므로 그 크기만큼의 비용이 매번 지불됩니다. 이번 릴리스는 행동을 형성하는 핵심 콘텐츠를 유지하면서 부트스트랩과 각 하네스별 참조 문서를 다듬었습니다.
 
-- **Compressed the `using-superpowers` bootstrap.** Replaced the graphviz skill-flow diagram with the prose it encoded, folded the standalone Instruction-Priority section into User Instructions, dropped the per-platform "How to Access Skills" walkthrough, and trimmed the Platform Adaptation pointer to the harnesses that still ship a reference file. The full Red Flags rationalization table and the user-instruction precedence rules are unchanged.
-- **Pruned the per-harness tool-mapping references.** The verbose action-to-tool tables restated guidance modern agents already follow. Each reference file is trimmed to the harness-specific notes that still carry weight — subagent dispatch, task tracking, instructions-file paths — and `claude-code-tools.md` and `copilot-tools.md`, which had nothing harness-specific left, are deleted.
+- **`using-superpowers` 부트스트랩을 압축했습니다.** graphviz 스킬 흐름도를 그 안에 담긴 산문으로 대체하고, 독립된 Instruction-Priority 섹션을 User Instructions에 통합했으며, 플랫폼별 "How to Access Skills" 안내를 제거하고, Platform Adaptation 포인터는 여전히 참조 파일을 배포하는 하네스들만 가리키도록 다듬었습니다. 전체 Red Flags 합리화 표와 사용자 지시 우선순위 규칙은 변경되지 않았습니다.
+- **하네스별 도구 매핑 참조 문서를 정리했습니다.** 장황한 행동-도구(action-to-tool) 표들은 최신 에이전트들이 이미 따르고 있는 가이드를 반복 설명하고 있었습니다. 각 참조 파일은 서브에이전트 디스패치, 태스크 추적, 지시사항 파일 경로 등 여전히 중요한 하네스 고유 참고 사항만 남기도록 다듬었으며, 하네스 고유 내용이 남지 않은 `claude-code-tools.md`와 `copilot-tools.md`는 삭제했습니다.
 
 ### Codex
 
-- **Codex can install from the marketplace.** Codex marketplace sources expect a `.agents/plugins/marketplace.json` at the marketplace root; the repo only shipped the Claude marketplace file, so Codex could name the marketplace but found no installable plugin entries. A repo-local Codex marketplace manifest now points at the same repository root, so the plugin is installable from Codex.
-- **Codex no longer ships a SessionStart hook.** Codex reliably triggers skills on its own, and the bootstrap hook made the UX worse rather than better. The Codex hook config (`hooks-codex.json`) and its manifest registration are removed.
+- **Codex가 마켓플레이스에서 설치할 수 있습니다.** Codex 마켓플레이스 소스는 루트에 `.agents/plugins/marketplace.json`이 있기를 기대하는데, 기존 저장소는 Claude 마켓플레이스 파일만 배포하여 Codex가 마켓플레이스 이름은 인식하더라도 설치 가능한 플러그인 항목을 찾지 못했습니다. 이제 저장소 로컬의 Codex 마켓플레이스 매니페스트가 동일한 저장소 루트를 가리키므로 Codex에서 플러그인을 설치할 수 있습니다.
+- **Codex가 더 이상 SessionStart 훅을 배포하지 않습니다.** Codex는 스스로 스킬을 안정적으로 트리거하며, 부트스트랩 훅은 오히려 UX를 악화시켰습니다. Codex 훅 설정(`hooks-codex.json`)과 매니페스트 등록이 제거되었습니다.
 
-### Harness Support
+### 하네스 지원 (Harness Support)
 
-- **Gemini CLI support removed.** Google EOLed the Gemini CLI on 2026-06-18; the extension can no longer be installed or updated. Gemini is gone from the install docs, the subagent-capable platform lists, and the eval-harness description, and its tool-mapping reference is deleted.
+- **Gemini CLI 지원이 제거되었습니다.** Google이 2026-06-18에 Gemini CLI를 단종(EOL)함에 따라 확장 프로그램을 더 이상 설치하거나 업데이트할 수 없게 되었습니다. 설치 문서, 서브에이전트 지원 플랫폼 목록, 평가 하네스 설명에서 Gemini가 제거되었으며 도구 매핑 참조 문서도 삭제되었습니다. *(참고: 이후 v6.2.0에서 복원됨)*
 
 ## v6.0.3 (2026-06-18)
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-- **SDD scratch files moved out of `.git/`.** Claude Code treats `.git/` as a protected path and denies agent writes there, so an implementer subagent writing its report into `.git/sdd/` got blocked mid-run. Task briefs, implementer reports, review diffs, and the progress ledger now live in a self-ignoring `.superpowers/sdd/` directory in the working tree — kept out of `git status` and out of commits, and resolved per worktree by a shared `sdd-workspace` helper. One caveat: because the workspace is git-ignored working-tree scratch, `git clean -fdx` will delete the progress ledger; recover from `git log` if that happens. (#1780)
+- **SDD 임시 파일들이 `.git/` 밖으로 이동했습니다.** Claude Code는 `.git/`을 보호된 경로로 취급하여 에이전트의 쓰기 작업을 거부하기 때문에, 구현자 서브에이전트가 리포트를 `.git/sdd/`에 작성하려다 실행 도중 차단되곤 했습니다. 이제 태스크 브리프, 구현자 리포트, 리뷰 diff, 진행 원장(progress ledger)은 작업 트리 내의 자체 무시(self-ignoring) 디렉토리인 `.superpowers/sdd/`에 위치합니다. 이 디렉토리는 `git status`와 커밋에서 제외되며 공유 `sdd-workspace` 헬퍼에 의해 워크트리별로 해석됩니다. 한 가지 주의할 점은 워크스페이스가 git에서 무시되는 작업 트리 임시 공간이므로 `git clean -fdx`를 실행하면 진행 원장이 삭제된다는 것입니다. 만약 그런 일이 발생하면 `git log`에서 복구하세요. (#1780)
 
 ## v6.0.2 (2026-06-16)
 
-### Install Fixes
+### 설치 버그 수정 (Install Fixes)
 
-- **We no longer ship the `evals` submodule.** It broke plugin installs for some users, so the eval harness now lives in its own repo, separate from the published plugin. (#1778, #1774)
+- **더 이상 `evals` 서브모듈을 함께 배포하지 않습니다.** 일부 사용자 환경에서 플러그인 설치를 깨뜨리는 원인이 되었기 때문에, 평가 하네스는 배포되는 플러그인과 분리되어 별도의 자체 저장소에 위치합니다. (#1778, #1774)
 
 ## v6.0.1 (2026-06-16)
 
-### Codex Fixes
+### Codex 버그 수정 (Codex Fixes)
 
-- **Version display in the brainstorm companion** — packaged Codex plugins ship without a root `package.json`, so the visual companion reported its version as "unknown". `readSuperpowersVersion()` now falls back to `.codex-plugin/plugin.json` when `package.json` is absent.
-- **Cleaner Codex plugin sync** — the sync-to-codex script now excludes `.gitmodules` and `.pre-commit-config.yaml`, keeping repo metadata out of the packaged Codex plugin.
+- **브레인스토밍 컴패니언의 버전 표시** — 패키징된 Codex 플러그인은 루트 `package.json` 없이 배포되기 때문에 비주얼 컴패니언이 버전을 "unknown"으로 보고했습니다. 이제 `readSuperpowersVersion()`은 `package.json`이 없을 때 `.codex-plugin/plugin.json`으로 폴백합니다.
+- **더 깔끔해진 Codex 플러그인 동기화** — sync-to-codex 스크립트가 이제 `.gitmodules`와 `.pre-commit-config.yaml`을 제외하여 패키징된 Codex 플러그인에 저장소 메타데이터가 포함되지 않도록 유지합니다.
 
 ## v6.0.0 (2026-06-16)
 
-Superpowers 6.0 is a big release. The headline is a rewrite of how `subagent-driven-development` reviews each task — cheaper, stricter, and harder to game. 
+Superpowers 6.0은 대규모 릴리스입니다. 가장 핵심적인 변경 사항은 `subagent-driven-development`가 각 태스크를 리뷰하는 방식을 전면 재작성하여 더 저렴하고, 더 엄격하며, 편법으로 통과하기 어렵게 만든 것입니다.
 
-While these numbers won't hold on every harness and for every workload, in our evals, Claude Code and Codex produce similar high-quality results roughly twice as fast and while spending almost 50% fewer tokens.
+모든 하네스와 모든 워크로드에서 동일한 수치가 나오지는 않겠지만, 자체 평가(evals)에서 Claude Code와 Codex는 거의 50% 더 적은 토큰을 소비하면서 약 두 배 빠른 속도로 유사한 고품질 결과를 만들어냈습니다.
 
-It also adds three new harnesses (Kimi Code, Pi, and Antigravity), gives the brainstorming visual companion a better security model, and rewrites a number of skills' tool calls to be significantly more vendor-neutral.
+또한 세 가지 새로운 하네스(Kimi Code, Pi, Antigravity)를 추가하고, 브레인스토밍 비주얼 컴패니언에 더 나은 보안 모델을 부여하며, 여러 스킬의 도구 호출을 특정 벤더에 종속되지 않도록 대폭 재작성했습니다.
 
-### Visible Changes
+### 눈에 띄는 변경 사항 (Visible Changes)
 
-- **The two per-task reviewer prompts became one.** `spec-reviewer-prompt.md` and `code-quality-reviewer-prompt.md` are gone, replaced by a single `task-reviewer-prompt.md`. If you dispatch the old files directly, switch to the new one.
-- **The legacy global worktree directory is gone.** `using-git-worktrees` and `finishing-a-development-branch` no longer use `~/.config/superpowers/worktrees/`. Worktrees now land in the project — an existing `.worktrees/` or `worktrees/` if you have one, otherwise a fresh `.worktrees/` — unless you say otherwise.
+- **태스크별 리뷰어 프롬프트 두 개가 하나로 합쳐졌습니다.** `spec-reviewer-prompt.md`와 `code-quality-reviewer-prompt.md`가 사라지고 단일 `task-reviewer-prompt.md`로 대체되었습니다. 기존 파일을 직접 디스패치하고 있었다면 새 파일로 전환하세요.
+- **레거시 전역 워크트리 디렉토리가 사라졌습니다.** `using-git-worktrees`와 `finishing-a-development-branch`는 더 이상 `~/.config/superpowers/worktrees/`를 사용하지 않습니다. 별도로 지정하지 않는 한 워크트리는 이제 프로젝트 내부(기존 `.worktrees/` 또는 `worktrees/`가 있다면 해당 위치, 없다면 새로운 `.worktrees/`)에 생성됩니다.
 
-### New Harness Support
+### 새로운 하네스 지원 (New Harness Support)
 
-Superpowers now runs on three more harnesses. Each ships its own bootstrap, a tool-mapping reference, and tests, and each gets its own install section in the README.
+이제 세 개의 추가 하네스에서 Superpowers가 실행됩니다. 각 하네스는 자체 부트스트랩, 도구 매핑 참조 문서, 테스트를 함께 배포하며 README에 별도의 설치 섹션이 마련되었습니다.
 
-- **Kimi Code** — a plugin manifest, install docs, and manifest tests; install from Kimi's marketplace or straight from the repo. (initial manifest by @qer)
-- **Pi** — a session-start extension that registers the skills and injects the `using-superpowers` bootstrap. Pi has native skills, so it needs no compatibility shim.
-- **Antigravity (`agy`)** — installs the plugin directly and bootstraps from the first message; verified end-to-end against the standard "make a react todo list" acceptance test.
+- **Kimi Code** — 플러그인 매니페스트, 설치 문서, 매니페스트 테스트 포함. Kimi 마켓플레이스 또는 저장소에서 직접 설치할 수 있습니다. (초기 매니페스트 작성: @qer)
+- **Pi** — 스킬을 등록하고 `using-superpowers` 부트스트랩을 주입하는 세션 시작 확장 프로그램. Pi는 네이티브 스킬을 지원하므로 별도의 호환성 심(shim)이 필요하지 않습니다.
+- **Antigravity (`agy`)** — 플러그인을 직접 설치하고 첫 번째 메시지부터 부트스트랩하며, 표준 "make a react todo list" 인수 테스트를 통해 엔드투엔드로 검증되었습니다.
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-A long run of cost-and-quality experiments on real projects reshaped how the controller reviews each task. The old flow ran two reviewers per task and leaned on the controller's judgment for model choice and severity, and both turned out to be expensive and easy to game. The new flow runs one reviewer per task, hands work off as files instead of pasted text, and takes several judgment calls away from the controller.
+실제 프로젝트들에서 장기간 진행한 비용 및 품질 실험을 통해 컨트롤러가 각 태스크를 리뷰하는 방식을 재설계했습니다. 기존 흐름은 태스크당 두 명의 리뷰어를 실행하고 모델 선택과 심각도 판단을 컨트롤러의 재량에 맡겼는데, 두 가지 모두 비용이 많이 들고 편법으로 우회하기 쉽다는 것이 드러났습니다. 새로운 흐름은 태스크당 한 명의 리뷰어를 실행하고, 텍스트를 붙여넣는 대신 파일로 작업을 전달하며, 컨트롤러로부터 몇 가지 판단 권한을 회수합니다.
 
-- **One reviewer per task, two verdicts.** A single `task-reviewer-prompt.md` reads the task's diff once and returns both a spec-compliance verdict and a quality verdict, so one fix pass clears both. A new "can't verify from the diff" verdict flags requirements that live in untouched code, for the controller to check itself. (#1538, #1543)
-- **One broad review at the end.** The run finishes with a single whole-branch review on the most capable model, instead of re-reviewing everything task by task.
-- **Plans get a pre-flight read.** Before the first task, the controller checks the plan for internal conflicts — and for anything the plan asks for that a reviewer would flag as a defect — and raises it all at once, rather than stumbling into it mid-run.
-- **Diffs and task text move as files.** A pasted diff parks itself permanently in the most expensive context, and a reviewer without one rebuilds it by hand — the single biggest reviewer cost. Two new scripts, `task-brief` and `review-package`, write the task text and the review diff to files for the subagent to read.
-- **Every dispatch states its model.** Left to choose, controllers stopped naming a model at all — and an unnamed model quietly inherits the session's most expensive one, so one run put all 26 of its reviewers on the top tier. The templates now require a model, with guidance that reaches for cheaper tiers when the work allows.
-- **The controller can't tell a reviewer what to ignore.** Real runs caught controllers coaching reviewers to skip a finding or call it "Minor at most," and the flaw shipped. Suppressing findings and pre-rating severity are now banned outright, and a defect the plan itself mandates gets reported for you to decide on rather than waved through.
-- **Reviewers are read-only and skeptical of rationales.** Review no longer touches the working tree or branch — a reviewer running `git checkout` had been orphaning later commits — and an implementer's "I left this unabstracted on purpose" no longer talks a reviewer out of a real finding.
-- **Stronger evidence and reporting.** Reviewers back each answer with a file and line, the implementer's report moves to a file and carries red/green evidence when TDD applies, and a progress ledger lets a controller that loses its context resume instead of redoing finished work. (#994)
+- **태스크당 한 명의 리뷰어, 두 개의 판정.** 단일 `task-reviewer-prompt.md`가 태스크의 diff를 한 번 읽고 명세 준수(spec-compliance) 판정과 품질(quality) 판정을 모두 반환하므로 한 번의 수정 패스로 두 가지를 모두 해결할 수 있습니다. 새로운 "diff만으로 검증 불가(can't verify from the diff)" 판정은 수정되지 않은 코드에 존재하는 요구사항을 표시하여 컨트롤러가 직접 확인하도록 합니다. (#1538, #1543)
+- **마지막에 수행하는 한 번의 폭넓은 리뷰.** 모든 것을 태스크별로 다시 리뷰하는 대신, 가장 성능이 뛰어난 모델에서 전체 브랜치에 대한 단일 리뷰를 수행하며 실행을 마무리합니다.
+- **계획서에 대한 사전 점검(pre-flight read).** 첫 번째 태스크를 시작하기 전에 컨트롤러가 계획서의 내부 충돌 여부와 계획서가 요구하는 사항 중 리뷰어가 결함으로 지적할 만한 부분을 미리 확인하여, 실행 도중에 부딪히는 대신 처음에 한꺼번에 제기합니다.
+- **파일로 이동하는 diff와 태스크 텍스트.** 붙여넣은 diff는 가장 비싼 컨텍스트에 영구적으로 자리 잡으며, diff를 받지 못한 리뷰어는 이를 수작업으로 다시 재구성하는데 이것이 리뷰어 비용 중 가장 큰 단일 요인이었습니다. 두 개의 새로운 스크립트인 `task-brief`와 `review-package`가 태스크 텍스트와 리뷰 diff를 파일로 작성하여 서브에이전트가 읽을 수 있게 합니다.
+- **모든 디스패치에 모델 명시.** 선택권을 맡겨두자 컨트롤러들이 아예 모델을 지정하지 않기 시작했고, 지정되지 않은 모델은 소리 없이 세션의 가장 비싼 모델을 상속받아 한 실행에서는 26명의 리뷰어 전원을 최상위 티어 모델로 실행하기도 했습니다. 이제 템플릿은 모델 지정을 필수로 요구하며, 작업 성격이 허용할 때는 더 저렴한 티어를 선택하도록 안내합니다.
+- **컨트롤러가 리뷰어에게 무엇을 무시할지 지시할 수 없음.** 실제 실행에서 컨트롤러가 리뷰어에게 특정 지적 사항을 건너뛰거나 "기껏해야 Minor"라고 부르도록 코칭하여 결함이 그대로 배포된 사례가 포착되었습니다. 이제 지적 사항을 억제하거나 심각도를 미리 매기는 행위는 전면 금지되며, 계획서 자체가 강제한 결함은 그냥 넘어가는 대신 사용자가 결정할 수 있도록 보고됩니다.
+- **리뷰어는 읽기 전용이며 변명에 회의적임.** 리뷰어가 `git checkout`을 실행하여 이후 커밋들을 고아(orphan)로 만들곤 했던 문제를 막기 위해 리뷰는 더 이상 작업 트리나 브랜치를 건드리지 않으며, 구현자의 "일부러 추상화하지 않고 남겨두었습니다" 같은 해명이 실제 결함 지적을 무마하지 못합니다.
+- **더 강력한 근거와 리포팅.** 리뷰어는 각 답변을 파일과 줄 번호로 뒷받침하며, 구현자의 리포트는 파일로 이동하여 TDD가 적용될 때 레드/그린(red/green) 근거를 담고, 진행 원장(progress ledger)을 통해 컨텍스트를 잃은 컨트롤러가 완료된 작업을 다시 하는 대신 이어서 재개할 수 있습니다. (#994)
 
-### Writing Plans
+### 계획 작성하기 (Writing Plans)
 
-Plans now carry the structure the controller and reviewers used to re-derive on every dispatch.
+이제 계획서는 이전에는 컨트롤러와 리뷰어가 매 디스패치마다 다시 도출해야 했던 구조를 자체적으로 포함합니다.
 
-- **A Global Constraints block** lists the rules that bind every task — version floors, dependency limits, naming and copy, exact values — copied in verbatim, so they actually reach the implementers and reviewers downstream.
-- **A per-task Interfaces block** names exactly what each task consumes and produces, so an implementer who sees only its own task still knows its neighbors' contracts.
-- **Right-sizing guidance** keeps a task at the size that earns its own test cycle and a reviewer's pass, folding setup, config, and docs into the task that needs them. In testing, a plan written this way needed one round of fixes where the control needed two to four — and the control shipped a real bug.
+- **Global Constraints 블록**은 모든 태스크에 적용되는 규칙(최소 버전, 의존성 제한, 네이밍 및 문구, 정확한 값 등)을 있는 그대로 복사해 나열하여 하위 단계의 구현자와 리뷰어에게 실제로 전달되게 합니다.
+- **태스크별 Interfaces 블록**은 각 태스크가 소비하고 생성하는 것을 정확히 명시하여, 자신의 태스크만 보는 구현자도 이웃 태스크의 계약(contract)을 알 수 있게 합니다.
+- **적정 규모 산정(Right-sizing) 가이드**는 설정, 구성, 문서를 이를 필요로 하는 태스크 안으로 통합하여, 각 태스크가 자체 테스트 사이클과 리뷰어의 패스를 받을 만한 적정 크기를 유지하도록 합니다. 테스트 결과 이 방식으로 작성된 계획은 대조군이 2~4라운드의 수정을 필요로 했던 곳에서 단 1라운드의 수정만 필요로 했으며, 심지어 대조군은 실제 버그를 배포했습니다.
 
-### Brainstorming Visual Companion
+### 브레인스토밍 비주얼 컴패니언 (Brainstorming Visual Companion)
 
-The visual companion is a small web server the agent opens alongside the conversation. It had no authentication at all, so on a shared or remote machine anyone who could reach the port could read your brainstorm — or inject events the agent treats as your input. This release gives it a real security model and makes it survive restarts and dropped connections.
+비주얼 컴패니언은 에이전트가 대화와 함께 여는 작은 웹 서버입니다. 기존에는 인증이 전혀 없어서 공유 머신이나 원격 머신에서 포트에 접근할 수 있는 사람이라면 누구나 브레인스토밍 내용을 읽거나 에이전트가 사용자의 입력으로 취급하는 이벤트를 주입할 수 있었습니다. 이번 릴리스는 실질적인 보안 모델을 부여하고 재시작이나 연결 끊김에도 살아남도록 개선합니다.
 
-- **A per-session key now guards everything.** The agent's URL carries a one-time key, the browser tucks it into a tab-scoped cookie, and every request and WebSocket connection has to present it. This closes the door to stray local tabs and routable remote hosts alike, including the DNS-rebinding case an origin allowlist can't catch. (Closes #1014)
-- **The file server stays in its sandbox.** It refuses symlinks, dotfiles, and any path that climbs out of the content directory, ignores macOS resource-fork files, and sends the usual no-store and deny-framing headers. Files that hold the session key are written owner-only.
-- **The companion is offered only when it helps.** The skill raises it the first time a question would read better shown than told, as its own message, and lets a decline stand. Accepting opens your browser to the first screen. (Closes #755)
-- **It survives restarts and flaky connections.** Given a project directory, the server keeps the same port and key across restarts, so an open tab simply reconnects. The page reconnects on its own, shows a live status pill, and raises a "paused" overlay while the server is down.
-- **Longer idle life, safer shutdown.** The idle timeout went from 30 minutes to 4 hours, and `stop-server.sh` now confirms it owns the right process before signaling, so it never kills an unrelated `node` after a reboot. (#1703)
-- **Windows launch hardening** — consolidated shell detection, and Windows now relies on the idle timeout for shutdown, since Node can't track POSIX process ownership across MSYS2.
+- **세션별 키가 모든 것을 보호합니다.** 에이전트의 URL은 일회용 키를 포함하며, 브라우저는 이를 탭 범위의 쿠키에 저장하고, 모든 요청과 WebSocket 연결은 이 키를 제시해야 합니다. 이를 통해 오리진 허용 목록(origin allowlist)으로는 잡을 수 없는 DNS 리바인딩(rebinding) 사례를 포함해, 길을 잃은 로컬 탭과 라우팅 가능한 원격 호스트 모두의 접근을 차단합니다. (#1014 해결)
+- **파일 서버가 샌드박스 내부에 머뭅니다.** 심볼릭 링크, 숨김 파일(dotfiles), 콘텐츠 디렉토리 밖으로 벗어나는 모든 경로를 거부하고, macOS 리소스 포크 파일을 무시하며, 표준 no-store 및 프레임 거부(deny-framing) 헤더를 전송합니다. 세션 키를 보관하는 파일은 소유자 전용(owner-only) 권한으로 작성됩니다.
+- **컴패니언은 도움이 될 때만 제안됩니다.** 말로 설명하는 것보다 눈으로 보여주는 편이 나은 질문이 처음 등장했을 때 별도의 메시지로 컴패니언을 제안하며, 거절하면 그대로 존중합니다. 수락하면 첫 번째 화면으로 브라우저가 열립니다. (#755 해결)
+- **재시작과 불안정한 연결에도 유지됩니다.** 프로젝트 디렉토리가 주어지면 서버는 재시작 후에도 동일한 포트와 키를 유지하므로 열려 있는 탭이 단순하게 재연결됩니다. 페이지는 스스로 재연결을 시도하며 실시간 상태 표시줄(status pill)을 보여주고 서버가 내려가 있는 동안 "일시 중지됨(paused)" 오버레이를 띄웁니다.
+- **더 길어진 유휴 수명과 더 안전한 종료.** 유휴 타임아웃이 30분에서 4시간으로 늘어났으며, `stop-server.sh`는 시그널을 보내기 전에 올바른 프로세스를 소유하고 있는지 확인하므로 재부팅 후 무관한 `node` 프로세스를 종료시키는 일이 없습니다. (#1703)
+- **Windows 실행 안정화** — 셸 감지를 통합했으며, Node가 MSYS2 너머의 POSIX 프로세스 소유권을 추적할 수 없기 때문에 Windows에서는 이제 유휴 타임아웃에 의존하여 서버를 종료합니다.
 
 
-### Existing Harness Updates
+### 기존 하네스 업데이트 (Existing Harness Updates)
 
-- **Codex** now bootstraps through its own SessionStart hook rather than shared wiring, and the Codex App gained an install section and fuller tool docs (web search, `AGENTS.md`, personal skills). (#1540)
-- **OpenCode** got an action-based tool mapping across its plugin, install doc, and README, plus a bootstrap-caching test.
-- **Cursor**'s manifest dropped its `agents` and `commands` entries, since those directories no longer exist.
+- **Codex**는 이제 공유 배선 대신 자체 SessionStart 훅을 통해 부트스트랩하며, Codex App에 설치 섹션과 더 충실한 도구 문서(웹 검색, `AGENTS.md`, 개인 스킬)가 추가되었습니다. (#1540)
+- **OpenCode**는 플러그인, 설치 문서, README 전반에 걸쳐 행동 기반(action-based) 도구 매핑을 적용받았으며 부트스트랩 캐싱 테스트가 추가되었습니다.
+- **Cursor**의 매니페스트에서 더 이상 존재하지 않는 디렉토리인 `agents`와 `commands` 항목을 제거했습니다.
 
-### One Set of Skills, Every Harness
+### 하나의 스킬 세트, 모든 하네스 (One Set of Skills, Every Harness)
 
-The skills used to speak Claude Code's dialect — "use the Task tool," "put it in CLAUDE.md." This release rewrites that vocabulary in terms of what you're actually doing ("dispatch a subagent," "your instructions file") and adds a per-harness reference that maps each action to the right tool, checked against each runtime. Prose that named "Claude" now says "your agent."
+기존 스킬들은 "Task 도구를 사용하세요", "CLAUDE.md에 넣으세요"처럼 Claude Code의 방언으로 작성되어 있었습니다. 이번 릴리스는 그러한 어휘를 실제로 수행하는 행동("서브에이전트를 디스패치하세요", "지시사항 파일") 중심의 표현으로 다시 작성하고, 각 런타임에 맞춰 검증된 하네스별 행동-도구 매핑 참조 문서를 추가했습니다. "Claude"라고 지칭하던 문구들은 이제 "당신의 에이전트(your agent)"라고 표현합니다.
 
-- **A tool reference per harness** at `skills/using-superpowers/references/`, covering Claude Code, Codex, Copilot, Gemini, Pi, and Antigravity.
-- **`finishing-a-development-branch` went forge-neutral** — it no longer hardcodes `gh pr create`, so agents push with whatever forge tooling they have. (#1609)
-- **One rename:** "Claude Search Optimization" is now "Skill Discovery Optimization," since the technique isn't Claude-specific.
+- `skills/using-superpowers/references/`에 Claude Code, Codex, Copilot, Gemini, Pi, Antigravity를 다루는 **하네스별 도구 참조 문서**가 추가되었습니다.
+- **`finishing-a-development-branch`가 포지 중립적(forge-neutral)으로 변경되었습니다** — 더 이상 `gh pr create`를 하드코딩하지 않으므로 에이전트가 보유한 포지 도구가 무엇이든 사용하여 푸시할 수 있습니다. (#1609)
+- **이름 변경 한 가지:** "Claude Search Optimization" 기술은 Claude에만 국한되지 않으므로 이제 "Skill Discovery Optimization"으로 불립니다.
 
-### Writing Skills
+### 스킬 작성하기 (Writing Skills)
 
-Two additions for skill authors.
+스킬 작성자를 위한 두 가지 추가 사항입니다.
 
-- **Match the Form to the Failure** — a short table for picking the right kind of guidance. A flat "don't do X" works for discipline slips but backfires when the problem is the *shape* of an output, where a worked example does better. The table, and a tighter scope on the existing rationalization section, steer authors to the form that actually helps.
-- **Micro-Test Wording** — a cheap way to check a phrasing before committing to it: sample it a handful of times against a no-guidance control and read every result by hand, treating run-to-run variance as a warning sign.
+- **실패 유형에 맞는 형식 선택 (Match the Form to the Failure)** — 올바른 종류의 가이드를 고르기 위한 짧은 표입니다. 단순한 "X를 하지 마세요"는 규율 일탈에는 효과가 있지만, 출력물의 *형태(shape)*가 문제일 때는 오히려 역효과를 내며 이때는 구체적인 예시(worked example)가 더 잘 작동합니다. 이 표와 더 좁혀진 기존 합리화 섹션의 범위가 작성자로 하여금 실제로 도움이 되는 형식을 선택하도록 안내합니다.
+- **문구 마이크로 테스트 (Micro-Test Wording)** — 특정 문구를 확정하기 전에 저렴하게 확인하는 방법입니다: 가이드가 없는 대조군과 비교하여 몇 번 샘플링 실행해 보고 모든 결과를 직접 읽으면서, 실행 간 편차(variance)를 경고 신호로 삼습니다.
 
-### Testing
+### 테스팅 (Testing)
 
-Skill-behavior testing moved out of `tests/` into a new `evals/` submodule built on "drill," which runs real Claude Code, Codex, and Gemini sessions and judges them with an LLM. Several in-tree bash suites retired once a stricter drill scenario covered them; the few with no equivalent stayed. From here on, `tests/` holds plugin-code tests and `evals/` holds skill-behavior tests, and `docs/testing.md` explains the split. New backends reach Antigravity, Pi, and more models, and new shell-lint and pre-commit checks guard the harness. (#1541)
+스킬 행동 테스팅이 `tests/`에서 분리되어 실제 Claude Code, Codex, Gemini 세션을 실행하고 LLM으로 판정하는 "drill" 기반의 새로운 `evals/` 서브모듈로 이동했습니다. 트리 내부의 여러 bash 스위트들은 더 엄격한 drill 시나리오가 대체함에 따라 은퇴했고, 대체할 시나리오가 없는 소수의 테스트만 남았습니다. 이제부터 `tests/`는 플러그인 코드 테스트를 담고 `evals/`는 스킬 행동 테스트를 담으며, `docs/testing.md`가 이 구분을 설명합니다. 새로운 백엔드가 Antigravity, Pi 및 더 많은 모델들을 지원하며, 새로운 셸 린트(shell-lint) 및 pre-commit 검사가 하네스를 보호합니다. (#1541)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **systematic-debugging no longer forces every session into extended thinking.** One bullet held the exact keyword Claude Code scans for, quietly tripping the switch on every session that loaded the skill. A hyphen breaks the keyword; the text still reads. (#1283, by @Nick Galatis)
-- **The Windows SessionStart hook stopped printing a write error every session** — each `printf` now routes through `cat` to absorb the broken pipe, and the output is otherwise unchanged. (#1612, reported by @silvertakana)
-- **Windows foreground mode** tracks the right process and clears its owner PID on MSYS2. (by @nestorluiscamachopaz)
-- **The `using-superpowers` bootstrap** no longer lists "debugging" as a skill that doesn't exist. (reported by @mhat)
-- **The TDD skill** links the testing anti-patterns reference. (#1532, #1529; link fix #1474 by @Stable Genius)
-- **`using-git-worktrees`** fixes its step numbering and drops stale Cursor references. (#1522, and by @fuleinist)
-- **The Codex review skill** swaps a private in-joke for plain guidance. (#1531)
+- **`systematic-debugging`이 더 이상 모든 세션을 확장 사고(extended thinking) 모드로 강제하지 않습니다.** 한 불릿 항목에 Claude Code가 스캔하는 정확한 키워드가 들어 있어서 해당 스킬을 로드한 모든 세션에서 소리 없이 스위치를 켜고 있었습니다. 하이픈을 넣어 키워드를 끊었으며 텍스트의 의미는 그대로 읽힙니다. (#1283, @Nick Galatis)
+- **Windows SessionStart 훅이 매 세션마다 쓰기 오류를 출력하던 문제를 수정했습니다** — 이제 각 `printf`가 `cat`을 거치도록 라우팅하여 끊어진 파이프(broken pipe)를 흡수하며, 그 외의 출력은 동일합니다. (#1612, 제보: @silvertakana)
+- **Windows 포그라운드 모드**가 MSYS2에서 올바른 프로세스를 추적하고 소유자 PID를 정리합니다. (@nestorluiscamachopaz)
+- **`using-superpowers` 부트스트랩**이 더 이상 존재하지 않는 스킬인 "debugging"을 나열하지 않습니다. (제보: @mhat)
+- **TDD 스킬**이 테스팅 안티패턴 참조 문서를 링크합니다. (#1532, #1529; 링크 수정 #1474: @Stable Genius)
+- **`using-git-worktrees`**의 단계 번호 매기기를 수정하고 오래된 Cursor 참조를 제거했습니다. (#1522, @fuleinist)
+- **Codex 리뷰 스킬**에서 내부 농담(in-joke)을 평이한 가이드 문구로 교체했습니다. (#1531)
 
-### Documentation & Contributor Guidelines
+### 문서 및 기여자 가이드라인 (Documentation & Contributor Guidelines)
 
-- **A guide to porting Superpowers to a new harness** (`docs/porting-to-a-new-harness.md`) lays out the three pieces every integration needs and the one rule that makes or breaks it: load the bootstrap at session start.
-- **Every PR and issue now discloses how it was made** — model, harness, version, and installed plugins, or a note that it was written by hand. We weigh a contribution differently depending on what produced it. PRs also target `dev`, not `main`. The PR template, all three issue templates, and a new platform-support template carry this.
+- **새로운 하네스로 Superpowers를 포팅하기 위한 가이드**(`docs/porting-to-a-new-harness.md`)가 모든 통합에 필요한 세 가지 요소와 성패를 가르는 단 하나의 규칙(세션 시작 시 부트스트랩 로드하기)을 설명합니다.
+- **모든 PR과 이슈는 이제 어떻게 작성되었는지 공개해야 합니다** — 모델, 하네스, 버전, 설치된 플러그인을 명시하거나 수작업으로 직접 작성되었음을 밝혀야 합니다. 무엇이 그 결과물을 만들어냈는지에 따라 기여의 가치를 다르게 평가합니다. 또한 PR은 `main`이 아닌 `dev`를 타겟으로 합니다. PR 템플릿, 세 가지 이슈 템플릿 모두, 그리고 새로운 플랫폼 지원 템플릿에 이 내용이 반영되었습니다.
 
-### Contributors
+### 기여자 (Contributors)
 
-Thanks to @mattvanhorn, @nawfal, @Nick Galatis, @silvertakana, @nestorluiscamachopaz, @qer, @mhat, @Stable Genius, @fuleinist, @dev_Hakaze, @robotsnh, Rahul, and @arittr.
+@mattvanhorn, @nawfal, @Nick Galatis, @silvertakana, @nestorluiscamachopaz, @qer, @mhat, @Stable Genius, @fuleinist, @dev_Hakaze, @robotsnh, Rahul, @arittr님께 감사드립니다.
 
 ## v5.1.0 (2026-04-30)
 
-### Removals
+### 제거된 항목 (Removals)
 
-- **Legacy slash commands removed** — `/brainstorm`, `/execute-plan`, and `/write-plan` are gone. They were deprecated stubs that did nothing but tell the user to invoke the corresponding skill. Invoke `superpowers:brainstorming`, `superpowers:executing-plans`, and `superpowers:writing-plans` directly instead. (#1188)
-- **`superpowers:code-reviewer` named agent removed** — the agent was the plugin's only named agent and was used by exactly two skills, while every other reviewer/implementer subagent in the repo dispatches `general-purpose` with a prompt template alongside its skill. The agent's persona and checklist have been merged into `skills/requesting-code-review/code-reviewer.md` as a self-contained Task-dispatch template. Anyone dispatching `Task (superpowers:code-reviewer)` should switch to `Task (general-purpose)` with the prompt template instead. (PR #1299)
-- **Integration sections removed from skills** — these were a legacy of the time before agents had native skills systems and didn't help with steering.
+- **레거시 슬래시 명령어 제거** — `/brainstorm`, `/execute-plan`, `/write-plan`이 사라졌습니다. 이들은 사용자에게 해당 스킬을 호출하라고 안내하는 것 외에는 아무 일도 하지 않던 지원 중단(deprecated) 스텁이었습니다. 대신 `superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`를 직접 호출하세요. (#1188)
+- **`superpowers:code-reviewer` 명명된 에이전트(named agent) 제거** — 이 에이전트는 플러그인의 유일한 명명된 에이전트였으며 단 두 개의 스킬에서만 사용된 반면, 저장소의 다른 모든 리뷰어/구현자 서브에이전트는 스킬 옆의 프롬프트 템플릿과 함께 `general-purpose`를 디스패치하고 있었습니다. 에이전트의 페르소나와 체크리스트는 독립적인 Task 디스패치 템플릿으로 `skills/requesting-code-review/code-reviewer.md`에 병합되었습니다. `Task (superpowers:code-reviewer)`를 디스패치하고 있었다면 프롬프트 템플릿과 함께 `Task (general-purpose)`를 사용하는 방식으로 전환하세요. (PR #1299)
+- **스킬에서 Integration 섹션 제거** — 에이전트에 네이티브 스킬 시스템이 없던 시절의 유산이었으며 에이전트 행동 유도(steering)에 도움이 되지 않았습니다.
 
-### Worktree Skills Rewrite
+### 워크트리 스킬 재작성 (Worktree Skills Rewrite)
 
-`using-git-worktrees` and `finishing-a-development-branch` now detect when the agent is already running inside an isolated worktree and prefer the harness's native worktree controls before falling back to `git worktree`. Behavior was TDD-validated and cross-platform-checked across five harnesses. (PRI-974, PR #1121)
+`using-git-worktrees`와 `finishing-a-development-branch`가 이제 에이전트가 이미 격리된 워크트리 내부에서 실행 중인지 감지하며, `git worktree`로 폴백하기 전에 하네스의 네이티브 워크트리 제어 기능을 우선 사용합니다. 이 동작은 TDD로 검증되었고 5개의 하네스에 걸쳐 크로스 플랫폼 점검을 마쳤습니다. (PRI-974, PR #1121)
 
-- **Environment detection** — both skills check `GIT_DIR != GIT_COMMON` before doing anything; if already in a linked worktree, creation is skipped entirely. A submodule guard prevents false detection.
-- **Consent before creating worktrees** — `using-git-worktrees` no longer creates worktrees implicitly; the skill asks the user first. Fixes #991 (subagent-driven-development was auto-creating worktrees without consent).
-- **Native tool preference (Step 1a)** — when the harness exposes its own worktree tool (e.g. Codex), the skill defers to it. The user's stated preference is respected when expressed.
-- **Provenance-based cleanup** — `finishing-a-development-branch` only cleans up worktrees inside `.worktrees/` (created by superpowers); anything outside is left alone. Fixes #940 (Option 2 was incorrectly cleaning up worktrees), #999 (merge-then-remove ordering), and #238 (`cd` to repo root before `git worktree remove`).
-- **Detached HEAD handling** — the finishing menu collapses to two options when there is no branch to merge from.
-- **Hardcoded `/Users/jesse` paths** in skill examples replaced with generic placeholders. (#858, PR #1122)
+- **환경 감지** — 두 스킬 모두 작업을 수행하기 전에 `GIT_DIR != GIT_COMMON`인지 확인합니다. 이미 연결된(linked) 워크트리 내부에 있다면 생성을 아예 건너뜁니다. 서브모듈 가드가 오탐(false detection)을 방지합니다.
+- **워크트리 생성 전 동의 확인** — `using-git-worktrees`가 더 이상 암묵적으로 워크트리를 생성하지 않고 사용자에게 먼저 묻습니다. #991(`subagent-driven-development`가 동의 없이 워크트리를 자동 생성하던 문제)을 수정합니다.
+- **네이티브 도구 우선 (Step 1a)** — 하네스가 자체 워크트리 도구(예: Codex)를 노출하는 경우 스킬은 해당 도구에 작업을 위임합니다. 사용자가 명시한 선호 사항이 있다면 이를 존중합니다.
+- **출처 기반(Provenance-based) 정리** — `finishing-a-development-branch`는 `.worktrees/` 내부(superpowers가 생성한 위치)의 워크트리만 정리하며 외부의 워크트리는 건드리지 않습니다. #940(Option 2가 워크트리를 잘못 정리하던 문제), #999(병합 후 제거 순서), #238(`git worktree remove` 전에 저장소 루트로 `cd`)을 수정합니다.
+- **Detached HEAD 처리** — 병합할 브랜치가 없는 경우 마무리 메뉴가 두 개의 선택지로 축소됩니다.
+- 스킬 예시의 **하드코딩된 `/Users/jesse` 경로**를 일반 플레이스홀더로 교체했습니다. (#858, PR #1122)
 
-### Contributor Guidelines for AI Agents
+### AI 에이전트를 위한 기여자 가이드라인 (Contributor Guidelines for AI Agents)
 
-Two new sections at the top of `CLAUDE.md` (symlinked to `AGENTS.md`) speak directly to AI agents. An audit of the last 100 closed PRs against this repo showed a 94% rejection rate driven by AI-generated slop: agents that didn't read the PR template, opened duplicates, fabricated problem descriptions, or pushed fork- or domain-specific changes upstream.
+`CLAUDE.md`(`AGENTS.md`로 심볼릭 링크됨) 상단의 새로운 두 섹션이 AI 에이전트에게 직접 이야기합니다. 이 저장소에 제출되었다가 닫힌 최근 100개의 PR을 감사한 결과, PR 템플릿을 읽지 않거나 중복 PR을 열거나 문제 설명을 지어내거나 포크/도메인 전용 변경 사항을 업스트림에 푸시한 에이전트들이 만든 저품질 AI 양산형(slop) PR로 인해 거절률이 94%에 달했습니다.
 
-- **Pre-submission checklist** — read the PR template, search for existing PRs, verify a real problem exists, confirm the change belongs in core, and show the human partner the complete diff before submitting.
-- **What we will not accept** — third-party dependencies, "compliance" rewrites of skill content, project-specific configuration, bulk PRs, speculative fixes, domain-specific skills, fork-specific changes, fabricated content, and bundled unrelated changes.
-- **New harness PRs require a session transcript** — most past new-harness integrations copied skill files or wrapped with `npx skills` instead of loading the `using-superpowers` bootstrap at session start. The acceptance test ("Let's make a react todo list" must auto-trigger `brainstorming` in a clean session) and a complete transcript are now required.
+- **제출 전 체크리스트** — PR 템플릿 읽기, 기존 PR 검색, 실제 문제인지 확인, 변경 사항이 코어에 속하는지 확인, 제출 전 인간 파트너에게 전체 diff 보여주기.
+- **우리가 수락하지 않는 것** — 서드파티 의존성, 스킬 콘텐츠의 "규격 준수(compliance)" 재작성, 프로젝트별 설정, 대량(bulk) PR, 추측성 수정, 특정 도메인에 국한된 스킬, 포크 전용 변경 사항, 지어낸 콘텐츠, 관련 없는 변경 사항들의 묶음.
+- **새로운 하네스 PR은 세션 트랜스크립트 필수** — 과거의 새로운 하네스 통합 PR 대부분은 세션 시작 시 `using-superpowers` 부트스트랩을 로드하는 대신 스킬 파일을 복사하거나 `npx skills`로 감싸는 방식이었습니다. 이제 인수 테스트(깨끗한 세션에서 "Let's make a react todo list" 입력 시 `brainstorming`이 자동 트리거되어야 함)와 전체 트랜스크립트가 필수로 요구됩니다.
 
-### Codex Plugin Mirror Tooling
+### Codex 플러그인 미러링 도구 (Codex Plugin Mirror Tooling)
 
-New `sync-to-codex-plugin` script mirrors superpowers into the OpenAI Codex plugin marketplace as `prime-radiant-inc/openai-codex-plugins`. Path/user-agnostic so any team member can run it. (PR #1165)
+새로운 `sync-to-codex-plugin` 스크립트가 superpowers를 OpenAI Codex 플러그인 마켓플레이스에 `prime-radiant-inc/openai-codex-plugins`로 미러링합니다. 경로 및 사용자에 종속되지 않아 팀원 누구나 실행할 수 있습니다. (PR #1165)
 
-- Clones the fork fresh into a temp directory per run, regenerates overlays inline, and opens a PR; auto-detects upstream from the script's own location and preflights `rsync`/`git`/`gh auth`/`python3`.
-- `--bootstrap` flag for first-time setup; `EXCLUDES` patterns anchored to source root; `assets/` excluded.
-- Mirrors `CODE_OF_CONDUCT.md`; drops the `agents/openai.yaml` overlay.
-- Seeds `interface.defaultPrompt` in the mirrored `plugin.json`. (PR #1180 by @arittr)
-- Codex plugin files are committed to the source repo so the sync script uses canonical versions; Codex marketplace metadata is preserved.
+- 실행할 때마다 포크를 임시 디렉토리에 새로 클론하고 오버레이를 인라인으로 재생성한 뒤 PR을 엽니다. 스크립트의 자체 위치에서 업스트림을 자동 감지하고 `rsync`/`git`/`gh auth`/`python3`를 사전 점검(preflight)합니다.
+- 최초 설정을 위한 `--bootstrap` 플래그 지원, `EXCLUDES` 패턴을 소스 루트에 고정, `assets/` 제외.
+- `CODE_OF_CONDUCT.md`를 미러링하며 `agents/openai.yaml` 오버레이는 제거합니다.
+- 미러링된 `plugin.json`에 `interface.defaultPrompt`를 시드(seed)합니다. (PR #1180, @arittr)
+- 동기화 스크립트가 정식(canonical) 버전을 사용하도록 Codex 플러그인 파일들을 소스 저장소에 커밋했으며, Codex 마켓플레이스 메타데이터가 보존됩니다.
 
 ### OpenCode
 
-- **Bootstrap content cached at module level** — `getBootstrapContent()` was calling `fs.existsSync` + `fs.readFileSync` + frontmatter regex on every agent step (the `experimental.chat.messages.transform` hook fires on every step in OpenCode's agent loop). Now read once, cached for the session lifetime, with a null sentinel for the missing-file case. 15 regression tests cover cache behavior, fs call counts, the injection guard, the missing-file sentinel, and cache reset. (Fixes #1202)
-- **Integration tests modernized**.
-- **Install caveats clarified** in the README.
+- **모듈 수준에서 부트스트랩 콘텐츠 캐싱** — `getBootstrapContent()`가 에이전트의 매 스텝마다 `fs.existsSync` + `fs.readFileSync` + 프론트매터 정규식을 호출하고 있었습니다(`experimental.chat.messages.transform` 훅은 OpenCode 에이전트 루프의 모든 스텝마다 실행됨). 이제 한 번만 읽고 파일이 없는 경우를 위한 null 센티넬(sentinel)과 함께 세션 수명 동안 캐싱합니다. 15개의 회귀 테스트가 캐시 동작, fs 호출 횟수, 주입 가드, 파일 누락 센티넬, 캐시 리셋을 검증합니다. (#1202 수정)
+- **통합 테스트 현대화**.
+- README에 **설치 시 주의 사항을 명확히 기술**했습니다.
 
-### Code Review Consolidation
+### 코드 리뷰 통합 (Code Review Consolidation)
 
-`requesting-code-review` is now self-contained: the persona, checklist, and dispatch template live in `skills/requesting-code-review/code-reviewer.md` and the skill dispatches `Task (general-purpose)` directly. (PR #1299)
+`requesting-code-review`가 이제 자체 완결적(self-contained)인 구조를 갖습니다: 페르소나, 체크리스트, 디스패치 템플릿이 `skills/requesting-code-review/code-reviewer.md`에 위치하며 스킬이 `Task (general-purpose)`를 직접 디스패치합니다. (PR #1299)
 
-- **Single source of truth** — the persona/checklist that previously lived in both `agents/code-reviewer.md` and the skill's placeholder template (and drifted independently) is now one file.
-- **`subagent-driven-development` follows suit** — its `code-quality-reviewer-prompt.md` now dispatches `Task (general-purpose)` instead of the named agent.
-- **Behavioral test added** — `tests/claude-code/test-requesting-code-review.sh` plants real bugs (SQL injection, plaintext password handling, credential logging) into a tiny project and asserts the dispatched reviewer flags every planted issue at Critical/Important severity and refuses to approve the diff.
+- **단일 진실 공급원(Single source of truth)** — 이전에는 `agents/code-reviewer.md`와 스킬의 플레이스홀더 템플릿 양쪽에 존재하며 각자 따로 변경되던 페르소나/체크리스트가 이제 하나의 파일로 합쳐졌습니다.
+- **`subagent-driven-development`도 동일하게 적용** — `code-quality-reviewer-prompt.md`가 이제 명명된 에이전트 대신 `Task (general-purpose)`를 디스패치합니다.
+- **행동 테스트 추가** — `tests/claude-code/test-requesting-code-review.sh`가 작은 프로젝트에 실제 버그(SQL 인젝션, 평문 비밀번호 처리, 자격 증명 로깅)를 심어두고 디스패치된 리뷰어가 심어둔 모든 이슈를 Critical/Important 심각도로 지적하며 diff 승인을 거부하는지 검증합니다.
 
-> Note: `tests/claude-code/test-requesting-code-review.sh` and `tests/claude-code/test-document-review-system.sh` (mentioned later in this document) were lifted into drill scenarios on 2026-05-06 and removed from `tests/`. See `evals/scenarios/code-review-catches-planted-bugs.yaml` and `evals/scenarios/spec-reviewer-catches-planted-flaws.yaml`. The references above and below are preserved as dated artifacts of the work this section describes.
-- **Codex and Copilot workaround docs trimmed** — the "Named agent dispatch" sections in `references/codex-tools.md` and `references/copilot-tools.md` documented how to flatten a named agent into a generic dispatch. With no named agents shipping, the workaround is unnecessary; both sections were dropped.
+> 참고: `tests/claude-code/test-requesting-code-review.sh` 및 (이 문서의 뒷부분에 언급되는) `tests/claude-code/test-document-review-system.sh`는 2026-05-06에 drill 시나리오로 승격되면서 `tests/`에서 제거되었습니다. `evals/scenarios/code-review-catches-planted-bugs.yaml` 및 `evals/scenarios/spec-reviewer-catches-planted-flaws.yaml`을 참조하세요. 위와 아래의 참조는 이 섹션이 설명하는 작업 당시의 기록으로 보존되었습니다.
+- **Codex 및 Copilot 우회 문서 정리** — `references/codex-tools.md`와 `references/copilot-tools.md`의 "Named agent dispatch" 섹션은 명명된 에이전트를 일반 디스패치로 평탄화(flatten)하는 방법을 설명하고 있었습니다. 이제 명명된 에이전트가 배포되지 않으므로 해당 우회 방법은 불필요해져 두 섹션 모두 제거되었습니다.
 
-### Subagent-Driven Development
+### 서브에이전트 기반 개발 (Subagent-Driven Development)
 
-- **No more pause every 3 tasks** — the "review after each batch (3 tasks)" cadence in `requesting-code-review` (originally for `executing-plans`) was leaking into `subagent-driven-development`. Replaced with "each task or at natural checkpoints" plus an explicit continuous-execution directive.
-- **SDD integration test now runs its assertions** — three independent bugs caused the test to silently bail before printing any verification results: an unresolved `..` segment in the working-dir path, a `set -euo pipefail` interaction with `find | sort | head -1` (SIGPIPE on the producer killed the script), and a missing `--plugin-dir` on the `claude -p` invocation that caused the test to load the installed plugin instead of the working tree. All three fixed; six verification tests now actually run against a real end-to-end SDD run.
+- **더 이상 3개 태스크마다 멈추지 않음** — (원래 `executing-plans`용이었던) `requesting-code-review`의 "배치(3개 태스크)마다 리뷰" 주기가 `subagent-driven-development`로 새어 들어가고 있었습니다. 명시적인 연속 실행 지시문과 함께 "각 태스크마다 또는 자연스러운 체크포인트에서"로 교체되었습니다.
+- **SDD 통합 테스트가 실제로 단언문(assertions)을 실행함** — 세 가지 독립적인 버그 때문에 테스트가 검증 결과를 출력하기 전에 소리 없이 종료되고 있었습니다: 작업 디렉토리 경로의 해석되지 않은 `..` 세그먼트, `find | sort | head -1`과 `set -euo pipefail`의 상호작용(생산자 프로세스의 SIGPIPE가 스크립트를 종료시킴), 그리고 `claude -p` 호출에서 `--plugin-dir`이 누락되어 작업 트리 대신 설치된 플러그인을 로드하던 문제였습니다. 세 가지 모두 수정되어 이제 6개의 검증 테스트가 실제 엔드투엔드 SDD 실행을 대상으로 정상 작동합니다.
 
 ### Cursor
 
-- **Windows SessionStart hook** routed through `run-hook.cmd` instead of invoking the extensionless `session-start` script directly. Fixes Windows opening the file in an editor instead of running it. Also removed an accidental UTF-8 BOM from `hooks-cursor.json`.
+- **Windows SessionStart 훅**이 확장자가 없는 `session-start` 스크립트를 직접 호출하는 대신 `run-hook.cmd`를 거치도록 라우팅되었습니다. Windows가 파일을 실행하는 대신 편집기에서 열던 문제를 수정합니다. 또한 `hooks-cursor.json`에 실수로 들어간 UTF-8 BOM을 제거했습니다.
 
 ### Gemini CLI
 
-- **Subagent dispatch mapping** — Gemini's `Task` dispatch now maps to `@agent-name` / `@generalist`, with parallel subagent dispatch documented for independent tasks.
+- **서브에이전트 디스패치 매핑** — Gemini의 `Task` 디스패치가 이제 `@agent-name` / `@generalist`로 매핑되며, 독립적인 태스크를 위한 병렬 서브에이전트 디스패치가 문서화되었습니다.
 
-### Skills
+### 스킬 (Skills)
 
-- **Terminology cleanups** across skill content.
+- 스킬 콘텐츠 전반에 걸쳐 **용어를 정리**했습니다.
 
-### Documentation & Install
+### 문서 및 설치 (Documentation & Install)
 
-- **Factory Droid installation instructions** added to README.
-- **Quickstart install links** in README. (PR #1293 by @arittr)
-- **Codex plugin install guidance** updated. (PR #1288 by @arittr)
-- **Codex `wait` mapping corrected** to `wait_agent` in the tools reference.
-- **Install order reorganized**; Codex install instructions cleaned up.
-- **Removed vestigial `CHANGELOG.md`** in favor of `RELEASE-NOTES.md` as the single source. (PR #1163 by @shaanmajid)
-- **Discord invite link** fixed; release announcements link and a detailed Discord description added to the Community section.
+- README에 **Factory Droid 설치 안내**를 추가했습니다.
+- README에 **빠른 시작(Quickstart) 설치 링크**를 추가했습니다. (PR #1293, @arittr)
+- **Codex 플러그인 설치 가이드**를 업데이트했습니다. (PR #1288, @arittr)
+- 도구 참조 문서에서 **Codex `wait` 매핑**을 `wait_agent`로 수정했습니다.
+- **설치 순서를 재구성**하고 Codex 설치 안내를 정리했습니다.
+- `RELEASE-NOTES.md`를 단일 소스로 삼기 위해 **흔적만 남아 있던 `CHANGELOG.md`를 제거**했습니다. (PR #1163, @shaanmajid)
+- **Discord 초대 링크**를 수정하고 Community 섹션에 릴리스 공지 링크와 상세한 Discord 설명을 추가했습니다.
 
-### Community
+### 커뮤니티 (Community)
 
-- @shaanmajid — vestigial `CHANGELOG.md` removal (PR #1163)
-- @arittr — README quickstart install links (#1293), Codex plugin install guidance (#1288), `sync-to-codex-plugin` `interface.defaultPrompt` seed (#1180)
+- @shaanmajid — 흔적만 남은 `CHANGELOG.md` 제거 (PR #1163)
+- @arittr — README 빠른 시작 설치 링크 (#1293), Codex 플러그인 설치 가이드 (#1288), `sync-to-codex-plugin`의 `interface.defaultPrompt` 시드 (#1180)
 
 ## v5.0.7 (2026-03-31)
 
-### GitHub Copilot CLI Support
+### GitHub Copilot CLI 지원
 
-- **SessionStart context injection** — Copilot CLI v1.0.11 added support for `additionalContext` in sessionStart hook output. The session-start hook now detects the `COPILOT_CLI` environment variable and emits the SDK-standard `{ "additionalContext": "..." }` format, giving Copilot CLI users the full superpowers bootstrap at session start. (Original fix by @culinablaz in PR #910)
-- **Tool mapping** — added `references/copilot-tools.md` with the full Claude Code to Copilot CLI tool equivalence table
-- **Skill and README updates** — added Copilot CLI to the `using-superpowers` skill's platform instructions and README installation section
+- **SessionStart 컨텍스트 주입** — Copilot CLI v1.0.11에서 sessionStart 훅 출력의 `additionalContext` 지원이 추가되었습니다. 이제 session-start 훅이 `COPILOT_CLI` 환경 변수를 감지하여 SDK 표준 `{ "additionalContext": "..." }` 형식을 출력하므로, Copilot CLI 사용자에게도 세션 시작 시 전체 superpowers 부트스트랩을 제공합니다. (원본 수정: PR #910, @culinablaz)
+- **도구 매핑** — 전체 Claude Code 대 Copilot CLI 도구 대응표가 담긴 `references/copilot-tools.md`를 추가했습니다.
+- **스킬 및 README 업데이트** — `using-superpowers` 스킬의 플랫폼 지시사항 및 README 설치 섹션에 Copilot CLI를 추가했습니다.
 
-### OpenCode Fixes
+### OpenCode 버그 수정
 
-- **Skills path consistency** — the bootstrap text no longer advertises a misleading `configDir/skills/superpowers/` path that didn't match the runtime path. The agent should use the native `skill` tool, not navigate to files by path. Tests now use consistent paths derived from a single source of truth. (#847, #916)
-- **Bootstrap as user message** — moved bootstrap injection from `experimental.chat.system.transform` to `experimental.chat.messages.transform`, prepending to the first user message instead of adding a system message. Avoids token bloat from system messages repeated every turn (#750) and fixes compatibility with Qwen and other models that break on multiple system messages (#894).
+- **스킬 경로 일관성** — 부트스트랩 텍스트가 더 이상 실제 런타임 경로와 일치하지 않는 오해의 소지가 있는 `configDir/skills/superpowers/` 경로를 안내하지 않습니다. 에이전트는 경로로 파일을 찾아가는 대신 네이티브 `skill` 도구를 사용해야 합니다. 이제 테스트들도 단일 진실 공급원(single source of truth)에서 파생된 일관된 경로를 사용합니다. (#847, #916)
+- **사용자 메시지로서의 부트스트랩** — 부트스트랩 주입 위치를 `experimental.chat.system.transform`에서 `experimental.chat.messages.transform`으로 옮겨, 시스템 메시지를 추가하는 대신 첫 번째 사용자 메시지 앞에 붙이도록 변경했습니다. 매 턴마다 반복되는 시스템 메시지로 인한 토큰 낭비를 방지하고(#750), 여러 개의 시스템 메시지가 주어지면 깨지는 Qwen 및 기타 모델들과의 호환성 문제를 해결합니다(#894).
 
 ## v5.0.6 (2026-03-24)
 
-### Inline Self-Review Replaces Subagent Review Loops
+### 서브에이전트 리뷰 루프를 대체하는 인라인 셀프 리뷰 (Inline Self-Review Replaces Subagent Review Loops)
 
-The subagent review loop (dispatching a fresh agent to review plans/specs) doubled execution time (~25 min overhead) without measurably improving plan quality. Regression testing across 5 versions with 5 trials each showed identical quality scores regardless of whether the review loop ran.
+서브에이전트 리뷰 루프(계획/명세서를 검토하기 위해 새로운 에이전트를 디스패치하는 방식)는 계획 품질을 눈에 띄게 개선하지 못하면서 실행 시간만 두 배(약 25분의 오버헤드)로 늘렸습니다. 5개 버전에 걸쳐 각 5회씩 수행한 회귀 테스트에서 리뷰 루프 실행 여부와 관계없이 동일한 품질 점수가 나타났습니다.
 
-- **brainstorming** — replaced Spec Review Loop (subagent dispatch + 3-iteration cap) with inline Spec Self-Review checklist: placeholder scan, internal consistency, scope check, ambiguity check
-- **writing-plans** — replaced Plan Review Loop (subagent dispatch + 3-iteration cap) with inline Self-Review checklist: spec coverage, placeholder scan, type consistency
-- **writing-plans** — added explicit "No Placeholders" section defining plan failures (TBD, vague descriptions, undefined references, "similar to Task N")
-- Self-review catches 3-5 real bugs per run in ~30s instead of ~25 min, with comparable defect rates to the subagent approach
+- **brainstorming** — Spec Review Loop(서브에이전트 디스패치 + 최대 3회 반복 제한)를 인라인 Spec Self-Review 체크리스트(플레이스홀더 스캔, 내부 일관성, 범위 점검, 모호성 점검)로 대체했습니다.
+- **writing-plans** — Plan Review Loop(서브에이전트 디스패치 + 최대 3회 반복 제한)를 인라인 Self-Review 체크리스트(명세 커버리지, 플레이스홀더 스캔, 타입 일관성)로 대체했습니다.
+- **writing-plans** — 계획 실패 사례(TBD, 모호한 설명, 정의되지 않은 참조, "Task N과 유사함")를 정의하는 명시적인 "No Placeholders" 섹션을 추가했습니다.
+- 셀프 리뷰는 서브에이전트 방식과 비슷한 결함 탐지율을 보이면서도 약 25분 대신 약 30초 만에 실행당 3~5개의 실제 버그를 잡아냅니다.
 
-### Brainstorm Server
+### 브레인스토밍 서버 (Brainstorm Server)
 
-- **Session directory restructured** — the brainstorm server session directory now contains two peer subdirectories: `content/` (HTML files served to the browser) and `state/` (events, server-info, pid, log). Previously, server state and user interaction data were stored alongside served content, making them accessible over HTTP. The `screen_dir` and `state_dir` paths are both included in the server-started JSON. (Reported by 吉田仁)
+- **세션 디렉토리 재구성** — 브레인스토밍 서버 세션 디렉토리가 이제 두 개의 동등한 하위 디렉토리인 `content/`(브라우저에 서빙되는 HTML 파일)와 `state/`(이벤트, server-info, pid, 로그)를 포함합니다. 이전에는 서버 상태와 사용자 상호작용 데이터가 서빙되는 콘텐츠와 함께 저장되어 HTTP를 통해 접근 가능했습니다. 서버 시작 시 출력되는 JSON에는 `screen_dir`과 `state_dir` 경로가 모두 포함됩니다. (제보: 吉田仁)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Owner-PID lifecycle fixes** — the brainstorm server's owner-PID monitoring had two bugs causing false shutdowns within 60 seconds: (1) EPERM from cross-user PIDs (Tailscale SSH, etc.) was treated as "process dead", and (2) on WSL the grandparent PID resolves to a short-lived subprocess that exits before the first lifecycle check. Fixed by treating EPERM as "alive" and validating the owner PID at startup — if it's already dead, monitoring is disabled and the server relies on the 30-minute idle timeout. This also removes the Windows/MSYS2-specific carve-out from `start-server.sh` since the server now handles it generically. (#879)
-- **writing-skills** — corrected false claim that SKILL.md frontmatter supports "only two fields"; now says "two required fields" and links to the agentskills.io specification for all supported fields (PR #882 by @arittr)
+- **소유자 PID(Owner-PID) 수명 주기 수정** — 브레인스토밍 서버의 소유자 PID 모니터링에 60초 이내의 잘못된 자동 종료를 유발하는 두 가지 버그가 있었습니다: (1) 교차 사용자(cross-user) PID(Tailscale SSH 등)에서 발생하는 EPERM을 "프로세스 죽음"으로 취급했고, (2) WSL에서 조부모(grandparent) PID가 첫 수명 주기 점검 전에 종료되는 단명 서브프로세스로 해석되었습니다. EPERM을 "살아있음(alive)"으로 취급하고 시작 시점에 소유자 PID를 검증(이미 죽어 있다면 모니터링을 비활성화하고 30분 유휴 타임아웃에 의존)하도록 수정했습니다. 이로써 서버가 이를 범용적으로 처리하게 되어 `start-server.sh`에서 Windows/MSYS2 전용 예외 처리도 제거되었습니다. (#879)
+- **writing-skills** — `SKILL.md` 프론트매터가 "단 두 개의 필드만" 지원한다는 잘못된 설명을 "두 개의 필수 필드"로 바로잡고 지원되는 모든 필드에 대해 agentskills.io 명세 링크를 추가했습니다. (PR #882, @arittr)
 
-### Codex App Compatibility
+### Codex App 호환성 (Codex App Compatibility)
 
-- **codex-tools** — added named agent dispatch mapping documenting how to translate Claude Code's named agent types to Codex's `spawn_agent` with worker roles (PR #647 by @arittr)
-- **codex-tools** — added environment detection and Codex App finishing sections for worktree-aware skills (by @arittr)
-- **Design spec** — added Codex App compatibility design spec (PRI-823) covering read-only environment detection, worktree-safe skill behavior, and sandbox fallback patterns (by @arittr)
+- **codex-tools** — Claude Code의 명명된 에이전트 타입을 작업자 역할(worker roles)을 가진 Codex의 `spawn_agent`로 변환하는 방법을 문서화한 명명된 에이전트 디스패치 매핑을 추가했습니다. (PR #647, @arittr)
+- **codex-tools** — 워크트리를 인식하는(worktree-aware) 스킬을 위한 환경 감지 및 Codex App 마무리 섹션을 추가했습니다. (@arittr)
+- **설계 명세** — 읽기 전용 환경 감지, 워크트리 안전 스킬 동작, 샌드박스 폴백 패턴을 다루는 Codex App 호환성 설계 명세(PRI-823)를 추가했습니다. (@arittr)
 
 ## v5.0.5 (2026-03-17)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Brainstorm server ESM fix** — renamed `server.js` → `server.cjs` so the brainstorming server starts correctly on Node.js 22+ where the root `package.json` `"type": "module"` caused `require()` to fail. (PR #784 by @sarbojitrana, fixes #774, #780, #783)
-- **Brainstorm owner-PID on Windows** — skip PID lifecycle monitoring on Windows/MSYS2 where the PID namespace is invisible to Node.js, preventing the server from self-terminating after 60 seconds. (#770, docs from PR #768 by @lucasyhzlu-debug)
-- **stop-server.sh reliability** — verify the server process actually died before reporting success. SIGTERM + 2s wait + SIGKILL fallback. (#723)
+- **브레인스토밍 서버 ESM 수정** — 루트 `package.json`의 `"type": "module"` 때문에 `require()`가 실패하던 Node.js 22+ 환경에서도 브레인스토밍 서버가 올바르게 시작되도록 `server.js`를 `server.cjs`로 이름을 변경했습니다. (PR #784: @sarbojitrana, #774, #780, #783 수정)
+- **Windows에서의 브레인스토밍 소유자 PID** — Node.js에서 PID 네임스페이스가 보이지 않는 Windows/MSYS2 환경에서는 PID 수명 주기 모니터링을 건너뛰어 서버가 60초 후에 스스로 종료되는 문제를 방지합니다. (#770, 문서: PR #768 @lucasyhzlu-debug)
+- **stop-server.sh 신뢰성 개선** — 성공을 보고하기 전에 서버 프로세스가 실제로 종료되었는지 확인합니다. SIGTERM + 2초 대기 + SIGKILL 폴백을 수행합니다. (#723)
 
-### Changed
+### 변경 사항 (Changed)
 
-- **Execution handoff** — restore user choice between subagent-driven and inline execution after plan writing. Subagent-driven is recommended but no longer mandatory.
+- **실행 핸드오프(Execution handoff)** — 계획 작성 후 서브에이전트 기반 실행과 인라인 실행 중 사용자가 선택할 수 있는 옵션을 복원했습니다. 서브에이전트 기반 실행이 권장되지만 더 이상 강제되지는 않습니다.
 
 ## v5.0.4 (2026-03-16)
 
-### Review Loop Refinements
+### 리뷰 루프 개선 (Review Loop Refinements)
 
-Dramatically reduces token usage and speeds up spec and plan reviews by eliminating unnecessary review passes and tightening reviewer focus.
+불필요한 리뷰 패스를 없애고 리뷰어의 초점을 좁혀 토큰 사용량을 대폭 줄이고 명세 및 계획 리뷰 속도를 높였습니다.
 
-- **Single whole-plan review** — plan reviewer now reviews the complete plan in one pass instead of chunk-by-chunk. Removed all chunk-related concepts (`## Chunk N:` headings, 1000-line chunk limits, per-chunk dispatch).
-- **Raised the bar for blocking issues** — both spec and plan reviewer prompts now include a "Calibration" section: only flag issues that would cause real problems during implementation. Minor wording, stylistic preferences, and formatting quibbles should not block approval.
-- **Reduced max review iterations** — from 5 to 3 for both spec and plan review loops. If the reviewer is calibrated correctly, 3 rounds is plenty.
-- **Streamlined reviewer checklists** — spec reviewer trimmed from 7 categories to 5; plan reviewer from 7 to 4. Removed formatting-focused checks (task syntax, chunk size) in favor of substance (buildability, spec alignment).
+- **단일 전체 계획 리뷰** — 계획 리뷰어가 이제 청크(chunk) 단위가 아닌 한 번의 패스로 전체 계획을 검토합니다. 청크와 관련된 모든 개념(`## Chunk N:` 제목, 1000줄 청크 제한, 청크별 디스패치)을 제거했습니다.
+- **블로킹 이슈 기준 상향** — 명세 및 계획 리뷰어 프롬프트 모두에 "Calibration(보정)" 섹션을 추가했습니다: 실제 구현 중에 문제를 일으킬 만한 이슈만 지적하도록 합니다. 사소한 단어 선택, 스타일 선호도, 포맷에 대한 트집은 승인을 가로막지 않아야 합니다.
+- **최대 리뷰 반복 횟수 축소** — 명세 및 계획 리뷰 루프 모두에서 최대 반복 횟수를 5회에서 3회로 줄였습니다. 리뷰어가 올바르게 보정되었다면 3라운드로 충분합니다.
+- **리뷰어 체크리스트 간소화** — 명세 리뷰어는 7개 카테고리에서 5개로, 계획 리뷰어는 7개에서 4개로 줄였습니다. 형식 중심의 점검(태스크 문법, 청크 크기)을 제거하고 실질적인 내용(구현 가능성, 명세 정합성)에 집중합니다.
 
 ### OpenCode
 
-- **One-line plugin install** — OpenCode plugin now auto-registers the skills directory via a `config` hook. No symlinks or `skills.paths` config needed. Install is just adding one line to `opencode.json`. (PR #753)
-- **Added `package.json`** so OpenCode can install superpowers as an npm package from git.
+- **한 줄 플러그인 설치** — OpenCode 플러그인이 이제 `config` 훅을 통해 스킬 디렉토리를 자동 등록합니다. 심볼릭 링크나 `skills.paths` 설정이 필요하지 않으며, `opencode.json`에 한 줄만 추가하면 설치가 완료됩니다. (PR #753)
+- OpenCode가 git에서 npm 패키지로 superpowers를 설치할 수 있도록 **`package.json`을 추가**했습니다.
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Verify server actually stopped** — `stop-server.sh` now confirms the process is dead before reporting success. SIGTERM + 2s wait + SIGKILL fallback. Reports failure if the process survives. (PR #751)
-- **Generic agent language** — brainstorm companion waiting page now says "the agent" instead of "Claude".
+- **서버 실제 중지 확인** — `stop-server.sh`가 이제 성공을 보고하기 전에 프로세스가 죽었는지 확인합니다. SIGTERM + 2초 대기 + SIGKILL 폴백을 수행하며 프로세스가 살아남으면 실패를 보고합니다. (PR #751)
+- **범용 에이전트 표현** — 브레인스토밍 컴패니언 대기 페이지가 이제 "Claude" 대신 "the agent"라고 표시합니다.
 
 ## v5.0.3 (2026-03-15)
 
-### Cursor Support
+### Cursor 지원
 
-- **Cursor hooks** — added `hooks/hooks-cursor.json` with Cursor's camelCase format (`sessionStart`, `version: 1`) and updated `.cursor-plugin/plugin.json` to reference it. Fixed platform detection in `session-start` to check `CURSOR_PLUGIN_ROOT` first (Cursor may also set `CLAUDE_PLUGIN_ROOT`). (Based on PR #709)
+- **Cursor 훅** — Cursor의 camelCase 형식(`sessionStart`, `version: 1`)을 사용하는 `hooks/hooks-cursor.json`을 추가하고 이를 참조하도록 `.cursor-plugin/plugin.json`을 업데이트했습니다. `session-start`의 플랫폼 감지 로직이 `CURSOR_PLUGIN_ROOT`를 먼저 확인하도록 수정했습니다(Cursor는 `CLAUDE_PLUGIN_ROOT`도 함께 설정할 수 있음). (PR #709 기반)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Stop firing SessionStart hook on `--resume`** — the startup hook was re-injecting context on resumed sessions, which already have the context in their conversation history. The hook now fires only on `startup`, `clear`, and `compact`.
-- **Bash 5.3+ hook hang** — replaced heredoc (`cat <<EOF`) with `printf` in `hooks/session-start`. Fixes indefinite hang on macOS with Homebrew bash 5.3+ caused by a bash regression with large variable expansion in heredocs. (#572, #571)
-- **POSIX-safe hook script** — replaced `${BASH_SOURCE[0]:-$0}` with `$0` in `hooks/session-start`. Fixes "Bad substitution" error on Ubuntu/Debian where `/bin/sh` is dash. (#553)
-- **Portable shebangs** — replaced `#!/bin/bash` with `#!/usr/bin/env bash` in all shell scripts. Fixes execution on NixOS, FreeBSD, and macOS with Homebrew bash where `/bin/bash` is outdated or missing. (#700)
-- **Brainstorm server on Windows** — auto-detect Windows/Git Bash (`OSTYPE=msys*`, `MSYSTEM`) and switch to foreground mode, fixing silent server failure caused by `nohup`/`disown` process reaping. (#737)
-- **Codex docs fix** — replaced deprecated `collab` flag with `multi_agent` in Codex documentation. (PR #749)
+- **`--resume` 시 SessionStart 훅 실행 중지** — 시작 훅이 이미 대화 히스토리에 컨텍스트를 가지고 있는 재개된(resumed) 세션에서도 컨텍스트를 다시 주입하고 있었습니다. 이제 훅은 `startup`, `clear`, `compact` 시에만 실행됩니다.
+- **Bash 5.3+ 훅 멈춤(hang) 현상 수정** — `hooks/session-start`에서 히어독(`cat <<EOF`)을 `printf`로 교체했습니다. 히어독 내 대규모 변수 확장 시 발생하는 bash 회귀 버그로 인해 Homebrew bash 5.3+가 설치된 macOS에서 무한정 멈추던 현상을 수정합니다. (#572, #571)
+- **POSIX 안전 훅 스크립트** — `hooks/session-start`에서 `${BASH_SOURCE[0]:-$0}`을 `$0`으로 교체했습니다. `/bin/sh`가 dash인 Ubuntu/Debian에서 발생하던 "Bad substitution" 오류를 수정합니다. (#553)
+- **이식성 있는 셔뱅(Portable shebangs)** — 모든 셸 스크립트에서 `#!/bin/bash`를 `#!/usr/bin/env bash`로 교체했습니다. `/bin/bash`가 오래되었거나 없는 NixOS, FreeBSD 및 Homebrew bash를 사용하는 macOS에서의 실행 문제를 수정합니다. (#700)
+- **Windows에서의 브레인스토밍 서버** — Windows/Git Bash(`OSTYPE=msys*`, `MSYSTEM`)를 자동 감지하여 포그라운드 모드로 전환함으로써, `nohup`/`disown` 프로세스 수거(reaping)로 인해 서버가 소리 없이 실패하던 문제를 수정합니다. (#737)
+- **Codex 문서 수정** — Codex 문서에서 지원 중단된 `collab` 플래그를 `multi_agent`로 교체했습니다. (PR #749)
 
 ## v5.0.2 (2026-03-11)
 
-### Zero-Dependency Brainstorm Server
+### 제로 의존성 브레인스토밍 서버 (Zero-Dependency Brainstorm Server)
 
-**Removed all vendored node_modules — server.js is now fully self-contained**
+**모든 벤더링된 `node_modules` 제거 — 이제 `server.js`는 완전히 독립적(self-contained)으로 작동합니다**
 
-- Replaced Express/Chokidar/WebSocket dependencies with zero-dependency Node.js server using built-in `http`, `fs`, and `crypto` modules
-- Removed ~1,200 lines of vendored `node_modules/`, `package.json`, and `package-lock.json`
-- Custom WebSocket protocol implementation (RFC 6455 framing, ping/pong, proper close handshake)
-- Native `fs.watch()` file watching replaces Chokidar
-- Full test suite: HTTP serving, WebSocket protocol, file watching, and integration tests
+- Express/Chokidar/WebSocket 의존성을 내장 `http`, `fs`, `crypto` 모듈만 사용하는 제로 의존성 Node.js 서버로 대체했습니다.
+- 약 1,200줄에 달하던 벤더링된 `node_modules/`, `package.json`, `package-lock.json`을 제거했습니다.
+- 커스텀 WebSocket 프로토콜 구현(RFC 6455 프레이밍, ping/pong, 올바른 종료 핸드셰이크)을 적용했습니다.
+- 네이티브 `fs.watch()` 파일 감시가 Chokidar를 대체합니다.
+- 전체 테스트 스위트 완비: HTTP 서빙, WebSocket 프로토콜, 파일 감시 및 통합 테스트.
 
-### Brainstorm Server Reliability
+### 브레인스토밍 서버 신뢰성 개선 (Brainstorm Server Reliability)
 
-- **Auto-exit after 30 minutes idle** — server shuts down when no clients are connected, preventing orphaned processes
-- **Owner process tracking** — server monitors the parent harness PID and exits when the owning session dies
-- **Liveness check** — skill verifies server is responsive before reusing an existing instance
-- **Encoding fix** — proper `<meta charset="utf-8">` on served HTML pages
+- **30분 유휴 상태 지속 시 자동 종료** — 연결된 클라이언트가 없을 때 서버가 종료되어 고아 프로세스가 남는 것을 방지합니다.
+- **소유자 프로세스 추적** — 서버가 부모 하네스 PID를 모니터링하여 소유 세션이 종료되면 함께 종료됩니다.
+- **생존 확인(Liveness check)** — 스킬이 기존 인스턴스를 재사용하기 전에 서버가 응답하는지 확인합니다.
+- **인코딩 수정** — 서빙되는 HTML 페이지에 올바른 `<meta charset="utf-8">`을 적용했습니다.
 
-### Subagent Context Isolation
+### 서브에이전트 컨텍스트 격리 (Subagent Context Isolation)
 
-- All delegation skills (brainstorming, dispatching-parallel-agents, requesting-code-review, subagent-driven-development, writing-plans) now include context isolation principle
-- Subagents receive only the context they need, preventing context window pollution
+- 모든 위임 스킬(`brainstorming`, `dispatching-parallel-agents`, `requesting-code-review`, `subagent-driven-development`, `writing-plans`)에 컨텍스트 격리 원칙이 포함되었습니다.
+- 서브에이전트는 필요한 컨텍스트만 전달받아 컨텍스트 윈도우 오염을 방지합니다.
 
 ## v5.0.1 (2026-03-10)
 
-### Agentskills Compliance
+### Agentskills 규격 준수 (Agentskills Compliance)
 
-**Brainstorm-server moved into skill directory**
+**브레인스토밍 서버를 스킬 디렉토리 내부로 이동**
 
-- Moved `lib/brainstorm-server/` → `skills/brainstorming/scripts/` per the [agentskills.io](https://agentskills.io) specification
-- All `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/` references replaced with relative `scripts/` paths
-- Skills are now fully portable across platforms — no platform-specific env vars needed to locate scripts
-- `lib/` directory removed (was the last remaining content)
+- [agentskills.io](https://agentskills.io) 명세에 따라 `lib/brainstorm-server/` → `skills/brainstorming/scripts/`로 이동했습니다.
+- 모든 `${CLAUDE_PLUGIN_ROOT}/lib/brainstorm-server/` 참조를 상대 경로인 `scripts/`로 교체했습니다.
+- 이제 스크립트 위치를 찾기 위해 플랫폼별 환경 변수가 필요하지 않으므로 스킬이 모든 플랫폼에서 완전한 이식성을 갖습니다.
+- 마지막으로 남아 있던 내용이 이동됨에 따라 `lib/` 디렉토리를 제거했습니다.
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Gemini CLI extension**
+**Gemini CLI 확장 프로그램**
 
-- Native Gemini CLI extension support via `gemini-extension.json` and `GEMINI.md` at repo root
-- `GEMINI.md` @imports `using-superpowers` skill and tool mapping table at session start
-- Gemini CLI tool mapping reference (`skills/using-superpowers/references/gemini-tools.md`) — translates Claude Code tool names (Read, Write, Edit, Bash, etc.) to Gemini CLI equivalents (read_file, write_file, replace, etc.)
-- Documents Gemini CLI limitations: no subagent support, skills fall back to `executing-plans`
-- Extension root at repo root for cross-platform compatibility (avoids Windows symlink issues)
-- Install instructions added to README
+- 저장소 루트의 `gemini-extension.json` 및 `GEMINI.md`를 통한 네이티브 Gemini CLI 확장 프로그램 지원.
+- 세션 시작 시 `GEMINI.md`가 `@` 임포트로 `using-superpowers` 스킬과 도구 매핑 표를 불러옵니다.
+- Gemini CLI 도구 매핑 참조 문서(`skills/using-superpowers/references/gemini-tools.md`) — Claude Code 도구 이름(Read, Write, Edit, Bash 등)을 Gemini CLI 대응 도구(`read_file`, `write_file`, `replace` 등)로 변환합니다.
+- Gemini CLI의 한계점 문서화: 서브에이전트를 지원하지 않으므로 스킬들이 `executing-plans`로 폴백합니다.
+- 크로스 플랫폼 호환성을 위해 확장 프로그램 루트를 저장소 루트에 배치했습니다(Windows 심볼릭 링크 문제 방지).
+- README에 설치 안내를 추가했습니다.
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Multi-platform brainstorm server launch**
+**다중 플랫폼 브레인스토밍 서버 실행**
 
-- Per-platform launch instructions in visual-companion.md: Claude Code (default mode), Codex (auto-foreground via `CODEX_CI`), Gemini CLI (`--foreground` with `is_background`), and fallback for other environments
-- Server now writes startup JSON to `$SCREEN_DIR/.server-info` so agents can find the URL and port even when stdout is hidden by background execution
+- `visual-companion.md`에 플랫폼별 실행 안내 추가: Claude Code(기본 모드), Codex(`CODEX_CI`를 통한 자동 포그라운드), Gemini CLI(`is_background`와 함께 `--foreground` 사용), 그리고 기타 환경을 위한 폴백.
+- 백그라운드 실행으로 인해 stdout이 가려진 경우에도 에이전트가 URL과 포트를 찾을 수 있도록 서버가 시작 JSON을 `$SCREEN_DIR/.server-info`에 기록합니다.
 
-**Brainstorm server dependencies bundled**
+**브레인스토밍 서버 의존성 번들링**
 
-- `node_modules` vendored into the repo so the brainstorm server works immediately on fresh plugin installs without requiring `npm` at runtime
-- Removed `fsevents` from bundled deps (macOS-only native binary; chokidar falls back gracefully without it)
-- Fallback auto-install via `npm install` if `node_modules` is missing
+- 런타임에 `npm`이 없어도 새로 설치한 플러그인에서 브레인스토밍 서버가 즉시 작동하도록 `node_modules`를 저장소에 벤더링했습니다.
+- 번들된 의존성에서 `fsevents`를 제거했습니다(macOS 전용 네이티브 바이너리이며, 없어도 chokidar가 자연스럽게 폴백함).
+- `node_modules`가 누락된 경우 `npm install`을 통해 자동으로 설치하는 폴백을 지원합니다.
 
-**OpenCode tool mapping fix**
+**OpenCode 도구 매핑 수정**
 
-- `TodoWrite` → `todowrite` (was incorrectly mapped to `update_plan`); verified against OpenCode source
+- `TodoWrite` → `todowrite`로 수정했습니다(이전에는 `update_plan`으로 잘못 매핑되어 있었음). OpenCode 소스를 통해 검증했습니다.
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-**Windows/Linux: single quotes break SessionStart hook** (#577, #529, #644, PR #585)
+**Windows/Linux: 작은따옴표로 인해 SessionStart 훅이 깨지는 문제** (#577, #529, #644, PR #585)
 
-- Single quotes around `${CLAUDE_PLUGIN_ROOT}` in hooks.json fail on Windows (cmd.exe doesn't recognize single quotes as path delimiters) and on Linux (single quotes prevent variable expansion)
-- Fix: replaced single quotes with escaped double quotes — works across macOS bash, Windows cmd.exe, Windows Git Bash, and Linux, with and without spaces in paths
-- Verified on Windows 11 (NT 10.0.26200.0) with Claude Code 2.1.72 and Git for Windows
+- `hooks.json`에서 `${CLAUDE_PLUGIN_ROOT}`를 감싼 작은따옴표가 Windows(`cmd.exe`는 작은따옴표를 경로 구분자로 인식하지 않음)와 Linux(작은따옴표가 변수 확장을 막음)에서 실패를 유발했습니다.
+- 수정: 작은따옴표를 이스케이프된 큰따옴표로 교체하여 경로 내 공백 유무와 상관없이 macOS bash, Windows `cmd.exe`, Windows Git Bash, Linux 모두에서 작동하도록 했습니다.
+- Claude Code 2.1.72 및 Git for Windows가 설치된 Windows 11(NT 10.0.26200.0)에서 검증했습니다.
 
-**Brainstorming spec review loop skipped** (#677)
+**브레인스토밍 명세 리뷰 루프가 건너뛰어지는 문제** (#677)
 
-- The spec review loop (dispatch spec-document-reviewer subagent, iterate until approved) existed in the prose "After the Design" section but was missing from the checklist and process flow diagram
-- Since agents follow the diagram and checklist more reliably than prose, the spec review step was being skipped entirely
-- Added step 7 (spec review loop) to the checklist and corresponding nodes to the dot graph
-- Tested with `claude --plugin-dir` and `claude-session-driver`: worker now correctly dispatches the reviewer
+- 명세 리뷰 루프(`spec-document-reviewer` 서브에이전트를 디스패치하고 승인될 때까지 반복)가 산문의 "After the Design" 섹션에는 있었지만 체크리스트와 프로세스 흐름도에는 빠져 있었습니다.
+- 에이전트는 산문보다 다이어그램과 체크리스트를 더 충실히 따르기 때문에 명세 리뷰 단계가 통째로 건너뛰어지고 있었습니다.
+- 체크리스트에 7단계(명세 리뷰 루프)를 추가하고 dot 그래프에 해당 노드들을 추가했습니다.
+- `claude --plugin-dir` 및 `claude-session-driver`로 테스트하여 워커가 이제 리뷰어를 올바르게 디스패치함을 확인했습니다.
 
-**Cursor install command** (PR #676)
+**Cursor 설치 명령어** (PR #676)
 
-- Fixed Cursor install command in README: `/plugin-add` → `/add-plugin` (confirmed via Cursor 2.5 release announcement)
+- README의 Cursor 설치 명령어를 수정했습니다: `/plugin-add` → `/add-plugin` (Cursor 2.5 릴리스 공지를 통해 확인).
 
-**User review gate in brainstorming** (#565)
+**브레인스토밍의 사용자 리뷰 게이트** (#565)
 
-- Added explicit user review step between spec completion and writing-plans handoff
-- User must approve the spec before implementation planning begins
-- Checklist, process flow, and prose updated with the new gate
+- 명세 완료와 `writing-plans` 핸드오프 사이에 명시적인 사용자 리뷰 단계를 추가했습니다.
+- 구현 계획이 시작되기 전에 사용자가 명세를 승인해야 합니다.
+- 새로운 게이트를 체크리스트, 프로세스 흐름도, 산문에 모두 반영했습니다.
 
-**Session-start hook emits context only once per platform**
+**Session-start 훅이 플랫폼당 한 번만 컨텍스트를 출력**
 
-- Hook now detects whether it's running in Claude Code or another platform
-- Emits `hookSpecificOutput` for Claude Code, `additional_context` for others — prevents double context injection
+- 이제 훅이 Claude Code에서 실행 중인지 다른 플랫폼에서 실행 중인지 감지합니다.
+- Claude Code에서는 `hookSpecificOutput`을, 그 외 플랫폼에서는 `additional_context`를 출력하여 컨텍스트가 이중으로 주입되는 것을 방지합니다.
 
-**Linting fix in token analysis script**
+**토큰 분석 스크립트의 린팅 수정**
 
-- `except:` → `except Exception:` in `tests/claude-code/analyze-token-usage.py`
+- `tests/claude-code/analyze-token-usage.py`에서 `except:` → `except Exception:`으로 수정했습니다.
 
-### Maintenance
+### 유지보수 (Maintenance)
 
-**Removed dead code**
+**불필요한 코드(dead code) 제거**
 
-- Deleted `lib/skills-core.js` and its test (`tests/opencode/test-skills-core.js`) — unused since February 2026
-- Removed skills-core existence check from `tests/opencode/test-plugin-loading.sh`
+- 2026년 2월 이후 사용되지 않던 `lib/skills-core.js`와 그 테스트(`tests/opencode/test-skills-core.js`)를 삭제했습니다.
+- `tests/opencode/test-plugin-loading.sh`에서 `skills-core` 존재 여부 확인 코드를 제거했습니다.
 
-### Community
+### 커뮤니티 (Community)
 
-- @karuturi — Claude Code official marketplace install instructions (PR #610)
-- @mvanhorn — session-start hook dual-emit fix, OpenCode tool mapping fix
-- @daniel-graham — linting fix for bare except
-- PR #585 author — Windows/Linux hooks quoting fix
+- @karuturi — Claude Code 공식 마켓플레이스 설치 안내 (PR #610)
+- @mvanhorn — session-start 훅 이중 출력 수정, OpenCode 도구 매핑 수정
+- @daniel-graham — bare except에 대한 린팅 수정
+- PR #585 작성자 — Windows/Linux 훅 따옴표 처리 수정
 
 ---
 
 ## v5.0.0 (2026-03-09)
 
-### Breaking Changes
+### 주요 변경 사항 (Breaking Changes)
 
-**Specs and plans directory restructured**
+**명세서(Specs) 및 계획서(Plans) 디렉토리 재구성**
 
-- Specs (brainstorming output) now save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-- Plans (writing-plans output) now save to `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- User preferences for spec/plan locations override these defaults
-- All internal skill references, test files, and example paths updated to match
-- Migration: move existing files from `docs/plans/` to new locations if desired
+- 명세서(브레인스토밍 결과물)는 이제 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`에 저장됩니다.
+- 계획서(`writing-plans` 결과물)는 이제 `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`에 저장됩니다.
+- 명세서/계획서 위치에 대한 사용자 선호 설정이 있다면 이 기본값보다 우선합니다.
+- 모든 내부 스킬 참조, 테스트 파일, 예시 경로가 이에 맞게 업데이트되었습니다.
+- 마이그레이션: 원하는 경우 기존 파일들을 `docs/plans/`에서 새 위치로 이동하세요.
 
-**Subagent-driven development mandatory on capable harnesses**
+**지원 가능한 하네스에서 서브에이전트 기반 개발 필수화**
 
-Writing-plans no longer offers a choice between subagent-driven and executing-plans. On harnesses with subagent support (Claude Code, Codex), subagent-driven-development is required. Executing-plans is reserved for harnesses without subagent capability, and now tells the user that Superpowers works better on a subagent-capable platform.
+`writing-plans`가 더 이상 서브에이전트 기반 개발과 `executing-plans` 사이의 선택권을 제공하지 않습니다. 서브에이전트를 지원하는 하네스(Claude Code, Codex)에서는 `subagent-driven-development`가 필수로 사용됩니다. `executing-plans`는 서브에이전트 기능이 없는 하네스 전용으로 남겨두었으며, 이제 서브에이전트를 지원하는 플랫폼에서 Superpowers가 더 잘 작동한다고 사용자에게 안내합니다.
 
-**Executing-plans no longer batches**
+**`executing-plans`가 더 이상 배치(batch) 단위로 끊어 실행하지 않음**
 
-Removed the "execute 3 tasks then stop for review" pattern. Plans now execute continuously, stopping only for blockers.
+"3개의 태스크를 실행한 뒤 리뷰를 위해 멈추는" 패턴을 제거했습니다. 이제 계획은 블로커(blocker)가 발생했을 때만 멈추고 연속으로 실행됩니다.
 
-**Slash commands deprecated**
+**슬래시 명령어 지원 중단 (Deprecated)**
 
-`/brainstorm`, `/write-plan`, and `/execute-plan` now show deprecation notices pointing users to the corresponding skills. Commands will be removed in the next major release.
+`/brainstorm`, `/write-plan`, `/execute-plan`은 이제 사용자에게 해당 스킬을 안내하는 지원 중단 알림을 표시합니다. 이 명령어들은 다음 메이저 릴리스에서 제거될 예정입니다.
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Visual brainstorming companion**
+**비주얼 브레인스토밍 컴패니언 (Visual brainstorming companion)**
 
-Optional browser-based companion for brainstorming sessions. When a topic would benefit from visuals, the brainstorming skill offers to show mockups, diagrams, comparisons, and other content in a browser window alongside terminal conversation.
+브레인스토밍 세션을 위한 선택적 브라우저 기반 컴패니언입니다. 시각 자료가 도움이 될 만한 주제일 때, 브레인스토밍 스킬이 터미널 대화와 함께 브라우저 창에 목업, 다이어그램, 비교표 및 기타 콘텐츠를 보여주겠다고 제안합니다.
 
-- `lib/brainstorm-server/` — WebSocket server with browser helper library, session management scripts, and dark/light themed frame template ("Superpowers Brainstorming" with GitHub link)
-- `skills/brainstorming/visual-companion.md` — Progressive disclosure guide for server workflow, screen authoring, and feedback collection
-- Brainstorming skill adds a visual companion decision point to its process flow: after exploring project context, the skill evaluates whether upcoming questions involve visual content and offers the companion in its own message
-- Per-question decision: even after accepting, each question is evaluated for whether browser or terminal is more appropriate
-- Integration tests in `tests/brainstorm-server/`
+- `lib/brainstorm-server/` — 브라우저 헬퍼 라이브러리, 세션 관리 스크립트, 다크/라이트 테마 프레임 템플릿(GitHub 링크가 포함된 "Superpowers Brainstorming")을 갖춘 WebSocket 서버.
+- `skills/brainstorming/visual-companion.md` — 서버 워크플로우, 화면 작성, 피드백 수집을 위한 점진적 공개(progressive disclosure) 가이드.
+- 브레인스토밍 스킬의 프로세스 흐름에 비주얼 컴패니언 결정 지점 추가: 프로젝트 컨텍스트를 탐색한 후 다가올 질문들에 시각적 콘텐츠가 수반되는지 평가하고 별도의 메시지로 컴패니언을 제안합니다.
+- 질문별 판단: 컴패니언 사용을 수락한 후에도 각 질문마다 브라우저와 터미널 중 어느 쪽이 더 적절한지 평가합니다.
+- `tests/brainstorm-server/`에 통합 테스트 추가.
 
-**Document review system**
+**문서 리뷰 시스템 (Document review system)**
 
-Automated review loops for spec and plan documents using subagent dispatch:
+서브에이전트 디스패치를 사용하는 명세서 및 계획서 문서의 자동화된 리뷰 루프입니다:
 
-- `skills/brainstorming/spec-document-reviewer-prompt.md` — Reviewer checks completeness, consistency, architecture, and YAGNI
-- `skills/writing-plans/plan-document-reviewer-prompt.md` — Reviewer checks spec alignment, task decomposition, file structure, and file size
-- Brainstorming dispatches spec reviewer after writing the design doc
-- Writing-plans includes chunk-based plan review loop after each section
-- Review loops repeat until approved or escalate after 5 iterations
-- End-to-end tests in `tests/claude-code/test-document-review-system.sh`
-- Design spec and implementation plan in `docs/superpowers/`
+- `skills/brainstorming/spec-document-reviewer-prompt.md` — 리뷰어가 완전성, 일관성, 아키텍처, YAGNI를 점검합니다.
+- `skills/writing-plans/plan-document-reviewer-prompt.md` — 리뷰어가 명세 정합성, 태스크 분해, 파일 구조, 파일 크기를 점검합니다.
+- 브레인스토밍은 설계 문서를 작성한 후 명세 리뷰어를 디스패치합니다.
+- `writing-plans`는 각 섹션 작성 후 청크 기반 계획 리뷰 루프를 포함합니다.
+- 리뷰 루프는 승인될 때까지 반복되거나 5회 반복 후 인간에게 에스컬레이션합니다.
+- `tests/claude-code/test-document-review-system.sh`에 엔드투엔드 테스트 추가.
+- `docs/superpowers/`에 설계 명세 및 구현 계획 수록.
 
-**Architecture guidance across the skill pipeline**
+**스킬 파이프라인 전반에 걸친 아키텍처 가이드**
 
-Design-for-isolation and file-size-awareness guidance added to brainstorming, writing-plans, and subagent-driven-development:
+격리를 고려한 설계(design-for-isolation) 및 파일 크기 인식 가이드가 `brainstorming`, `writing-plans`, `subagent-driven-development`에 추가되었습니다:
 
-- **Brainstorming** — New sections: "Design for isolation and clarity" (clear boundaries, well-defined interfaces, independently testable units) and "Working in existing codebases" (follow existing patterns, targeted improvements only)
-- **Writing-plans** — New "File Structure" section: map out files and responsibilities before defining tasks. New "Scope Check" backstop: catch multi-subsystem specs that should have been decomposed during brainstorming
-- **SDD implementer** — New "Code Organization" section (follow plan's file structure, report concerns about growing files) and "When You're in Over Your Head" escalation guidance
-- **SDD code quality reviewer** — Now checks architecture, unit decomposition, plan conformance, and file growth
-- **Spec/plan reviewers** — Architecture and file size added to review criteria
-- **Scope assessment** — Brainstorming now assesses whether a project is too large for a single spec. Multi-subsystem requests are flagged early and decomposed into sub-projects, each with its own spec → plan → implementation cycle
+- **Brainstorming** — 새로운 섹션 추가: "Design for isolation and clarity"(명확한 경계, 잘 정의된 인터페이스, 독립적으로 테스트 가능한 단위) 및 "Working in existing codebases"(기존 패턴 준수, 표적화된 개선만 수행).
+- **Writing-plans** — 새로운 "File Structure" 섹션: 태스크를 정의하기 전에 파일과 책임을 먼저 매핑합니다. 새로운 "Scope Check" 안전장치: 브레인스토밍 단계에서 분해되었어야 할 다중 서브시스템 명세를 잡아냅니다.
+- **SDD 구현자** — 새로운 "Code Organization" 섹션(계획서의 파일 구조를 따르고 비대해지는 파일에 대한 우려 사항 보고) 및 "When You're in Over Your Head" 에스컬레이션 가이드.
+- **SDD 코드 품질 리뷰어** — 이제 아키텍처, 단위 분해, 계획 준수 여부, 파일 비대화를 함께 점검합니다.
+- **명세/계획 리뷰어** — 리뷰 기준에 아키텍처와 파일 크기가 추가되었습니다.
+- **범위 평가 (Scope assessment)** — 브레인스토밍이 이제 프로젝트가 단일 명세서로 다루기에 너무 큰지 평가합니다. 다중 서브시스템 요청은 조기에 표시되어 하위 프로젝트들로 분해되며, 각각 독립적인 명세 → 계획 → 구현 사이클을 거칩니다.
 
-**Subagent-driven development improvements**
+**서브에이전트 기반 개발 개선 사항**
 
-- **Model selection** — Guidance for choosing model capability by task type: cheap models for mechanical implementation, standard for integration, capable for architecture and review
-- **Implementer status protocol** — Subagents now report DONE, DONE_WITH_CONCERNS, BLOCKED, or NEEDS_CONTEXT. Controller handles each status appropriately: re-dispatching with more context, upgrading model capability, breaking tasks apart, or escalating to human
+- **모델 선택** — 태스크 유형에 따른 모델 성능 등급 선택 가이드: 기계적인 구현에는 저렴한 모델, 통합 작업에는 표준 모델, 아키텍처 및 리뷰에는 고성능 모델 선택.
+- **구현자 상태 프로토콜** — 서브에이전트가 이제 `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, 또는 `NEEDS_CONTEXT`를 보고합니다. 컨트롤러는 각 상태에 맞게 추가 컨텍스트와 함께 재디스패치하거나, 모델 성능을 높이거나, 태스크를 쪼개거나, 인간에게 에스컬레이션하는 등 적절히 처리합니다.
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Instruction priority hierarchy**
+**지시사항 우선순위 계층 (Instruction priority hierarchy)**
 
-Added explicit priority ordering to using-superpowers:
+`using-superpowers`에 명시적인 우선순위 순서를 추가했습니다:
 
-1. User's explicit instructions (CLAUDE.md, AGENTS.md, direct requests) — highest priority
-2. Superpowers skills — override default system behavior
-3. Default system prompt — lowest priority
+1. 사용자의 명시적 지시사항(`CLAUDE.md`, `AGENTS.md`, 직접적인 요청) — 최우선
+2. Superpowers 스킬 — 기본 시스템 동작을 재정의(override)
+3. 기본 시스템 프롬프트 — 가장 낮은 우선순위
 
-If CLAUDE.md or AGENTS.md says "don't use TDD" and a skill says "always use TDD," the user's instructions win.
+만약 `CLAUDE.md`나 `AGENTS.md`에 "TDD를 사용하지 마세요"라고 되어 있고 스킬에는 "항상 TDD를 사용하세요"라고 되어 있다면 사용자의 지시사항이 우선합니다.
 
-**SUBAGENT-STOP gate**
+**SUBAGENT-STOP 게이트**
 
-Added `<SUBAGENT-STOP>` block to using-superpowers. Subagents dispatched for specific tasks now skip the skill instead of activating the 1% rule and invoking full skill workflows.
+`using-superpowers`에 `<SUBAGENT-STOP>` 블록을 추가했습니다. 특정 태스크를 위해 디스패치된 서브에이전트는 이제 1% 규칙을 활성화하여 전체 스킬 워크플로우를 호출하는 대신 해당 스킬을 건너뜁니다.
 
-**Multi-platform improvements**
+**다중 플랫폼 개선 사항**
 
-- Codex tool mapping moved to progressive disclosure reference file (`references/codex-tools.md`)
-- Platform Adaptation pointer added so non-Claude-Code platforms can find tool equivalents
-- Plan headers now address "agentic workers" instead of "Claude" specifically
-- Collab feature requirement documented in `docs/README.codex.md`
+- Codex 도구 매핑을 점진적 공개 참조 파일(`references/codex-tools.md`)로 이동했습니다.
+- Claude Code 이외의 플랫폼들이 대응 도구를 찾을 수 있도록 Platform Adaptation 포인터를 추가했습니다.
+- 계획서 헤더가 이제 특정 "Claude" 대신 "에이전트 워커(agentic workers)"를 지칭합니다.
+- `docs/README.codex.md`에 Collab 기능 요구사항을 문서화했습니다.
 
-**Writing-plans template updates**
+**`writing-plans` 템플릿 업데이트**
 
-- Plan steps now use checkbox syntax (`- [ ] **Step N:**`) for progress tracking
-- Plan header references both subagent-driven-development and executing-plans with platform-aware routing
+- 진행 상황 추적을 위해 계획 단계에 체크박스 문법(`- [ ] **Step N:**`)을 사용합니다.
+- 계획서 헤더가 플랫폼 인식 라우팅과 함께 `subagent-driven-development`와 `executing-plans`를 모두 참조합니다.
 
 ---
 
 ## v4.3.1 (2026-02-21)
 
-### Added
+### 추가됨 (Added)
 
-**Cursor support**
+**Cursor 지원**
 
-Superpowers now works with Cursor's plugin system. Includes a `.cursor-plugin/plugin.json` manifest and Cursor-specific installation instructions in the README. The SessionStart hook output now includes an `additional_context` field alongside the existing `hookSpecificOutput.additionalContext` for Cursor hook compatibility.
+이제 Superpowers가 Cursor의 플러그인 시스템과 함께 작동합니다. `.cursor-plugin/plugin.json` 매니페스트와 README의 Cursor 전용 설치 안내가 포함되어 있습니다. Cursor 훅 호환성을 위해 SessionStart 훅 출력에 기존의 `hookSpecificOutput.additionalContext`와 함께 `additional_context` 필드가 추가되었습니다.
 
-### Fixed
+### 수정됨 (Fixed)
 
-**Windows: Restored polyglot wrapper for reliable hook execution (#518, #504, #491, #487, #466, #440)**
+**Windows: 안정적인 훅 실행을 위한 폴리글랏(polyglot) 래퍼 복원 (#518, #504, #491, #487, #466, #440)**
 
-Claude Code's `.sh` auto-detection on Windows was prepending `bash` to the hook command, breaking execution. The fix:
+Windows에서 Claude Code의 `.sh` 자동 감지 기능이 훅 명령 앞에 `bash`를 덧붙여 실행을 깨뜨리고 있었습니다. 수정 내용:
 
-- Renamed `session-start.sh` to `session-start` (extensionless) so auto-detection doesn't interfere
-- Restored `run-hook.cmd` polyglot wrapper with multi-location bash discovery (standard Git for Windows paths, then PATH fallback)
-- Exits silently if no bash is found rather than erroring
-- On Unix, the wrapper runs the script directly via `exec bash`
-- Uses POSIX-safe `dirname "$0"` path resolution (works on dash/sh, not just bash)
+- 자동 감지가 간섭하지 않도록 `session-start.sh`를 `session-start`(확장자 없음)로 이름을 변경했습니다.
+- 여러 위치에서 bash를 탐색(표준 Git for Windows 경로 확인 후 PATH 폴백)하는 `run-hook.cmd` 폴리글랏 래퍼를 복원했습니다.
+- bash를 찾지 못한 경우 오류를 내는 대신 조용히 종료합니다.
+- Unix에서는 래퍼가 `exec bash`를 통해 스크립트를 직접 실행합니다.
+- POSIX 안전 `dirname "$0"` 경로 해석을 사용합니다(bash뿐만 아니라 dash/sh에서도 작동).
 
-This fixes SessionStart failures on Windows with spaces in paths, missing WSL, `set -euo pipefail` fragility on MSYS, and backslash mangling.
+이를 통해 공백이 포함된 경로, WSL 미설치 환경, MSYS에서의 `set -euo pipefail` 취약성, 백슬래시 손상으로 인한 Windows에서의 SessionStart 실패 문제를 해결합니다.
 
 ## v4.3.0 (2026-02-12)
 
-This fix should dramatically improve superpowers skills compliance and should reduce the chances of Claude entering its native plan mode unintentionally.
+이번 수정으로 superpowers 스킬 준수율이 크게 향상되고 Claude가 의도치 않게 자체 네이티브 플랜 모드로 진입할 가능성이 줄어들 것입니다.
 
-### Changed
+### 변경 사항 (Changed)
 
-**Brainstorming skill now enforces its workflow instead of describing it**
+**`brainstorming` 스킬이 워크플로우를 단순히 설명하는 대신 강제함**
 
-Models were skipping the design phase and jumping straight to implementation skills like frontend-design, or collapsing the entire brainstorming process into a single text block. The skill now uses hard gates, a mandatory checklist, and a graphviz process flow to enforce compliance:
+모델들이 설계 단계를 건너뛰고 `frontend-design` 같은 구현 스킬로 바로 넘어가거나, 전체 브레인스토밍 프로세스를 단일 텍스트 블록으로 축약해 버리는 문제가 있었습니다. 이제 스킬은 하드 게이트(hard gates), 필수 체크리스트, graphviz 프로세스 흐름도를 사용하여 준수를 강제합니다:
 
-- `<HARD-GATE>`: no implementation skills, code, or scaffolding until design is presented and user approves
-- Explicit checklist (6 items) that must be created as tasks and completed in order
-- Graphviz process flow with `writing-plans` as the only valid terminal state
-- Anti-pattern callout for "this is too simple to need a design" — the exact rationalization models use to skip the process
-- Design section sizing based on section complexity, not project complexity
+- `<HARD-GATE>`: 설계가 제시되고 사용자가 승인할 때까지 어떠한 구현 스킬, 코드, 스캐폴딩도 허용되지 않습니다.
+- 반드시 태스크로 생성되어 순서대로 완료되어야 하는 명시적 체크리스트(6개 항목).
+- `writing-plans`를 유일한 유효 종료 상태로 갖는 Graphviz 프로세스 흐름도.
+- 모델들이 프로세스를 건너뛰기 위해 사용하는 정확한 합리화 문구인 "이것은 너무 단순해서 설계가 필요 없다(this is too simple to need a design)"에 대한 안티패턴 경고.
+- 프로젝트 복잡도가 아닌 섹션 복잡도에 기반한 설계 섹션 분량 조절.
 
-**Using-superpowers workflow graph intercepts EnterPlanMode**
+**`using-superpowers` 워크플로우 그래프가 `EnterPlanMode`를 가로챔**
 
-Added an `EnterPlanMode` intercept to the skill flow graph. When the model is about to enter Claude's native plan mode, it checks whether brainstorming has happened and routes through the brainstorming skill instead. Plan mode is never entered.
+스킬 흐름 그래프에 `EnterPlanMode` 인터셉트를 추가했습니다. 모델이 Claude의 네이티브 플랜 모드로 진입하려 할 때 브레인스토밍이 수행되었는지 확인하고 대신 브레인스토밍 스킬로 라우팅합니다. 플랜 모드에는 절대 진입하지 않습니다.
 
-### Fixed
+### 수정됨 (Fixed)
 
-**SessionStart hook now runs synchronously**
+**SessionStart 훅이 이제 동기식(synchronously)으로 실행됨**
 
-Changed `async: true` to `async: false` in hooks.json. When async, the hook could fail to complete before the model's first turn, meaning using-superpowers instructions weren't in context for the first message.
+`hooks.json`에서 `async: true`를 `async: false`로 변경했습니다. 비동기로 실행될 경우 모델의 첫 번째 턴이 시작되기 전에 훅이 완료되지 못해 첫 번째 메시지 시점에 `using-superpowers` 지시사항이 컨텍스트에 포함되지 않는 문제가 발생할 수 있었습니다.
 
 ## v4.2.0 (2026-02-05)
 
-### Breaking Changes
+### 주요 변경 사항 (Breaking Changes)
 
-**Codex: Replaced bootstrap CLI with native skill discovery**
+**Codex: 부트스트랩 CLI를 네이티브 스킬 탐색으로 대체**
 
-The `superpowers-codex` bootstrap CLI, Windows `.cmd` wrapper, and related bootstrap content file have been removed. Codex now uses native skill discovery via `~/.agents/skills/superpowers/` symlink, so the old `use_skill`/`find_skills` CLI tools are no longer needed.
+`superpowers-codex` 부트스트랩 CLI, Windows `.cmd` 래퍼 및 관련 부트스트랩 콘텐츠 파일이 제거되었습니다. 이제 Codex는 `~/.agents/skills/superpowers/` 심볼릭 링크를 통한 네이티브 스킬 탐색을 사용하므로 기존의 `use_skill`/`find_skills` CLI 도구는 더 이상 필요하지 않습니다.
 
-Installation is now just clone + symlink (documented in INSTALL.md). No Node.js dependency required. The old `~/.codex/skills/` path is deprecated.
+설치는 이제 클론 + 심볼릭 링크 생성만으로 끝납니다(`INSTALL.md`에 문서화됨). Node.js 의존성이 필요하지 않습니다. 기존 `~/.codex/skills/` 경로는 지원 중단(deprecated)되었습니다.
 
-### Fixes
+### 버그 수정 (Fixes)
 
-**Windows: Fixed Claude Code 2.1.x hook execution (#331)**
+**Windows: Claude Code 2.1.x 훅 실행 수정 (#331)**
 
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash`. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the `.cmd` file as a bash script.
+Claude Code 2.1.x에서 Windows의 훅 실행 방식이 변경되어 명령 내의 `.sh` 파일을 자동 감지하고 앞에 `bash`를 덧붙이게 되었습니다. 이로 인해 `bash "run-hook.cmd" session-start.sh`가 `.cmd` 파일을 bash 스크립트로 실행하려 시도하면서 폴리글랏 래퍼 패턴이 깨졌습니다.
 
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+수정: 이제 `hooks.json`이 `session-start.sh`를 직접 호출하며, Claude Code 2.1.x가 bash 호출을 자동으로 처리합니다. 또한 셸 스크립트에 LF 줄바꿈을 강제하기 위해 `.gitattributes`를 추가했습니다(Windows 체크아웃 시 CRLF 문제 해결).
 
-**Windows: SessionStart hook runs async to prevent terminal freeze (#404, #413, #414, #419)**
+**Windows: 터미널 멈춤 현상을 방지하기 위해 SessionStart 훅을 비동기로 실행 (#404, #413, #414, #419)**
 
-The synchronous SessionStart hook blocked the TUI from entering raw mode on Windows, freezing all keyboard input. Running the hook async prevents the freeze while still injecting superpowers context.
+동기식 SessionStart 훅이 Windows에서 TUI가 raw 모드로 진입하는 것을 차단하여 모든 키보드 입력이 멈추는 현상이 있었습니다. 훅을 비동기로 실행하여 superpowers 컨텍스트를 주입하면서도 멈춤 현상을 방지합니다.
 
-**Windows: Fixed O(n^2) `escape_for_json` performance**
+**Windows: O(n^2) `escape_for_json` 성능 문제 수정**
 
-The character-by-character loop using `${input:$i:1}` was O(n^2) in bash due to substring copy overhead. On Windows Git Bash this took 60+ seconds. Replaced with bash parameter substitution (`${s//old/new}`) which runs each pattern as a single C-level pass — 7x faster on macOS, dramatically faster on Windows.
+`${input:$i:1}`을 사용한 문자 단위 루프는 부분 문자열 복사 오버헤드로 인해 bash에서 O(n^2)으로 작동했으며, Windows Git Bash에서는 60초 이상이 소요되었습니다. 각 패턴을 단일 C 레벨 패스로 실행하는 bash 매개변수 치환(`${s//old/new}`)으로 교체하여 macOS에서는 7배, Windows에서는 극적으로 속도를 높였습니다.
 
-**Codex: Fixed Windows/PowerShell invocation (#285, #243)**
+**Codex: Windows/PowerShell 호출 문제 수정 (#285, #243)**
 
-- Windows doesn't respect shebangs, so directly invoking the extensionless `superpowers-codex` script triggered an "Open with" dialog. All invocations now prefixed with `node`.
-- Fixed `~/` path expansion on Windows — PowerShell doesn't expand `~` when passed as an argument to `node`. Changed to `$HOME` which expands correctly in both bash and PowerShell.
+- Windows는 셔뱅(shebang)을 인식하지 않기 때문에 확장자가 없는 `superpowers-codex` 스크립트를 직접 호출하면 "연결 프로그램(Open with)" 대화상자가 열렸습니다. 이제 모든 호출 앞에 `node`를 붙입니다.
+- Windows에서의 `~/` 경로 확장 수정 — PowerShell은 `node`에 인자로 전달될 때 `~`를 확장하지 않습니다. bash와 PowerShell 모두에서 올바르게 확장되는 `$HOME`으로 변경했습니다.
 
-**Codex: Fixed path resolution in installer**
+**Codex: 설치 프로그램의 경로 해석 수정**
 
-Used `fileURLToPath()` instead of manual URL pathname parsing to correctly handle paths with spaces and special characters on all platforms.
+모든 플랫폼에서 공백과 특수 문자가 포함된 경로를 올바르게 처리하기 위해 수동 URL pathname 파싱 대신 `fileURLToPath()`를 사용했습니다.
 
-**Codex: Fixed stale skills path in writing-skills**
+**Codex: `writing-skills`의 오래된 스킬 경로 수정**
 
-Updated `~/.codex/skills/` reference (deprecated) to `~/.agents/skills/` for native discovery.
+네이티브 탐색을 위해 지원 중단된 `~/.codex/skills/` 참조를 `~/.agents/skills/`로 업데이트했습니다.
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Worktree isolation now required before implementation**
+**구현 전 워크트리 격리 필수화**
 
-Added `using-git-worktrees` as a required skill for both `subagent-driven-development` and `executing-plans`. Implementation workflows now explicitly require setting up an isolated worktree before starting work, preventing accidental work directly on main.
+`subagent-driven-development`와 `executing-plans` 모두에 필수 스킬로 `using-git-worktrees`를 추가했습니다. 이제 구현 워크플로우는 작업을 시작하기 전에 격리된 워크트리를 설정하도록 명시적으로 요구하여 실수로 main 브랜치에서 직접 작업하는 것을 방지합니다.
 
-**Main branch protection softened to require explicit consent**
+**명시적 동의를 조건으로 main 브랜치 보호 완화**
 
-Instead of prohibiting main branch work entirely, the skills now allow it with explicit user consent. More flexible while still ensuring users are aware of the implications.
+main 브랜치 작업을 완전히 금지하는 대신 명시적인 사용자 동의가 있을 경우 허용하도록 완화했습니다. 사용자에게 그 영향을 분명히 인지시키면서도 더 유연하게 작업할 수 있습니다.
 
-**Simplified installation verification**
+**설치 검증 절차 간소화**
 
-Removed `/help` command check and specific slash command list from verification steps. Skills are primarily invoked by describing what you want to do, not by running specific commands.
+검증 단계에서 `/help` 명령어 확인 및 특정 슬래시 명령어 목록을 제거했습니다. 스킬은 주로 특정 명령어를 실행하는 것이 아니라 하고 싶은 작업을 설명함으로써 호출됩니다.
 
-**Codex: Clarified subagent tool mapping in bootstrap**
+**Codex: 부트스트랩 내 서브에이전트 도구 매핑 명확화**
 
-Improved documentation of how Codex tools map to Claude Code equivalents for subagent workflows.
+서브에이전트 워크플로우를 위해 Codex 도구들이 Claude Code 대응 도구에 어떻게 매핑되는지 설명을 개선했습니다.
 
-### Tests
+### 테스트 (Tests)
 
-- Added worktree requirement test for subagent-driven-development
-- Added main branch red flag warning test
-- Fixed case sensitivity in skill recognition test assertions
+- `subagent-driven-development`에 대한 워크트리 요구사항 테스트 추가
+- main 브랜치 red flag 경고 테스트 추가
+- 스킬 인식 테스트 단언문의 대소문자 구분 문제 수정
 
 ---
 
 ## v4.1.1 (2026-01-23)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-**OpenCode: Standardized on `plugins/` directory per official docs (#343)**
+**OpenCode: 공식 문서에 맞춰 `plugins/` 디렉토리로 표준화 (#343)**
 
-OpenCode's official documentation uses `~/.config/opencode/plugins/` (plural). Our docs previously used `plugin/` (singular). While OpenCode accepts both forms, we've standardized on the official convention to avoid confusion.
+OpenCode의 공식 문서는 `~/.config/opencode/plugins/`(복수형)를 사용합니다. 기존 문서에서는 `plugin/`(단수형)을 사용했습니다. OpenCode는 두 형태를 모두 허용하지만 혼란을 피하기 위해 공식 규칙으로 표준화했습니다.
 
-Changes:
-- Renamed `.opencode/plugin/` to `.opencode/plugins/` in repo structure
-- Updated all installation docs (INSTALL.md, README.opencode.md) across all platforms
-- Updated test scripts to match
+변경 사항:
+- 저장소 구조에서 `.opencode/plugin/`을 `.opencode/plugins/`로 이름 변경
+- 모든 플랫폼의 설치 문서(`INSTALL.md`, `README.opencode.md`) 업데이트
+- 이에 맞춰 테스트 스크립트 업데이트
 
-**OpenCode: Fixed symlink instructions (#339, #342)**
+**OpenCode: 심볼릭 링크 생성 안내 수정 (#339, #342)**
 
-- Added explicit `rm` before `ln -s` (fixes "file already exists" errors on reinstall)
-- Added missing skills symlink step that was absent from INSTALL.md
-- Updated from deprecated `use_skill`/`find_skills` to native `skill` tool references
+- `ln -s` 실행 전에 명시적인 `rm` 추가 (재설치 시 "file already exists" 오류 해결)
+- `INSTALL.md`에 누락되어 있던 스킬 심볼릭 링크 단계 추가
+- 지원 중단된 `use_skill`/`find_skills` 참조를 네이티브 `skill` 도구 참조로 업데이트
 
 ---
 
 ## v4.1.0 (2026-01-23)
 
-### Breaking Changes
+### 주요 변경 사항 (Breaking Changes)
 
-**OpenCode: Switched to native skills system**
+**OpenCode: 네이티브 스킬 시스템으로 전환**
 
-Superpowers for OpenCode now uses OpenCode's native `skill` tool instead of custom `use_skill`/`find_skills` tools. This is a cleaner integration that works with OpenCode's built-in skill discovery.
+OpenCode용 Superpowers가 이제 커스텀 `use_skill`/`find_skills` 도구 대신 OpenCode의 네이티브 `skill` 도구를 사용합니다. 이는 OpenCode의 내장 스킬 탐색 기능과 함께 작동하는 훨씬 더 깔끔한 통합 방식입니다.
 
-**Migration required:** Skills must be symlinked to `~/.config/opencode/skills/superpowers/` (see updated installation docs).
+**마이그레이션 필요:** 스킬들을 `~/.config/opencode/skills/superpowers/`로 심볼릭 링크해야 합니다(업데이트된 설치 문서 참조).
 
-### Fixes
+### 버그 수정 (Fixes)
 
-**OpenCode: Fixed agent reset on session start (#226)**
+**OpenCode: 세션 시작 시 에이전트가 초기화되는 문제 수정 (#226)**
 
-The previous bootstrap injection method using `session.prompt({ noReply: true })` caused OpenCode to reset the selected agent to "build" on first message. Now uses `experimental.chat.system.transform` hook which modifies the system prompt directly without side effects.
+`session.prompt({ noReply: true })`를 사용하던 기존의 부트스트랩 주입 방식은 첫 번째 메시지에서 OpenCode가 선택된 에이전트를 "build"로 초기화하는 문제를 일으켰습니다. 이제 부작용 없이 시스템 프롬프트를 직접 수정하는 `experimental.chat.system.transform` 훅을 사용합니다.
 
-**OpenCode: Fixed Windows installation (#232)**
+**OpenCode: Windows 설치 문제 수정 (#232)**
 
-- Removed dependency on `skills-core.js` (eliminates broken relative imports when file is copied instead of symlinked)
-- Added comprehensive Windows installation docs for cmd.exe, PowerShell, and Git Bash
-- Documented proper symlink vs junction usage for each platform
+- `skills-core.js`에 대한 의존성 제거 (심볼릭 링크 대신 파일을 복사했을 때 상대 경로 임포트가 깨지는 문제 해소)
+- `cmd.exe`, PowerShell, Git Bash를 위한 포괄적인 Windows 설치 문서 추가
+- 각 플랫폼에 맞는 심볼릭 링크(symlink) 대 정션(junction) 사용법 문서화
 
-**Claude Code: Fixed Windows hook execution for Claude Code 2.1.x**
+**Claude Code: Claude Code 2.1.x용 Windows 훅 실행 수정**
 
-Claude Code 2.1.x changed how hooks execute on Windows: it now auto-detects `.sh` files in commands and prepends `bash `. This broke the polyglot wrapper pattern because `bash "run-hook.cmd" session-start.sh` tries to execute the .cmd file as a bash script.
+Claude Code 2.1.x에서 Windows의 훅 실행 방식이 변경되어 명령 내의 `.sh` 파일을 자동 감지하고 앞에 `bash `를 덧붙이게 되었습니다. 이로 인해 `bash "run-hook.cmd" session-start.sh`가 `.cmd` 파일을 bash 스크립트로 실행하려 시도하면서 폴리글랏 래퍼 패턴이 깨졌습니다.
 
-Fix: hooks.json now calls session-start.sh directly. Claude Code 2.1.x handles the bash invocation automatically. Also added .gitattributes to enforce LF line endings for shell scripts (fixes CRLF issues on Windows checkout).
+수정: 이제 `hooks.json`이 `session-start.sh`를 직접 호출하며, Claude Code 2.1.x가 bash 호출을 자동으로 처리합니다. 또한 셸 스크립트에 LF 줄바꿈을 강제하기 위해 `.gitattributes`를 추가했습니다(Windows 체크아웃 시 CRLF 문제 해결).
 
 ---
 
 ## v4.0.3 (2025-12-26)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Strengthened using-superpowers skill for explicit skill requests**
+**명시적인 스킬 요청에 대해 `using-superpowers` 스킬 강화**
 
-Addressed a failure mode where Claude would skip invoking a skill even when the user explicitly requested it by name (e.g., "subagent-driven-development, please"). Claude would think "I know what that means" and start working directly instead of loading the skill.
+사용자가 스킬 이름을 명시적으로 지정하여 요청했음에도(예: "subagent-driven-development, please") Claude가 스킬 호출을 건너뛰던 실패 모드를 해결했습니다. Claude는 "그게 무슨 뜻인지 알아"라고 생각하며 스킬을 로드하는 대신 바로 작업을 시작하곤 했습니다.
 
-Changes:
-- Updated "The Rule" to say "Invoke relevant or requested skills" instead of "Check for skills" - emphasizing active invocation over passive checking
-- Added "BEFORE any response or action" - the original wording only mentioned "response" but Claude would sometimes take action without responding first
-- Added reassurance that invoking a wrong skill is okay - reduces hesitation
-- Added new red flag: "I know what that means" → Knowing the concept ≠ using the skill
+변경 사항:
+- 수동적인 확인 대신 능동적인 호출을 강조하기 위해 "The Rule" 문구를 "Check for skills"에서 "Invoke relevant or requested skills"로 업데이트했습니다.
+- "BEFORE any response or action" 추가 — 기존 문구는 "response(응답)"만 언급하여 Claude가 때때로 응답하지 않고 바로 행동을 취하곤 했습니다.
+- 잘못된 스킬을 호출해도 괜찮다는 안심 문구를 추가하여 주저함을 줄였습니다.
+- 새로운 red flag 추가: "I know what that means(그게 무슨 뜻인지 안다)" → 개념을 아는 것 ≠ 스킬을 사용하는 것.
 
-**Added explicit skill request tests**
+**명시적 스킬 요청 테스트 추가**
 
-New test suite in `tests/explicit-skill-requests/` that verifies Claude correctly invokes skills when users request them by name. Includes single-turn and multi-turn test scenarios.
+사용자가 이름으로 스킬을 요청했을 때 Claude가 스킬을 올바르게 호출하는지 검증하는 새로운 테스트 스위트를 `tests/explicit-skill-requests/`에 추가했습니다. 단일 턴 및 다중 턴 테스트 시나리오를 포함합니다.
 
 ## v4.0.2 (2025-12-23)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-**Slash commands now user-only**
+**슬래시 명령어를 사용자 전용으로 제한**
 
-Added `disable-model-invocation: true` to all three slash commands (`/brainstorm`, `/execute-plan`, `/write-plan`). Claude can no longer invoke these commands via the Skill tool—they're restricted to manual user invocation only.
+세 개의 슬래시 명령어(`/brainstorm`, `/execute-plan`, `/write-plan`) 모두에 `disable-model-invocation: true`를 추가했습니다. 이제 Claude는 Skill 도구를 통해 이 명령어들을 호출할 수 없으며 사용자의 수동 호출로만 제한됩니다.
 
-The underlying skills (`superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`) remain available for Claude to invoke autonomously. This change prevents confusion when Claude would invoke a command that just redirects to a skill anyway.
+기반이 되는 스킬들(`superpowers:brainstorming`, `superpowers:executing-plans`, `superpowers:writing-plans`)은 여전히 Claude가 자율적으로 호출할 수 있습니다. 이 변경은 어차피 스킬로 리다이렉트할 뿐인 명령어를 Claude가 호출할 때 발생하는 혼란을 방지합니다.
 
 ## v4.0.1 (2025-12-23)
 
-### Fixes
+### 버그 수정 (Fixes)
 
-**Clarified how to access skills in Claude Code**
+**Claude Code에서 스킬에 접근하는 방법 명확화**
 
-Fixed a confusing pattern where Claude would invoke a skill via the Skill tool, then try to Read the skill file separately. The `using-superpowers` skill now explicitly states that the Skill tool loads skill content directly—no need to read files.
+Claude가 Skill 도구를 통해 스킬을 호출한 뒤 스킬 파일을 별도로 Read하려고 시도하던 혼란스러운 패턴을 수정했습니다. 이제 `using-superpowers` 스킬은 Skill 도구가 스킬 콘텐츠를 직접 로드하므로 파일을 따로 읽을 필요가 없다고 명시합니다.
 
-- Added "How to Access Skills" section to `using-superpowers`
-- Changed "read the skill" → "invoke the skill" in instructions
-- Updated slash commands to use fully qualified skill names (e.g., `superpowers:brainstorming`)
+- `using-superpowers`에 "How to Access Skills" 섹션 추가
+- 지시사항에서 "read the skill" → "invoke the skill"로 변경
+- 슬래시 명령어가 전체 정규화된(fully qualified) 스킬 이름(예: `superpowers:brainstorming`)을 사용하도록 업데이트
 
-**Added GitHub thread reply guidance to receiving-code-review** (h/t @ralphbean)
+**`receiving-code-review`에 GitHub 스레드 답글 가이드 추가** (h/t @ralphbean)
 
-Added a note about replying to inline review comments in the original thread rather than as top-level PR comments.
+인라인 리뷰 코멘트에 답변할 때 최상위 PR 코멘트가 아닌 원래 스레드에 답글을 달도록 안내를 추가했습니다.
 
-**Added automation-over-documentation guidance to writing-skills** (h/t @EthanJStark)
+**`writing-skills`에 문서화보다 자동화 우선(automation-over-documentation) 가이드 추가** (h/t @EthanJStark)
 
-Added guidance that mechanical constraints should be automated, not documented—save skills for judgment calls.
+기계적인 제약 사항은 문서화할 것이 아니라 자동화해야 하며, 스킬은 판단이 필요한 결정을 위해 아껴두어야 한다는 가이드를 추가했습니다.
 
 ## v4.0.0 (2025-12-17)
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Two-stage code review in subagent-driven-development**
+**`subagent-driven-development`의 2단계 코드 리뷰**
 
-Subagent workflows now use two separate review stages after each task:
+이제 서브에이전트 워크플로우는 각 태스크가 끝난 후 두 개의 분리된 리뷰 단계를 거칩니다:
 
-1. **Spec compliance review** - Skeptical reviewer verifies implementation matches spec exactly. Catches missing requirements AND over-building. Won't trust implementer's report—reads actual code.
+1. **명세 준수 리뷰 (Spec compliance review)** - 회의적인(skeptical) 리뷰어가 구현이 명세와 정확히 일치하는지 검증합니다. 누락된 요구사항뿐만 아니라 과도한 구현(over-building)도 잡아냅니다. 구현자의 리포트를 그대로 믿지 않고 실제 코드를 읽습니다.
 
-2. **Code quality review** - Only runs after spec compliance passes. Reviews for clean code, test coverage, maintainability.
+2. **코드 품질 리뷰 (Code quality review)** - 명세 준수 리뷰를 통과한 후에만 실행됩니다. 깔끔한 코드, 테스트 커버리지, 유지보수성을 검토합니다.
 
-This catches the common failure mode where code is well-written but doesn't match what was requested. Reviews are loops, not one-shot: if reviewer finds issues, implementer fixes them, then reviewer checks again.
+이를 통해 코드는 잘 작성되었지만 요청한 내용과 일치하지 않는 흔한 실패 모드를 잡아냅니다. 리뷰는 일회성이 아닌 루프로 작동합니다: 리뷰어가 문제를 발견하면 구현자가 이를 수정하고 리뷰어가 다시 확인합니다.
 
-Other subagent workflow improvements:
-- Controller provides full task text to workers (not file references)
-- Workers can ask clarifying questions before AND during work
-- Self-review checklist before reporting completion
-- Plan read once at start, extracted to TodoWrite
+기타 서브에이전트 워크플로우 개선 사항:
+- 컨트롤러가 파일 참조가 아닌 전체 태스크 텍스트를 워커에게 직접 제공
+- 워커는 작업 시작 전뿐만 아니라 작업 도중에도 명확화를 위한 질문 가능
+- 완료를 보고하기 전에 수행하는 셀프 리뷰 체크리스트
+- 계획서는 시작할 때 한 번 읽고 `TodoWrite`로 추출
 
-New prompt templates in `skills/subagent-driven-development/`:
-- `implementer-prompt.md` - Includes self-review checklist, encourages questions
-- `spec-reviewer-prompt.md` - Skeptical verification against requirements
-- `code-quality-reviewer-prompt.md` - Standard code review
+`skills/subagent-driven-development/`의 새로운 프롬프트 템플릿:
+- `implementer-prompt.md` - 셀프 리뷰 체크리스트 포함 및 질문 장려
+- `spec-reviewer-prompt.md` - 요구사항에 대한 회의적 검증
+- `code-quality-reviewer-prompt.md` - 표준 코드 리뷰
 
-**Debugging techniques consolidated with tools**
+**도구와 함께 통합된 디버깅 기법들**
 
-`systematic-debugging` now bundles supporting techniques and tools:
-- `root-cause-tracing.md` - Trace bugs backward through call stack
-- `defense-in-depth.md` - Add validation at multiple layers
-- `condition-based-waiting.md` - Replace arbitrary timeouts with condition polling
-- `find-polluter.sh` - Bisection script to find which test creates pollution
-- `condition-based-waiting-example.ts` - Complete implementation from real debugging session
+`systematic-debugging`이 이제 보조 기법 및 도구들을 함께 번들링합니다:
+- `root-cause-tracing.md` - 콜 스택을 거슬러 올라가며 버그를 역추적
+- `defense-in-depth.md` - 여러 계층에 걸쳐 검증 추가
+- `condition-based-waiting.md` - 임의의 타임아웃을 조건 폴링으로 대체
+- `find-polluter.sh` - 어떤 테스트가 상태 오염(pollution)을 유발하는지 찾는 이진 탐색(bisection) 스크립트
+- `condition-based-waiting-example.ts` - 실제 디버깅 세션에서 가져온 완전한 구현 예시
 
-**Testing anti-patterns reference**
+**테스팅 안티패턴 참조 문서**
 
-`test-driven-development` now includes `testing-anti-patterns.md` covering:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-- Incomplete mocks that hide structural assumptions
+`test-driven-development`에 다음 내용을 다루는 `testing-anti-patterns.md`가 포함되었습니다:
+- 실제 동작 대신 모의 객체(mock)의 동작을 테스트하는 행위
+- 프로덕션 클래스에 테스트 전용 메서드를 추가하는 행위
+- 의존성을 이해하지 못한 채 모킹하는 행위
+- 구조적 가정을 숨기는 불완전한 모의 객체
 
-**Skill test infrastructure**
+**스킬 테스트 인프라**
 
-Three new test frameworks for validating skill behavior:
+스킬 동작을 검증하기 위한 세 가지 새로운 테스트 프레임워크:
 
-`tests/skill-triggering/` - Validates skills trigger from naive prompts without explicit naming. Tests 6 skills to ensure descriptions alone are sufficient.
+`tests/skill-triggering/` - 명시적으로 스킬 이름을 부르지 않은 순수한(naive) 프롬프트에서 스킬이 트리거되는지 검증합니다. 설명(description)만으로도 충분한지 확인하기 위해 6개의 스킬을 테스트합니다.
 
-`tests/claude-code/` - Integration tests using `claude -p` for headless testing. Verifies skill usage via session transcript (JSONL) analysis. Includes `analyze-token-usage.py` for cost tracking.
+`tests/claude-code/` - 헤드리스 테스팅을 위해 `claude -p`를 사용하는 통합 테스트입니다. 세션 트랜스크립트(JSONL) 분석을 통해 스킬 사용 여부를 검증합니다. 비용 추적을 위한 `analyze-token-usage.py`가 포함되어 있습니다.
 
-`tests/subagent-driven-dev/` - End-to-end workflow validation with two complete test projects:
-- `go-fractals/` - CLI tool with Sierpinski/Mandelbrot (10 tasks)
-- `svelte-todo/` - CRUD app with localStorage and Playwright (12 tasks)
+`tests/subagent-driven-dev/` - 두 개의 완전한 테스트 프로젝트를 통한 엔드투엔드 워크플로우 검증:
+- `go-fractals/` - 시어핀스키(Sierpinski)/만델브로트(Mandelbrot)를 구현하는 CLI 도구 (10개 태스크)
+- `svelte-todo/` - localStorage와 Playwright를 사용하는 CRUD 앱 (12개 태스크)
 
-### Major Changes
+### 주요 변경 사항 (Major Changes)
 
-**DOT flowcharts as executable specifications**
+**실행 가능한 명세로서의 DOT 플로우차트**
 
-Rewrote key skills using DOT/GraphViz flowcharts as the authoritative process definition. Prose becomes supporting content.
+DOT/GraphViz 플로우차트를 권위 있는 프로세스 정의로 삼아 핵심 스킬들을 재작성했습니다. 산문은 보조 콘텐츠가 됩니다.
 
-**The Description Trap** (documented in `writing-skills`): Discovered that skill descriptions override flowchart content when descriptions contain workflow summaries. Claude follows the short description instead of reading the detailed flowchart. Fix: descriptions must be trigger-only ("Use when X") with no process details.
+**설명 함정 (The Description Trap)** (`writing-skills`에 문서화됨): 스킬 설명에 워크플로우 요약이 포함되어 있으면 스킬 설명이 플로우차트 내용을 덮어쓴다는 사실을 발견했습니다. Claude는 상세한 플로우차트를 읽는 대신 짧은 설명만 따릅니다. 수정: 설명은 프로세스 세부 사항 없이 오직 트리거 조건("Use when X")만 담아야 합니다.
 
-**Skill priority in using-superpowers**
+**`using-superpowers`의 스킬 우선순위**
 
-When multiple skills apply, process skills (brainstorming, debugging) now explicitly come before implementation skills. "Build X" triggers brainstorming first, then domain skills.
+여러 스킬이 적용될 때 프로세스 스킬(브레인스토밍, 디버깅)이 구현 스킬보다 명시적으로 우선합니다. "Build X"는 브레인스토밍을 먼저 트리거한 뒤 도메인 스킬을 트리거합니다.
 
-**brainstorming trigger strengthened**
+**`brainstorming` 트리거 강화**
 
-Description changed to imperative: "You MUST use this before any creative work—creating features, building components, adding functionality, or modifying behavior."
+설명이 명령형으로 변경되었습니다: "You MUST use this before any creative work—creating features, building components, adding functionality, or modifying behavior."
 
-### Breaking Changes
+### 호환성 변경 사항 (Breaking Changes)
 
-**Skill consolidation** - Six standalone skills merged:
-- `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` → bundled in `systematic-debugging/`
-- `testing-skills-with-subagents` → bundled in `writing-skills/`
-- `testing-anti-patterns` → bundled in `test-driven-development/`
-- `sharing-skills` removed (obsolete)
+**스킬 통합** - 6개의 독립 스킬이 병합되었습니다:
+- `root-cause-tracing`, `defense-in-depth`, `condition-based-waiting` → `systematic-debugging/`에 번들링됨
+- `testing-skills-with-subagents` → `writing-skills/`에 번들링됨
+- `testing-anti-patterns` → `test-driven-development/`에 번들링됨
+- `sharing-skills` 제거됨 (더 이상 사용되지 않음)
 
-### Other Improvements
+### 기타 개선 사항 (Other Improvements)
 
-- **render-graphs.js** - Tool to extract DOT diagrams from skills and render to SVG
-- **Rationalizations table** in using-superpowers - Scannable format including new entries: "I need more context first", "Let me explore first", "This feels productive"
-- **docs/testing.md** - Guide to testing skills with Claude Code integration tests
+- **render-graphs.js** - 스킬에서 DOT 다이어그램을 추출하여 SVG로 렌더링하는 도구
+- `using-superpowers`의 **합리화 표(Rationalizations table)** - 새로운 항목("I need more context first", "Let me explore first", "This feels productive")을 포함한 훑어보기 쉬운 형식
+- **docs/testing.md** - Claude Code 통합 테스트로 스킬을 테스트하는 가이드
 
 ---
 
 ## v3.6.2 (2025-12-03)
 
-### Fixed
+### 수정됨 (Fixed)
 
-- **Linux Compatibility**: Fixed polyglot hook wrapper (`run-hook.cmd`) to use POSIX-compliant syntax
-  - Replaced bash-specific `${BASH_SOURCE[0]:-$0}` with standard `$0` on line 16
-  - Resolves "Bad substitution" error on Ubuntu/Debian systems where `/bin/sh` is dash
-  - Fixes #141
+- **Linux 호환성**: 폴리글랏 훅 래퍼(`run-hook.cmd`)가 POSIX 호환 문법을 사용하도록 수정
+  - 16번째 줄의 bash 전용 `${BASH_SOURCE[0]:-$0}`을 표준 `$0`으로 교체
+  - `/bin/sh`가 dash인 Ubuntu/Debian 시스템에서 발생하던 "Bad substitution" 오류 해결
+  - #141 수정
 
 ---
 
 ## v3.5.1 (2025-11-24)
 
-### Changed
+### 변경됨 (Changed)
 
-- **OpenCode Bootstrap Refactor**: Switched from `chat.message` hook to `session.created` event for bootstrap injection
-  - Bootstrap now injects at session creation via `session.prompt()` with `noReply: true`
-  - Explicitly tells the model that using-superpowers is already loaded to prevent redundant skill loading
-  - Consolidated bootstrap content generation into shared `getBootstrapContent()` helper
-  - Cleaner single-implementation approach (removed fallback pattern)
+- **OpenCode 부트스트랩 리팩토링**: 부트스트랩 주입 방식을 `chat.message` 훅에서 `session.created` 이벤트로 전환
+  - 이제 세션 생성 시점에 `noReply: true` 옵션과 함께 `session.prompt()`를 통해 부트스트랩을 주입함
+  - 불필요한 중복 스킬 로딩을 방지하기 위해 모델에게 `using-superpowers`가 이미 로드되었음을 명시적으로 알림
+  - 부트스트랩 콘텐츠 생성을 공유 `getBootstrapContent()` 헬퍼로 통합
+  - 더 깔끔해진 단일 구현 접근 방식 (폴백 패턴 제거)
 
 ---
 
 ## v3.5.0 (2025-11-23)
 
-### Added
+### 추가됨 (Added)
 
-- **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
-  - Custom tools: `use_skill` and `find_skills`
-  - Message insertion pattern for skill persistence across context compaction
-  - Automatic context injection via chat.message hook
-  - Auto re-injection on session.compacted events
-  - Three-tier skill priority: project > personal > superpowers
-  - Project-local skills support (`.opencode/skills/`)
-  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
-  - Automated test suite with proper isolation (`tests/opencode/`)
-  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
+- **OpenCode 지원**: OpenCode.ai를 위한 네이티브 JavaScript 플러그인
+  - 커스텀 도구: `use_skill` 및 `find_skills`
+  - 컨텍스트 컴팩션 이후에도 스킬이 유지되도록 하는 메시지 삽입 패턴
+  - `chat.message` 훅을 통한 자동 컨텍스트 주입
+  - `session.compacted` 이벤트 발생 시 자동 재주입
+  - 3단계 스킬 우선순위: 프로젝트(project) > 개인(personal) > superpowers
+  - 프로젝트 로컬 스킬 지원 (`.opencode/skills/`)
+  - Codex와의 코드 재사용을 위한 공유 코어 모듈 (`lib/skills-core.js`)
+  - 적절한 격리를 갖춘 자동화 테스트 스위트 (`tests/opencode/`)
+  - 플랫폼별 문서 (`docs/README.opencode.md`, `docs/README.codex.md`)
 
-### Changed
+### 변경됨 (Changed)
 
-- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
-  - Eliminates code duplication between Codex and OpenCode
-  - Single source of truth for skill discovery and parsing
-  - Codex successfully loads ES modules via Node.js interop
+- **Codex 구현 리팩토링**: 이제 공유 `lib/skills-core.js` ES 모듈을 사용함
+  - Codex와 OpenCode 간의 코드 중복 제거
+  - 스킬 탐색 및 파싱을 위한 단일 진실 공급원
+  - Codex가 Node.js 상호운용성을 통해 ES 모듈을 성공적으로 로드함
 
-- **Improved Documentation**: Rewrote README to explain problem/solution clearly
-  - Removed duplicate sections and conflicting information
-  - Added complete workflow description (brainstorm → plan → execute → finish)
-  - Simplified platform installation instructions
-  - Emphasized skill-checking protocol over automatic activation claims
+- **문서 개선**: 문제와 해결책을 명확히 설명하도록 README 재작성
+  - 중복 섹션 및 상충하는 정보 제거
+  - 전체 워크플로우 설명 추가 (브레인스토밍 → 계획 → 실행 → 마무리)
+  - 플랫폼 설치 안내 간소화
+  - 자동 활성화 주장보다 스킬 확인 프로토콜을 강조
 
 ---
 
 ## v3.4.1 (2025-10-31)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-- Optimized superpowers bootstrap to eliminate redundant skill execution. The `using-superpowers` skill content is now provided directly in session context, with clear guidance to use the Skill tool only for other skills. This reduces overhead and prevents the confusing loop where agents would execute `using-superpowers` manually despite already having the content from session start.
+- 불필요한 중복 스킬 실행을 없애기 위해 superpowers 부트스트랩을 최적화했습니다. 이제 `using-superpowers` 스킬 콘텐츠가 세션 컨텍스트에 직접 제공되며, 다른 스킬들에 대해서만 Skill 도구를 사용하도록 명확히 안내합니다. 이를 통해 오버헤드를 줄이고, 세션 시작 시점에 이미 콘텐츠를 가지고 있음에도 에이전트가 `using-superpowers`를 수동으로 다시 실행하던 혼란스러운 루프를 방지합니다.
 
 ## v3.4.0 (2025-10-30)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-- Simplified `brainstorming` skill to return to original conversational vision. Removed heavyweight 6-phase process with formal checklists in favor of natural dialogue: ask questions one at a time, then present design in 200-300 word sections with validation. Keeps documentation and implementation handoff features.
+- 원래의 대화형 비전으로 돌아가기 위해 `brainstorming` 스킬을 단순화했습니다. 형식적인 체크리스트를 동반한 무거운 6단계 프로세스를 제거하고 자연스러운 대화를 택했습니다: 한 번에 하나씩 질문한 뒤, 200~300단어 분량의 섹션으로 설계를 제시하며 검증을 받습니다. 문서화 및 구현 핸드오프 기능은 그대로 유지됩니다.
 
 ## v3.3.1 (2025-10-28)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-- Updated `brainstorming` skill to require autonomous recon before questioning, encourage recommendation-driven decisions, and prevent agents from delegating prioritization back to humans.
-- Applied writing clarity improvements to `brainstorming` skill following Strunk's "Elements of Style" principles (omitted needless words, converted negative to positive form, improved parallel construction).
+- 질문하기 전에 자율적인 사전 조사(recon)를 수행하도록 요구하고, 추천 기반의 의사결정을 장려하며, 에이전트가 우선순위 결정을 인간에게 다시 떠넘기지 않도록 `brainstorming` 스킬을 업데이트했습니다.
+- Strunk의 "Elements of Style" 원칙에 따라 `brainstorming` 스킬의 문장 명확성을 개선했습니다(불필요한 단어 생략, 부정형을 긍정형으로 변환, 병렬 구조 개선).
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- Clarified `writing-skills` guidance so it points to the correct agent-specific personal skill directories (`~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex).
+- 에이전트별 개인 스킬 디렉토리(Claude Code는 `~/.claude/skills`, Codex는 `~/.codex/skills`)를 정확히 가리키도록 `writing-skills` 가이드를 명확히 수정했습니다.
 
 ## v3.3.0 (2025-10-28)
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Experimental Codex Support**
-- Added unified `superpowers-codex` script with bootstrap/use-skill/find-skills commands
-- Cross-platform Node.js implementation (works on Windows, macOS, Linux)
-- Namespaced skills: `superpowers:skill-name` for superpowers skills, `skill-name` for personal
-- Personal skills override superpowers skills when names match
-- Clean skill display: shows name/description without raw frontmatter
-- Helpful context: shows supporting files directory for each skill
-- Tool mapping for Codex: TodoWrite→update_plan, subagents→manual fallback, etc.
-- Bootstrap integration with minimal AGENTS.md for automatic startup
-- Complete installation guide and bootstrap instructions specific to Codex
+**실험적 Codex 지원 (Experimental Codex Support)**
+- `bootstrap`/`use-skill`/`find-skills` 명령어를 갖춘 통합 `superpowers-codex` 스크립트 추가
+- 크로스 플랫폼 Node.js 구현 (Windows, macOS, Linux에서 작동)
+- 네임스페이스가 적용된 스킬: superpowers 스킬은 `superpowers:skill-name`, 개인 스킬은 `skill-name`
+- 이름이 일치할 경우 개인 스킬이 superpowers 스킬보다 우선(override)함
+- 깔끔한 스킬 표시: 원시 프론트매터 없이 이름과 설명만 표시
+- 유용한 컨텍스트 제공: 각 스킬의 보조 파일 디렉토리 표시
+- Codex용 도구 매핑: `TodoWrite`→`update_plan`, 서브에이전트→수동 폴백 등
+- 자동 시작을 위한 최소한의 `AGENTS.md` 부트스트랩 통합
+- Codex 전용 전체 설치 가이드 및 부트스트랩 지시사항 제공
 
-**Key differences from Claude Code integration:**
-- Single unified script instead of separate tools
-- Tool substitution system for Codex-specific equivalents
-- Simplified subagent handling (manual work instead of delegation)
-- Updated terminology: "Superpowers skills" instead of "Core skills"
+**Claude Code 통합과의 주요 차이점:**
+- 개별 도구들 대신 단일 통합 스크립트 사용
+- Codex 전용 대응 기능을 위한 도구 치환 시스템
+- 단순화된 서브에이전트 처리 (위임 대신 직접 수행)
+- 용어 업데이트: "Core skills" 대신 "Superpowers skills" 사용
 
-### Files Added
-- `.codex/INSTALL.md` - Installation guide for Codex users
-- `.codex/superpowers-bootstrap.md` - Bootstrap instructions with Codex adaptations
-- `.codex/superpowers-codex` - Unified Node.js executable with all functionality
+### 추가된 파일 (Files Added)
+- `.codex/INSTALL.md` - Codex 사용자를 위한 설치 가이드
+- `.codex/superpowers-bootstrap.md` - Codex용 맞게 조정된 부트스트랩 지시사항
+- `.codex/superpowers-codex` - 모든 기능을 담은 통합 Node.js 실행 파일
 
-**Note:** Codex support is experimental. The integration provides core superpowers functionality but may require refinement based on user feedback.
+**참고:** Codex 지원은 실험적 기능입니다. 이 통합은 핵심 superpowers 기능을 제공하지만 사용자 피드백에 따라 추가적인 개선이 필요할 수 있습니다.
 
 ## v3.2.3 (2025-10-23)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Updated using-superpowers skill to use Skill tool instead of Read tool**
-- Changed skill invocation instructions from Read tool to Skill tool
-- Updated description: "using Read tool" → "using Skill tool"
-- Updated step 3: "Use the Read tool" → "Use the Skill tool to read and run"
-- Updated rationalization list: "Read the current version" → "Run the current version"
+**Read 도구 대신 Skill 도구를 사용하도록 `using-superpowers` 스킬 업데이트**
+- 스킬 호출 지시사항을 Read 도구에서 Skill 도구로 변경
+- 설명 업데이트: "using Read tool" → "using Skill tool"
+- 3단계 업데이트: "Use the Read tool" → "Use the Skill tool to read and run"
+- 합리화 목록 업데이트: "Read the current version" → "Run the current version"
 
-The Skill tool is the proper mechanism for invoking skills in Claude Code. This update corrects the bootstrap instructions to guide agents toward the correct tool.
+Skill 도구는 Claude Code에서 스킬을 호출하는 올바른 메커니즘입니다. 이번 업데이트는 에이전트가 올바른 도구를 사용하도록 부트스트랩 지시사항을 바로잡습니다.
 
-### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Changed tool references from Read to Skill
+### 변경된 파일 (Files Changed)
+- 업데이트됨: `skills/using-superpowers/SKILL.md` - 도구 참조를 Read에서 Skill로 변경
 
 ## v3.2.2 (2025-10-21)
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Strengthened using-superpowers skill against agent rationalization**
-- Added EXTREMELY-IMPORTANT block with absolute language about mandatory skill checking
-  - "If even 1% chance a skill applies, you MUST read it"
-  - "You do not have a choice. You cannot rationalize your way out."
-- Added MANDATORY FIRST RESPONSE PROTOCOL checklist
-  - 5-step process agents must complete before any response
-  - Explicit "responding without this = failure" consequence
-- Added Common Rationalizations section with 8 specific evasion patterns
+**에이전트의 합리화에 맞서 `using-superpowers` 스킬 강화**
+- 필수 스킬 확인에 관한 절대적인 표현을 담은 `EXTREMELY-IMPORTANT` 블록 추가
+  - "If even 1% chance a skill applies, you MUST read it" (스킬이 적용될 가능성이 1%라도 있다면 반드시 읽어야 합니다)
+  - "You do not have a choice. You cannot rationalize your way out." (선택권은 없습니다. 합리화하여 빠져나갈 수 없습니다.)
+- `MANDATORY FIRST RESPONSE PROTOCOL` 체크리스트 추가
+  - 에이전트가 응답하기 전에 반드시 완료해야 하는 5단계 프로세스
+  - "이 과정 없이 응답하는 것 = 실패"라는 결과를 명시
+- 8가지 구체적인 회피 패턴을 담은 Common Rationalizations 섹션 추가
   - "This is just a simple question" → WRONG
   - "I can check files quickly" → WRONG
   - "Let me gather information first" → WRONG
-  - Plus 5 more common patterns observed in agent behavior
+  - 그 외 에이전트 행동에서 관찰된 5가지 흔한 패턴 추가
 
-These changes address observed agent behavior where they rationalize around skill usage despite clear instructions. The forceful language and pre-emptive counter-arguments aim to make non-compliance harder.
+이러한 변경 사항들은 명확한 지시에도 불구하고 스킬 사용을 피해 가려 합리화하는 에이전트의 관찰된 행동을 다룹니다. 강력한 어조와 선제적인 반박 논거를 통해 지시 불이행을 더 어렵게 만드는 것이 목표입니다.
 
-### Files Changed
-- Updated: `skills/using-superpowers/SKILL.md` - Added three layers of enforcement to prevent skill-skipping rationalization
+### 변경된 파일 (Files Changed)
+- 업데이트됨: `skills/using-superpowers/SKILL.md` - 스킬 건너뛰기 합리화를 방지하기 위해 3단계 강제 장치 추가
 
 ## v3.2.1 (2025-10-20)
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Code reviewer agent now included in plugin**
-- Added `superpowers:code-reviewer` agent to plugin's `agents/` directory
-- Agent provides systematic code review against plans and coding standards
-- Previously required users to have personal agent configuration
-- All skill references updated to use namespaced `superpowers:code-reviewer`
-- Fixes #55
+**코드 리뷰어 에이전트가 플러그인에 포함됨**
+- 플러그인의 `agents/` 디렉토리에 `superpowers:code-reviewer` 에이전트 추가
+- 에이전트가 계획서 및 코딩 표준에 맞춰 체계적인 코드 리뷰를 제공함
+- 이전에는 사용자가 개인 에이전트 설정을 따로 가지고 있어야 했음
+- 모든 스킬 참조가 네임스페이스가 적용된 `superpowers:code-reviewer`를 사용하도록 업데이트됨
+- #55 수정
 
-### Files Changed
-- New: `agents/code-reviewer.md` - Agent definition with review checklist and output format
-- Updated: `skills/requesting-code-review/SKILL.md` - References to `superpowers:code-reviewer`
-- Updated: `skills/subagent-driven-development/SKILL.md` - References to `superpowers:code-reviewer`
+### 변경된 파일 (Files Changed)
+- 신규: `agents/code-reviewer.md` - 리뷰 체크리스트 및 출력 형식을 포함한 에이전트 정의
+- 업데이트됨: `skills/requesting-code-review/SKILL.md` - `superpowers:code-reviewer` 참조
+- 업데이트됨: `skills/subagent-driven-development/SKILL.md` - `superpowers:code-reviewer` 참조
 
 ## v3.2.0 (2025-10-18)
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Design documentation in brainstorming workflow**
-- Added Phase 4: Design Documentation to brainstorming skill
-- Design documents now written to `docs/plans/YYYY-MM-DD-<topic>-design.md` before implementation
-- Restores functionality from original brainstorming command that was lost during skill conversion
-- Documents written before worktree setup and implementation planning
-- Tested with subagent to verify compliance under time pressure
+**브레인스토밍 워크플로우에 설계 문서화 추가**
+- `brainstorming` 스킬에 Phase 4: Design Documentation 추가
+- 이제 구현 전에 설계 문서가 `docs/plans/YYYY-MM-DD-<topic>-design.md`에 작성됨
+- 스킬 변환 과정에서 유실되었던 원래 브레인스토밍 명령어의 기능을 복원함
+- 워크트리 설정 및 구현 계획 작성 전에 문서가 먼저 작성됨
+- 시간 압박 속에서도 이를 준수하는지 확인하기 위해 서브에이전트로 테스트 완료
 
-### Breaking Changes
+### 주요 변경 사항 (Breaking Changes)
 
-**Skill reference namespace standardization**
-- All internal skill references now use `superpowers:` namespace prefix
-- Updated format: `superpowers:test-driven-development` (previously just `test-driven-development`)
-- Affects all REQUIRED SUB-SKILL, RECOMMENDED SUB-SKILL, and REQUIRED BACKGROUND references
-- Aligns with how skills are invoked using the Skill tool
-- Files updated: brainstorming, executing-plans, subagent-driven-development, systematic-debugging, testing-skills-with-subagents, writing-plans, writing-skills
+**스킬 참조 네임스페이스 표준화**
+- 모든 내부 스킬 참조가 이제 `superpowers:` 네임스페이스 접두사를 사용함
+- 업데이트된 형식: `superpowers:test-driven-development` (이전에는 단순히 `test-driven-development`)
+- 모든 `REQUIRED SUB-SKILL`, `RECOMMENDED SUB-SKILL`, `REQUIRED BACKGROUND` 참조에 적용됨
+- Skill 도구를 사용하여 스킬을 호출하는 방식과 일치시킴
+- 업데이트된 파일: `brainstorming`, `executing-plans`, `subagent-driven-development`, `systematic-debugging`, `testing-skills-with-subagents`, `writing-plans`, `writing-skills`
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Design vs implementation plan naming**
-- Design documents use `-design.md` suffix to prevent filename collisions
-- Implementation plans continue using existing `YYYY-MM-DD-<feature-name>.md` format
-- Both stored in `docs/plans/` directory with clear naming distinction
+**설계 문서 대 구현 계획서 네이밍 구분**
+- 파일 이름 충돌을 방지하기 위해 설계 문서는 `-design.md` 접미사를 사용함
+- 구현 계획서는 기존의 `YYYY-MM-DD-<feature-name>.md` 형식을 계속 사용함
+- 두 문서 모두 명확한 네이밍 구분과 함께 `docs/plans/` 디렉토리에 저장됨
 
 ## v3.1.1 (2025-10-17)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Fixed command syntax in README** (#44) - Updated all command references to use correct namespaced syntax (`/superpowers:brainstorm` instead of `/brainstorm`). Plugin-provided commands are automatically namespaced by Claude Code to avoid conflicts between plugins.
+- **README의 명령어 문법 수정** (#44) - 모든 명령어 참조가 올바른 네임스페이스 문법(`/brainstorm` 대신 `/superpowers:brainstorm`)을 사용하도록 업데이트했습니다. 플러그인이 제공하는 명령어는 플러그인 간 충돌을 방지하기 위해 Claude Code에 의해 자동으로 네임스페이스가 부여됩니다.
 
 ## v3.1.0 (2025-10-17)
 
-### Breaking Changes
+### 주요 변경 사항 (Breaking Changes)
 
-**Skill names standardized to lowercase**
-- All skill frontmatter `name:` fields now use lowercase kebab-case matching directory names
-- Examples: `brainstorming`, `test-driven-development`, `using-git-worktrees`
-- All skill announcements and cross-references updated to lowercase format
-- This ensures consistent naming across directory names, frontmatter, and documentation
+**스킬 이름을 소문자로 표준화**
+- 모든 스킬 프론트매터의 `name:` 필드가 이제 디렉토리 이름과 일치하는 소문자 kebab-case를 사용합니다.
+- 예시: `brainstorming`, `test-driven-development`, `using-git-worktrees`
+- 모든 스킬 알림 및 상호 참조가 소문자 형식으로 업데이트되었습니다.
+- 이를 통해 디렉토리 이름, 프론트매터, 문서 전반에 걸쳐 일관된 네이밍을 보장합니다.
 
-### New Features
+### 새로운 기능 (New Features)
 
-**Enhanced brainstorming skill**
-- Added Quick Reference table showing phases, activities, and tool usage
-- Added copyable workflow checklist for tracking progress
-- Added decision flowchart for when to revisit earlier phases
-- Added comprehensive AskUserQuestion tool guidance with concrete examples
-- Added "Question Patterns" section explaining when to use structured vs open-ended questions
-- Restructured Key Principles as scannable table
+**향상된 `brainstorming` 스킬**
+- 단계, 활동, 도구 사용법을 보여주는 Quick Reference 표 추가
+- 진행 상황을 추적하기 위해 복사해서 쓸 수 있는 워크플로우 체크리스트 추가
+- 이전 단계로 언제 돌아가야 하는지 판단하는 의사결정 플로우차트 추가
+- 구체적인 예시와 함께 포괄적인 `AskUserQuestion` 도구 가이드 추가
+- 구조화된 질문과 열린 질문을 언제 사용해야 하는지 설명하는 "Question Patterns" 섹션 추가
+- 훑어보기 쉬운 표 형태로 Key Principles 재구성
 
-**Anthropic best practices integration**
-- Added `skills/writing-skills/anthropic-best-practices.md` - Official Anthropic skill authoring guide
-- Referenced in writing-skills SKILL.md for comprehensive guidance
-- Provides patterns for progressive disclosure, workflows, and evaluation
+**Anthropic 모범 사례(best practices) 통합**
+- `skills/writing-skills/anthropic-best-practices.md` 추가 - 공식 Anthropic 스킬 작성 가이드
+- 포괄적인 가이드를 위해 `writing-skills`의 `SKILL.md`에서 참조함
+- 점진적 공개(progressive disclosure), 워크플로우, 평가를 위한 패턴 제공
 
-### Improvements
+### 개선 사항 (Improvements)
 
-**Skill cross-reference clarity**
-- All skill references now use explicit requirement markers:
-  - `**REQUIRED BACKGROUND:**` - Prerequisites you must understand
-  - `**REQUIRED SUB-SKILL:**` - Skills that must be used in workflow
-  - `**Complementary skills:**` - Optional but helpful related skills
-- Removed old path format (`skills/collaboration/X` → just `X`)
-- Updated Integration sections with categorized relationships (Required vs Complementary)
-- Updated cross-reference documentation with best practices
+**스킬 상호 참조 명확성 개선**
+- 모든 스킬 참조가 이제 명시적인 요구사항 마커를 사용합니다:
+  - `**REQUIRED BACKGROUND:**` - 반드시 이해해야 하는 사전 지식
+  - `**REQUIRED SUB-SKILL:**` - 워크플로우에서 반드시 사용해야 하는 스킬
+  - `**Complementary skills:**` - 선택 사항이지만 도움이 되는 관련 스킬
+- 구식 경로 형식 제거 (`skills/collaboration/X` → 단순히 `X`)
+- 분류된 관계(Required 대 Complementary)로 Integration 섹션 업데이트
+- 모범 사례에 맞춰 상호 참조 문서 업데이트
 
-**Alignment with Anthropic best practices**
-- Fixed description grammar and voice (fully third-person)
-- Added Quick Reference tables for scanning
-- Added workflow checklists Claude can copy and track
-- Appropriate use of flowcharts for non-obvious decision points
-- Improved scannable table formats
-- All skills well under 500-line recommendation
+**Anthropic 모범 사례와의 정합성 확보**
+- 설명(description)의 문법과 어조 수정 (완전한 3인칭 시점)
+- 빠르게 훑어볼 수 있도록 Quick Reference 표 추가
+- Claude가 복사하여 추적할 수 있는 워크플로우 체크리스트 추가
+- 직관적이지 않은 의사결정 지점에 적절히 플로우차트 사용
+- 훑어보기 쉬운 표 형식 개선
+- 모든 스킬을 권장 기준인 500줄보다 훨씬 짧게 유지
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Re-added missing command redirects** - Restored `commands/brainstorm.md` and `commands/write-plan.md` that were accidentally removed in v3.0 migration
-- Fixed `defense-in-depth` name mismatch (was `Defense-in-Depth-Validation`)
-- Fixed `receiving-code-review` name mismatch (was `Code-Review-Reception`)
-- Fixed `commands/brainstorm.md` reference to correct skill name
-- Removed references to non-existent related skills
+- **누락된 명령어 리다이렉트 재추가** - v3.0 마이그레이션 과정에서 실수로 제거되었던 `commands/brainstorm.md` 및 `commands/write-plan.md` 복원
+- `defense-in-depth` 이름 불일치 수정 (기존 `Defense-in-Depth-Validation`)
+- `receiving-code-review` 이름 불일치 수정 (기존 `Code-Review-Reception`)
+- `commands/brainstorm.md`가 올바른 스킬 이름을 참조하도록 수정
+- 존재하지 않는 관련 스킬에 대한 참조 제거
 
-### Documentation
+### 문서 (Documentation)
 
-**writing-skills improvements**
-- Updated cross-referencing guidance with explicit requirement markers
-- Added reference to Anthropic's official best practices
-- Improved examples showing proper skill reference format
+**`writing-skills` 개선 사항**
+- 명시적 요구사항 마커를 포함하도록 상호 참조 가이드 업데이트
+- Anthropic의 공식 모범 사례에 대한 참조 추가
+- 올바른 스킬 참조 형식을 보여주는 예시 개선
 
 ## v3.0.1 (2025-10-16)
 
-### Changes
+### 변경 사항 (Changes)
 
-We now use Anthropic's first-party skills system!
+이제 Anthropic의 공식(first-party) 스킬 시스템을 사용합니다!
 
 ## v2.0.2 (2025-10-12)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Fixed false warning when local skills repo is ahead of upstream** - The initialization script was incorrectly warning "New skills available from upstream" when the local repository had commits ahead of upstream. The logic now correctly distinguishes between three git states: local behind (should update), local ahead (no warning), and diverged (should warn).
+- **로컬 스킬 저장소가 업스트림보다 앞서 있을 때 발생하던 잘못된 경고 수정** - 로컬 저장소에 업스트림보다 앞선 커밋이 있을 때 초기화 스크립트가 "New skills available from upstream"이라고 잘못 경고하던 문제가 있었습니다. 이제 로직이 세 가지 git 상태를 올바르게 구분합니다: 로컬이 뒤처진 상태(업데이트 필요), 로컬이 앞선 상태(경고 없음), 분기된(diverged) 상태(경고 필요).
 
 ## v2.0.1 (2025-10-12)
 
-### Bug Fixes
+### 버그 수정 (Bug Fixes)
 
-- **Fixed session-start hook execution in plugin context** (#8, PR #9) - The hook was failing silently with "Plugin hook error" preventing skills context from loading. Fixed by:
-  - Using `${BASH_SOURCE[0]:-$0}` fallback when BASH_SOURCE is unbound in Claude Code's execution context
-  - Adding `|| true` to handle empty grep results gracefully when filtering status flags
+- **플러그인 컨텍스트에서의 session-start 훅 실행 오류 수정** (#8, PR #9) - 훅이 "Plugin hook error"와 함께 소리 없이 실패하여 스킬 컨텍스트가 로드되지 않던 문제를 다음과 같이 수정했습니다:
+  - Claude Code의 실행 컨텍스트에서 `BASH_SOURCE`가 바인딩되지 않았을 때를 대비해 `${BASH_SOURCE[0]:-$0}` 폴백 사용
+  - 상태 플래그를 필터링할 때 빈 grep 결과를 우아하게 처리하도록 `|| true` 추가
 
 ---
 
-# Superpowers v2.0.0 Release Notes
+# Superpowers v2.0.0 릴리스 노트
 
-## Overview
+## 개요 (Overview)
 
-Superpowers v2.0 makes skills more accessible, maintainable, and community-driven through a major architectural shift.
+Superpowers v2.0은 대규모 아키텍처 전환을 통해 스킬을 더 접근하기 쉽고, 유지보수하기 편하며, 커뮤니티 주도로 발전할 수 있게 만듭니다.
 
-The headline change is **skills repository separation**: all skills, scripts, and documentation have moved from the plugin into a dedicated repository ([obra/superpowers-skills](https://github.com/obra/superpowers-skills)). This transforms superpowers from a monolithic plugin into a lightweight shim that manages a local clone of the skills repository. Skills auto-update on session start. Users fork and contribute improvements via standard git workflows. The skills library versions independently from the plugin.
+가장 핵심적인 변화는 **스킬 저장소 분리(skills repository separation)**입니다: 모든 스킬, 스크립트, 문서가 플러그인에서 전용 저장소([obra/superpowers-skills](https://github.com/obra/superpowers-skills))로 이동했습니다. 이를 통해 superpowers는 모놀리식 플러그인에서 스킬 저장소의 로컬 클론을 관리하는 가벼운 심(shim)으로 탈바꿈합니다. 스킬은 세션 시작 시 자동으로 업데이트됩니다. 사용자는 표준 git 워크플로우를 통해 포크하고 개선 사항을 기여할 수 있습니다. 스킬 라이브러리는 플러그인과 독립적으로 버전을 관리합니다.
 
-Beyond infrastructure, this release adds nine new skills focused on problem-solving, research, and architecture. We rewrote the core **using-skills** documentation with imperative tone and clearer structure, making it easier for Claude to understand when and how to use skills. **find-skills** now outputs paths you can paste directly into the Read tool, eliminating friction in the skills discovery workflow.
+인프라 외에도 이번 릴리스에는 문제 해결, 리서치, 아키텍처에 초점을 맞춘 9개의 새로운 스킬이 추가되었습니다. Claude가 언제 어떻게 스킬을 사용해야 하는지 더 쉽게 이해할 수 있도록 핵심 **using-skills** 문서를 명령형 어조와 더 명확한 구조로 다시 작성했습니다. 이제 **find-skills**는 Read 도구에 바로 붙여넣을 수 있는 경로를 출력하여 스킬 탐색 워크플로우의 마찰을 없앴습니다.
 
-Users experience seamless operation: the plugin handles cloning, forking, and updating automatically. Contributors find the new architecture makes improving and sharing skills trivial. This release lays the foundation for skills to evolve rapidly as a community resource.
+사용자는 매끄러운 작동을 경험할 수 있습니다: 플러그인이 클론, 포크, 업데이트를 자동으로 처리합니다. 기여자는 새로운 아키텍처 덕분에 스킬을 개선하고 공유하는 일이 매우 간단해졌음을 느끼게 될 것입니다. 이번 릴리스는 스킬이 커뮤니티 리소스로서 빠르게 진화할 수 있는 토대를 마련합니다.
 
-## Breaking Changes
+## 주요 변경 사항 (Breaking Changes)
 
-### Skills Repository Separation
+### 스킬 저장소 분리 (Skills Repository Separation)
 
-**The biggest change:** Skills no longer live in the plugin. They've been moved to a separate repository at [obra/superpowers-skills](https://github.com/obra/superpowers-skills).
+**가장 큰 변화:** 스킬이 더 이상 플러그인 내부에 존재하지 않습니다. [obra/superpowers-skills](https://github.com/obra/superpowers-skills)의 별도 저장소로 이동했습니다.
 
-**What this means for you:**
+**사용자에게 의미하는 바:**
 
-- **First install:** Plugin automatically clones skills to `~/.config/superpowers/skills/`
-- **Forking:** During setup, you'll be offered the option to fork the skills repo (if `gh` is installed)
-- **Updates:** Skills auto-update on session start (fast-forward when possible)
-- **Contributing:** Work on branches, commit locally, submit PRs to upstream
-- **No more shadowing:** Old two-tier system (personal/core) replaced with single-repo branch workflow
+- **최초 설치:** 플러그인이 자동으로 `~/.config/superpowers/skills/`에 스킬들을 클론합니다.
+- **포크(Forking):** 설정 과정에서 (`gh`가 설치되어 있는 경우) 스킬 저장소를 포크할 수 있는 옵션이 제공됩니다.
+- **업데이트:** 세션 시작 시 스킬이 자동으로 업데이트됩니다(가능한 경우 fast-forward 병합).
+- **기여하기:** 브랜치에서 작업하고, 로컬에 커밋한 뒤, 업스트림에 PR을 제출합니다.
+- **섀도잉(shadowing) 폐지:** 기존의 2계층 시스템(personal/core)이 단일 저장소 브랜치 워크플로우로 대체되었습니다.
 
-**Migration:**
+**마이그레이션:**
 
-If you have an existing installation:
-1. Your old `~/.config/superpowers/.git` will be backed up to `~/.config/superpowers/.git.bak`
-2. Old skills will be backed up to `~/.config/superpowers/skills.bak`
-3. Fresh clone of obra/superpowers-skills will be created at `~/.config/superpowers/skills/`
+기존 설치본이 있는 경우:
+1. 기존 `~/.config/superpowers/.git`은 `~/.config/superpowers/.git.bak`으로 백업됩니다.
+2. 기존 스킬들은 `~/.config/superpowers/skills.bak`으로 백업됩니다.
+3. `~/.config/superpowers/skills/`에 `obra/superpowers-skills`의 새로운 클론이 생성됩니다.
 
-### Removed Features
+### 제거된 기능 (Removed Features)
 
-- **Personal superpowers overlay system** - Replaced with git branch workflow
-- **setup-personal-superpowers hook** - Replaced by initialize-skills.sh
+- **개인 superpowers 오버레이 시스템** - git 브랜치 워크플로우로 대체됨
+- **setup-personal-superpowers 훅** - `initialize-skills.sh`로 대체됨
 
-## New Features
+## 새로운 기능 (New Features)
 
-### Skills Repository Infrastructure
+### 스킬 저장소 인프라 (Skills Repository Infrastructure)
 
-**Automatic Clone & Setup** (`lib/initialize-skills.sh`)
-- Clones obra/superpowers-skills on first run
-- Offers fork creation if GitHub CLI is installed
-- Sets up upstream/origin remotes correctly
-- Handles migration from old installation
+**자동 클론 및 설정** (`lib/initialize-skills.sh`)
+- 최초 실행 시 `obra/superpowers-skills` 클론
+- GitHub CLI가 설치되어 있는 경우 포크 생성 제안
+- upstream/origin 리모트를 올바르게 설정
+- 구버전 설치본으로부터의 마이그레이션 처리
 
-**Auto-Update**
-- Fetches from tracking remote on every session start
-- Auto-merges with fast-forward when possible
-- Notifies when manual sync needed (branch diverged)
-- Uses pulling-updates-from-skills-repository skill for manual sync
+**자동 업데이트 (Auto-Update)**
+- 매 세션 시작 시 트래킹 리모트에서 fetch 수행
+- 가능한 경우 fast-forward로 자동 병합
+- 수동 동기화가 필요한 경우(브랜치가 분기된 경우) 알림 표시
+- 수동 동기화를 위해 `pulling-updates-from-skills-repository` 스킬 사용
 
-### New Skills
+### 새로운 스킬 (New Skills)
 
-**Problem-Solving Skills** (`skills/problem-solving/`)
-- **collision-zone-thinking** - Force unrelated concepts together for emergent insights
-- **inversion-exercise** - Flip assumptions to reveal hidden constraints
-- **meta-pattern-recognition** - Spot universal principles across domains
-- **scale-game** - Test at extremes to expose fundamental truths
-- **simplification-cascades** - Find insights that eliminate multiple components
-- **when-stuck** - Dispatch to right problem-solving technique
+**문제 해결 스킬 (Problem-Solving Skills)** (`skills/problem-solving/`)
+- **collision-zone-thinking** - 창발적인 통찰을 얻기 위해 서로 관련 없는 개념들을 강제로 결합
+- **inversion-exercise** - 숨겨진 제약 조건을 드러내기 위해 가정을 뒤집어 생각하기
+- **meta-pattern-recognition** - 여러 도메인에 걸친 보편적 원리 포착
+- **scale-game** - 근본적인 진실을 드러내기 위해 극한의 규모에서 테스트
+- **simplification-cascades** - 여러 컴포넌트를 한꺼번에 제거할 수 있는 통찰 찾기
+- **when-stuck** - 막혔을 때 올바른 문제 해결 기법으로 디스패치
 
-**Research Skills** (`skills/research/`)
-- **tracing-knowledge-lineages** - Understand how ideas evolved over time
+**리서치 스킬 (Research Skills)** (`skills/research/`)
+- **tracing-knowledge-lineages** - 아이디어가 시간의 흐름에 따라 어떻게 진화했는지 이해
 
-**Architecture Skills** (`skills/architecture/`)
-- **preserving-productive-tensions** - Keep multiple valid approaches instead of forcing premature resolution
+**아키텍처 스킬 (Architecture Skills)** (`skills/architecture/`)
+- **preserving-productive-tensions** - 성급한 해결을 강제하는 대신 여러 유효한 접근 방식을 함께 유지
 
-### Skills Improvements
+### 스킬 개선 사항 (Skills Improvements)
 
-**using-skills (formerly getting-started)**
-- Renamed from getting-started to using-skills
-- Complete rewrite with imperative tone (v4.0.0)
-- Front-loaded critical rules
-- Added "Why" explanations for all workflows
-- Always includes /SKILL.md suffix in references
-- Clearer distinction between rigid rules and flexible patterns
+**using-skills (구 getting-started)**
+- `getting-started`에서 `using-skills`로 이름 변경
+- 명령형 어조로 전면 재작성 (v4.0.0)
+- 핵심 규칙들을 문서 앞부분에 배치
+- 모든 워크플로우에 대해 "Why(이유)" 설명 추가
+- 참조에 항상 `/SKILL.md` 접미사 포함
+- 엄격한 규칙과 유연한 패턴 간의 구분을 명확화
 
 **writing-skills**
-- Cross-referencing guidance moved from using-skills
-- Added token efficiency section (word count targets)
-- Improved CSO (Claude Search Optimization) guidance
+- `using-skills`에서 상호 참조 가이드를 이동해 옴
+- 토큰 효율성 섹션 추가 (단어 수 목표치)
+- CSO (Claude Search Optimization) 가이드 개선
 
 **sharing-skills**
-- Updated for new branch-and-PR workflow (v2.0.0)
-- Removed personal/core split references
+- 새로운 브랜치 및 PR 워크플로우에 맞춰 업데이트 (v2.0.0)
+- personal/core 분리 관련 참조 제거
 
-**pulling-updates-from-skills-repository** (new)
-- Complete workflow for syncing with upstream
-- Replaces old "updating-skills" skill
+**pulling-updates-from-skills-repository** (신규)
+- 업스트림과 동기화하기 위한 전체 워크플로우
+- 구 "updating-skills" 스킬을 대체함
 
-### Tools Improvements
+### 도구 개선 사항 (Tools Improvements)
 
 **find-skills**
-- Now outputs full paths with /SKILL.md suffix
-- Makes paths directly usable with Read tool
-- Updated help text
+- 이제 `/SKILL.md` 접미사가 포함된 전체 경로를 출력함
+- 출력된 경로를 Read 도구에서 바로 사용할 수 있게 함
+- 도움말 텍스트 업데이트
 
 **skill-run**
-- Moved from scripts/ to skills/using-skills/
-- Improved documentation
+- `scripts/`에서 `skills/using-skills/`로 이동
+- 문서 개선
 
-### Plugin Infrastructure
+### 플러그인 인프라 (Plugin Infrastructure)
 
-**Session Start Hook**
-- Now loads from skills repository location
-- Shows full skills list at session start
-- Prints skills location info
-- Shows update status (updated successfully / behind upstream)
-- Moved "skills behind" warning to end of output
+**Session Start 훅**
+- 이제 스킬 저장소 위치에서 로드함
+- 세션 시작 시 전체 스킬 목록 표시
+- 스킬 위치 정보 출력
+- 업데이트 상태 표시 (업데이트 성공 / 업스트림보다 뒤처짐)
+- "skills behind" 경고를 출력의 맨 끝으로 이동
 
-**Environment Variables**
-- `SUPERPOWERS_SKILLS_ROOT` set to `~/.config/superpowers/skills`
-- Used consistently throughout all paths
+**환경 변수**
+- `SUPERPOWERS_SKILLS_ROOT`가 `~/.config/superpowers/skills`로 설정됨
+- 모든 경로 전반에 걸쳐 일관되게 사용됨
 
-## Bug Fixes
+## 버그 수정 (Bug Fixes)
 
-- Fixed duplicate upstream remote addition when forking
-- Fixed find-skills double "skills/" prefix in output
-- Removed obsolete setup-personal-superpowers call from session-start
-- Fixed path references throughout hooks and commands
+- 포크 시 upstream 리모트가 중복으로 추가되던 문제 수정
+- `find-skills` 출력에서 "skills/" 접두사가 두 번 붙던 문제 수정
+- `session-start`에서 더 이상 사용되지 않는 `setup-personal-superpowers` 호출 제거
+- 훅과 명령어 전반의 경로 참조 수정
 
-## Documentation
+## 문서 (Documentation)
 
 ### README
-- Updated for new skills repository architecture
-- Prominent link to superpowers-skills repo
-- Updated auto-update description
-- Fixed skill names and references
-- Updated Meta skills list
+- 새로운 스킬 저장소 아키텍처에 맞춰 업데이트
+- `superpowers-skills` 저장소 링크를 눈에 띄게 배치
+- 자동 업데이트 설명 업데이트
+- 스킬 이름 및 참조 수정
+- Meta 스킬 목록 업데이트
 
-### Testing Documentation
-- Added comprehensive testing checklist (`docs/TESTING-CHECKLIST.md`)
-- Created local marketplace config for testing
-- Documented manual testing scenarios
+### 테스팅 문서
+- 포괄적인 테스팅 체크리스트 추가 (`docs/TESTING-CHECKLIST.md`)
+- 테스트용 로컬 마켓플레이스 설정 생성
+- 수동 테스팅 시나리오 문서화
 
-## Technical Details
+## 기술 세부 사항 (Technical Details)
 
-### File Changes
+### 파일 변경 내역 (File Changes)
 
-**Added:**
-- `lib/initialize-skills.sh` - Skills repo initialization and auto-update
-- `docs/TESTING-CHECKLIST.md` - Manual testing scenarios
-- `.claude-plugin/marketplace.json` - Local testing config
+**추가됨:**
+- `lib/initialize-skills.sh` - 스킬 저장소 초기화 및 자동 업데이트
+- `docs/TESTING-CHECKLIST.md` - 수동 테스팅 시나리오
+- `.claude-plugin/marketplace.json` - 로컬 테스팅 설정
 
-**Removed:**
-- `skills/` directory (82 files) - Now in obra/superpowers-skills
-- `scripts/` directory - Now in obra/superpowers-skills/skills/using-skills/
-- `hooks/setup-personal-superpowers.sh` - Obsolete
+**제거됨:**
+- `skills/` 디렉토리 (82개 파일) - 이제 `obra/superpowers-skills`에 위치함
+- `scripts/` 디렉토리 - 이제 `obra/superpowers-skills/skills/using-skills/`에 위치함
+- `hooks/setup-personal-superpowers.sh` - 더 이상 사용되지 않음
 
-**Modified:**
-- `hooks/session-start.sh` - Use skills from ~/.config/superpowers/skills
-- `commands/brainstorm.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `commands/write-plan.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `commands/execute-plan.md` - Updated paths to SUPERPOWERS_SKILLS_ROOT
-- `README.md` - Complete rewrite for new architecture
+**수정됨:**
+- `hooks/session-start.sh` - `~/.config/superpowers/skills`의 스킬 사용
+- `commands/brainstorm.md` - 경로를 `SUPERPOWERS_SKILLS_ROOT`로 업데이트
+- `commands/write-plan.md` - 경로를 `SUPERPOWERS_SKILLS_ROOT`로 업데이트
+- `commands/execute-plan.md` - 경로를 `SUPERPOWERS_SKILLS_ROOT`로 업데이트
+- `README.md` - 새로운 아키텍처에 맞춰 전면 재작성
 
-### Commit History
+### 커밋 히스토리 (Commit History)
 
-This release includes:
-- 20+ commits for skills repository separation
-- PR #1: Amplifier-inspired problem-solving and research skills
-- PR #2: Personal superpowers overlay system (later replaced)
-- Multiple skill refinements and documentation improvements
+이번 릴리스에는 다음 내용이 포함됩니다:
+- 스킬 저장소 분리를 위한 20개 이상의 커밋
+- PR #1: Amplifier에서 영감을 받은 문제 해결 및 리서치 스킬
+- PR #2: 개인 superpowers 오버레이 시스템 (이후 대체됨)
+- 다수의 스킬 다듬기 및 문서 개선
 
-## Upgrade Instructions
+## 업그레이드 안내 (Upgrade Instructions)
 
-### Fresh Install
+### 신규 설치 (Fresh Install)
 
 ```bash
-# In Claude Code
+# Claude Code에서 실행
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
 
-The plugin handles everything automatically.
+플러그인이 모든 과정을 자동으로 처리합니다.
 
-### Upgrading from v1.x
+### v1.x에서 업그레이드 (Upgrading from v1.x)
 
-1. **Backup your personal skills** (if you have any):
+1. **개인 스킬 백업** (보유한 경우):
    ```bash
    cp -r ~/.config/superpowers/skills ~/superpowers-skills-backup
    ```
 
-2. **Update the plugin:**
+2. **플러그인 업데이트:**
    ```bash
    /plugin update superpowers
    ```
 
-3. **On next session start:**
-   - Old installation will be backed up automatically
-   - Fresh skills repo will be cloned
-   - If you have GitHub CLI, you'll be offered the option to fork
+3. **다음 세션 시작 시:**
+   - 기존 설치본이 자동으로 백업됩니다.
+   - 새로운 스킬 저장소가 클론됩니다.
+   - GitHub CLI가 설치되어 있다면 포크할 수 있는 옵션이 제안됩니다.
 
-4. **Migrate personal skills** (if you had any):
-   - Create a branch in your local skills repo
-   - Copy your personal skills from backup
-   - Commit and push to your fork
-   - Consider contributing back via PR
+4. **개인 스킬 마이그레이션** (보유했던 경우):
+   - 로컬 스킬 저장소에서 브랜치를 생성합니다.
+   - 백업에서 개인 스킬들을 복사해 옵니다.
+   - 포크 저장소에 커밋하고 푸시합니다.
+   - PR을 통해 커뮤니티에 다시 기여하는 것도 고려해 보세요.
 
-## What's Next
+## 향후 계획 (What's Next)
 
-### For Users
+### 사용자를 위해 (For Users)
 
-- Explore the new problem-solving skills
-- Try the branch-based workflow for skill improvements
-- Contribute skills back to the community
+- 새로운 문제 해결 스킬들을 탐색해 보세요.
+- 스킬 개선을 위해 브랜치 기반 워크플로우를 사용해 보세요.
+- 커뮤니티에 스킬을 기여해 보세요.
 
-### For Contributors
+### 기여자를 위해 (For Contributors)
 
-- Skills repository is now at https://github.com/obra/superpowers-skills
-- Fork → Branch → PR workflow
-- See skills/meta/writing-skills/SKILL.md for TDD approach to documentation
+- 이제 스킬 저장소는 https://github.com/obra/superpowers-skills 에 있습니다.
+- Fork → Branch → PR 워크플로우를 따릅니다.
+- 문서에 대한 TDD 접근 방식은 `skills/meta/writing-skills/SKILL.md`를 참조하세요.
 
-## Known Issues
+## 알려진 이슈 (Known Issues)
 
-None at this time.
+현재 알려진 이슈가 없습니다.
 
-## Credits
+## 크레딧 (Credits)
 
-- Problem-solving skills inspired by Amplifier patterns
-- Community contributions and feedback
-- Extensive testing and iteration on skill effectiveness
+- Amplifier 패턴에서 영감을 받은 문제 해결 스킬
+- 커뮤니티의 기여와 피드백
+- 스킬 효과성에 대한 광범위한 테스팅과 반복 개선
 
 ---
 
-**Full Changelog:** https://github.com/obra/superpowers/compare/dd013f6...main
-**Skills Repository:** https://github.com/obra/superpowers-skills
-**Issues:** https://github.com/obra/superpowers/issues
+**전체 변경 로그 (Full Changelog):** https://github.com/obra/superpowers/compare/dd013f6...main
+**스킬 저장소 (Skills Repository):** https://github.com/obra/superpowers-skills
+**이슈 (Issues):** https://github.com/obra/superpowers/issues

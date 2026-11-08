@@ -1,158 +1,132 @@
-# Visual Companion Auth Hardening Design
+# 비주얼 컴패니언(Visual Companion) 인증 강화 설계
 
-**Date:** 2026-06-10
-**Status:** Draft for Drew review
+**날짜:** 2026-06-10
+**상태:** Drew 리뷰용 초안
 
-## Goal
+## 목표
 
-Fix the security and reliability gaps found in PR #1720's brainstorming visual
-companion without changing the companion's core workflow or adding runtime
-dependencies.
+컴패니언의 핵심 워크플로우를 변경하거나 런타임 의존성을 추가하지 않고, PR #1720의 브레인스토밍 비주얼 컴패니언에서 발견된 보안 및 안정성 취약점을 해결합니다.
 
-The fixes must be test-first and must leave clear automated evidence for:
+수정 사항은 반드시 테스트 우선(test-first)으로 작성되어야 하며, 다음 항목에 대한 명확한 자동화 검증 증거를 남겨야 합니다:
 
-- cross-origin browser tabs cannot inject companion events by riding cookies
-- restart reconnect works without depending only on browser cookie behavior
-- bearer keys do not remain in the visible URL after bootstrap
-- `/files/*` cannot serve files outside the content directory
-- future same-origin vendored UI libraries still work
+- 교차 출처(cross-origin) 브라우저 탭이 쿠키에 편승하여 컴패니언 이벤트를 주입할 수 없음
+- 브라우저 쿠키 동작에만 의존하지 않고도 서버 재시작 시 재연결이 작동함
+- 부트스트랩 이후 표시되는 URL에 베어러(bearer) 키가 남아 있지 않음
+- `/files/*`가 콘텐츠 디렉터리 외부의 파일을 제공할 수 없음
+- 향후 동일 출처(same-origin)로 번들링된(vendored) UI 라이브러리가 계속 작동함
 
-## Threat Model
+## 위협 모델 (Threat Model)
 
-The companion serves agent-generated local UI for a single brainstorming
-session. The important assets are:
+컴패니언은 단일 브레인스토밍 세션을 위해 에이전트가 생성한 로컬 UI를 제공합니다. 보호해야 할 주요 자산은 다음과 같습니다:
 
-- screen content served from the companion
-- the session key
-- `state/events`, which the agent reads as user feedback
-- local files under the companion session directory
+- 컴패니언에서 제공하는 화면 콘텐츠
+- 세션 키(session key)
+- 에이전트가 사용자 피드백으로 읽어들일 `state/events`
+- 컴패니언 세션 디렉터리 하위의 로컬 파일들
 
-In scope attackers:
+범위 내(In-scope) 공격자:
 
-- a malicious browser tab on another `localhost` port
-- a browser page that can make requests to the companion but should not be able
-  to authenticate as the companion UI
-- a direct remote client when the server is bound to a non-loopback interface
-- accidental leakage through URL history, referrers, or committed local state
-- content-directory symlinks or path tricks that escape `/files/*`
+- 다른 `localhost` 포트에서 실행 중인 악의적인 브라우저 탭
+- 컴패니언에 요청을 보낼 수는 있지만 컴패니언 UI로 인증되어서는 안 되는 브라우저 페이지
+- 서버가 비루프백(non-loopback) 인터페이스에 바인딩되었을 때 직접 접근하는 원격 클라이언트
+- URL 히스토리, 리퍼러(referrer), 또는 커밋된 로컬 상태를 통한 우발적 유출
+- `/files/*`를 벗어나는 콘텐츠 디렉터리 심볼릭 링크 또는 경로 조작 트릭
 
-Out of scope for this fix:
+이번 수정의 범위 외(Out of scope) 항목:
 
-- malicious agent-authored screen HTML
-- malicious same-origin vendored JavaScript loaded by a companion screen
+- 에이전트가 악의적으로 작성한 화면 HTML
+- 컴패니언 화면이 로드한 악의적인 동일 출처 번들(vendored) JavaScript
 
-This out-of-scope boundary is intentional. Companion screens are part of the
-agent UI surface. They may use inline scripts today and may someday use
-same-origin vendored libraries such as Alpine or Three.js. Protecting against
-malicious screen HTML would require a larger sandboxed-iframe architecture with
-a narrow message bridge; that is not the scope of this PR hardening pass.
+이러한 범위 외 경계는 의도적인 것입니다. 컴패니언 화면은 에이전트 UI 표면의 일부입니다. 현재 인라인 스크립트를 사용할 수 있으며, 향후 Alpine이나 Three.js 같은 동일 출처 번들 라이브러리를 사용할 수도 있습니다. 악의적인 화면 HTML로부터 보호하려면 좁은 메시지 브리지를 갖춘 더 큰 규모의 샌드박스 iframe 아키텍처가 필요하며, 이는 이번 PR 보안 강화 패스의 범위가 아닙니다.
 
-## Current Failures
+## 현재 발견된 문제점
 
-Automated and headed-browser testing found these failures in the PR branch:
+PR 브랜치에 대한 자동화 테스트 및 헤디드(headed) 브라우저 테스트에서 다음과 같은 실패가 발견되었습니다:
 
-1. A cross-origin localhost page can open a cookie-authenticated WebSocket and
-   write attacker-controlled choices to `state/events` after the real companion
-   page sets the cookie.
-2. `/files/*` serves symlinks that point outside `content/`, including a symlink
-   to `state/server-info` containing the keyed URL.
-3. The session key remains in the URL of the actual screen page, so same-origin
-   screen JavaScript and accidental referrers/history can see it.
-4. The helper reconnects with a keyless `ws://host` URL. In headed Chrome, after
-   a same-port/same-token restart, the browser stopped presenting the cookie to
-   the restarted server, so the open tab stayed stuck on the tombstone until a
-   manual reload.
-5. Shell lint and the lifecycle test need cleanup so the test pass is stable in
-   Codex.
+1. 실제 컴패니언 페이지가 쿠키를 설정한 후, 교차 출처 localhost 페이지가 쿠키로 인증된 WebSocket을 열고 공격자가 제어하는 선택지를 `state/events`에 기록할 수 있습니다.
+2. `/files/*`가 키가 포함된 URL이 들어 있는 `state/server-info`로의 심볼릭 링크를 포함하여 `content/` 외부를 가리키는 심볼릭 링크를 그대로 제공합니다.
+3. 실제 화면 페이지의 URL에 세션 키가 그대로 남아 있어, 동일 출처 화면 JavaScript나 우발적인 리퍼러/히스토리를 통해 키가 노출될 수 있습니다.
+4. 헬퍼가 키가 없는 `ws://host` URL로 재연결을 시도합니다. 헤디드 Chrome 환경에서 동일 포트/동일 토큰으로 서버를 재시작한 후, 브라우저가 재시작된 서버에 쿠키 제시를 중단하여 수동으로 새로고침할 때까지 열린 탭이 종료 안내 화면(tombstone)에 멈춰 있는 현상이 발생했습니다.
+5. Codex에서 테스트 통과가 안정적으로 이루어지도록 셸 린트(shell lint)와 라이프사이클 테스트를 정리해야 합니다.
 
-## Design
+## 설계
 
-### 1. Bootstrap Keyed Loads
+### 1. 키가 포함된 로드의 부트스트랩 처리
 
-`GET /?key=<token>` becomes a bootstrap response, not the screen response.
+`GET /?key=<token>`은 화면 응답이 아니라 부트스트랩 응답이 됩니다.
 
-When the key is valid, the server:
+키가 유효할 때 서버의 동작:
 
-1. sets the HttpOnly session cookie as it does today
-2. returns a small HTML bootstrap page
-3. the bootstrap page stores the key in tab-scoped `sessionStorage`
-4. the bootstrap page navigates to `/` using `location.replace('/')`
+1. 현재와 동일하게 HttpOnly 세션 쿠키를 설정합니다.
+2. 작은 HTML 부트스트랩 페이지를 반환합니다.
+3. 부트스트랩 페이지는 탭 범위의 `sessionStorage`에 키를 저장합니다.
+4. 부트스트랩 페이지는 `location.replace('/')`를 사용하여 `/`로 이동합니다.
 
-After this, the visible screen URL is bare `/`, not `/?key=...`.
+이 과정이 끝나면 눈에 보이는 화면 URL은 `/?key=...`가 아니라 깔끔한 `/`가 됩니다.
 
-`GET /` with a valid cookie serves the current screen. `GET /` without a valid
-cookie still returns the friendly 403 page. `GET /?key=<wrong>` returns 403.
+유효한 쿠키가 있는 `GET /`은 현재 화면을 제공합니다. 유효한 쿠키가 없는 `GET /`은 여전히 친절한 403 페이지를 반환합니다. `GET /?key=<wrong>`은 403을 반환합니다.
 
-Why `sessionStorage`: the helper needs a reconnect credential that survives
-same-port restarts and does not depend only on cookie behavior. Because screen
-HTML is trusted same-origin UI, storing the key in tab-scoped storage is
-acceptable for this threat model. It is materially better than leaving the key
-in the address bar, history, and referrer surface.
+`sessionStorage`를 사용하는 이유: 헬퍼는 동일 포트 재시작 후에도 유지되고 쿠키 동작에만 의존하지 않는 재연결 자격 증명이 필요합니다. 화면 HTML은 신뢰할 수 있는 동일 출처 UI이므로, 탭 범위 스토리지에 키를 저장하는 것은 이 위협 모델에서 허용 가능합니다. 이는 주소창, 히스토리, 리퍼러 표면에 키를 남겨두는 것보다 실질적으로 훨씬 안전합니다.
 
-### 2. WebSocket Same-Origin Enforcement
+### 2. WebSocket 동일 출처(Same-Origin) 강제 적용
 
-WebSocket upgrades must pass both checks:
+WebSocket 업그레이드는 다음 두 가지 검사를 모두 통과해야 합니다:
 
-1. valid session auth by query key or cookie
-2. if an `Origin` header is present, it must match the request target origin
+1. 쿼리 키 또는 쿠키를 통한 유효한 세션 인증
+2. `Origin` 헤더가 존재하는 경우, 요청 대상 출처(target origin)와 반드시 일치해야 함
 
-The origin check should compare:
+출처 검사는 다음을 비교해야 합니다:
 
 ```text
 Origin === "http://" + req.headers.host
 ```
 
-Browser attacker page example:
+브라우저 공격자 페이지 예시:
 
 ```text
 Origin: http://localhost:9999
 Host: localhost:58088
 ```
 
-This must be rejected even if the browser sends the companion cookie.
+이 경우 브라우저가 컴패니언 쿠키를 전송하더라도 반드시 거부되어야 합니다.
 
-Legitimate companion page example:
+정상적인 컴패니언 페이지 예시:
 
 ```text
 Origin: http://localhost:58088
 Host: localhost:58088
 ```
 
-This should be accepted when the key or cookie is valid.
+키 또는 쿠키가 유효할 때 이 요청은 수락되어야 합니다.
 
-Direct non-browser clients may omit `Origin`; they still need the session key.
+브라우저가 아닌 직접 연결 클라이언트는 `Origin`을 생략할 수 있으나, 여전히 세션 키가 필요합니다.
 
-### 3. Helper Reconnect Credential
+### 3. 헬퍼 재연결 자격 증명
 
-`helper.js` should read the tab-scoped key from `sessionStorage` and append it
-to the WebSocket URL:
+`helper.js`는 `sessionStorage`에서 탭 범위 키를 읽어 WebSocket URL에 추가해야 합니다:
 
 ```text
 ws://<host>/?key=<stored-key>
 ```
 
-If no stored key exists, the helper falls back to the current cookie-only
-`ws://<host>` behavior. This preserves compatibility for already-loaded pages
-that do have a valid cookie but no storage entry.
+저장된 키가 없으면 헬퍼는 현재의 쿠키 전용 `ws://<host>` 동작으로 폴백(fallback)합니다. 이를 통해 유효한 쿠키는 있지만 스토리지 항목은 없는 이미 로드된 페이지들과의 호환성을 유지합니다.
 
-### 4. `/files/*` Containment
+### 4. `/files/*` 격리 (Containment)
 
-The file server should continue to reject empty names and dotfiles. It must also
-ensure the file is a real regular file inside `CONTENT_DIR`.
+파일 서버는 빈 이름과 숨김 파일(dotfiles)을 계속 거부해야 합니다. 또한 대상 파일이 `CONTENT_DIR` 내부의 실제 일반 파일(regular file)인지 확인해야 합니다.
 
-Use realpath containment as the boundary:
+실제 경로(realpath) 격리를 경계로 사용합니다:
 
-- compute `realContentDir = fs.realpathSync(CONTENT_DIR)`
-- compute `realFilePath = fs.realpathSync(filePath)`
-- serve only when `realFilePath` equals a descendant of `realContentDir`
-- reject symlinks and anything outside the content directory with 404
+- `realContentDir = fs.realpathSync(CONTENT_DIR)` 계산
+- `realFilePath = fs.realpathSync(filePath)` 계산
+- `realFilePath`가 `realContentDir`의 하위 경로와 일치할 때만 파일 제공
+- 심볼릭 링크 및 콘텐츠 디렉터리 외부의 모든 항목은 404로 거부
 
-The server should keep using `path.basename` so nested paths remain unsupported.
+중첩 경로가 계속 지원되지 않도록 서버는 `path.basename`을 계속 사용해야 합니다.
 
-### 5. Leak-Reduction Headers
+### 5. 유출 방지 헤더
 
-Add conservative headers that do not block inline scripts or future same-origin
-vendored libraries:
+인라인 스크립트나 향후 동일 출처 번들 라이브러리를 차단하지 않는 보수적인 보안 헤더를 추가합니다:
 
 ```text
 Referrer-Policy: no-referrer
@@ -162,64 +136,52 @@ Content-Security-Policy: frame-ancestors 'none'
 Cross-Origin-Resource-Policy: same-origin
 ```
 
-Do not add a restrictive `script-src` CSP in this pass. The companion currently
-injects inline helper JavaScript and future screens may load same-origin
-vendored libraries.
+이번 패스에서는 제한적인 `script-src` CSP를 추가하지 마세요. 컴패니언은 현재 인라인 헬퍼 JavaScript를 주입하며, 향후 화면들은 동일 출처 번들 라이브러리를 로드할 수 있습니다.
 
-### 6. Gitignore Durable Session State
+### 6. 영구 세션 상태 Gitignore 처리
 
-Add `.superpowers/` to the repo root `.gitignore` so persisted companion state
-and `.last-token` are not accidentally committed when using `--project-dir`.
+`--project-dir`를 사용할 때 영구 저장된 컴패니언 상태와 `.last-token`이 실수로 커밋되지 않도록 저장소 루트 `.gitignore`에 `.superpowers/`를 추가합니다.
 
-### 7. Test Stability And Lint
+### 7. 테스트 안정성 및 린트
 
-Clean up shell lint warnings in the touched start/stop scripts.
+수정한 시작/중지 스크립트의 셸 린트 경고를 정리합니다.
 
-Update the lifecycle test that invokes `start-server.sh --idle-timeout-minutes`
-so it cannot hang under Codex's `CODEX_CI` foreground auto-detection. The test
-should force background mode with `--background` when it expects the script to
-return startup JSON.
+Codex의 `CODEX_CI` 포그라운드 자동 감지 환경에서 멈추지(hang) 않도록 `start-server.sh --idle-timeout-minutes`를 호출하는 라이프사이클 테스트를 업데이트합니다. 테스트가 스크립트로부터 시작 JSON 반환을 기대할 때는 `--background`를 사용하여 백그라운드 모드를 강제해야 합니다.
 
-## Testing Strategy
+## 테스트 전략
 
-All behavior changes should be TDD:
+모든 동작 변경은 TDD로 진행해야 합니다:
 
-1. write the failing focused test
-2. run it and confirm it fails for the expected reason
-3. implement the minimum fix
-4. rerun the focused test
-5. rerun the full brainstorm-server suite
+1. 실패하는 집중 테스트(focused test) 작성
+2. 테스트를 실행하고 예상한 이유로 실패하는지 확인
+3. 최소한의 수정 사항 구현
+4. 집중 테스트 재실행
+5. 전체 brainstorm-server 스위트 재실행
 
-Required focused regressions:
+필수 집중 회귀 테스트 항목:
 
-- valid keyed `/` returns bootstrap, not screen content
-- bootstrap stores key in `sessionStorage` and strips the URL
-- cookie-only `/` still serves screen content
-- helper uses `sessionStorage` key for WebSocket URL
-- same-origin cookie WebSocket opens
-- cross-origin cookie WebSocket is rejected and writes no events
-- direct key WebSocket still opens without `Origin`
-- symlink under `content/` pointing to `state/server-info` returns 404
-- security headers are present on normal HTML, bootstrap, 403, and file responses
-- restart same port/token can authenticate reconnect with the stored key
-- shell lint passes for touched shell scripts
-- lifecycle suite does not hang under Codex
+- 유효한 키가 포함된 `/` 요청이 화면 콘텐츠가 아닌 부트스트랩을 반환함
+- 부트스트랩이 `sessionStorage`에 키를 저장하고 URL에서 키를 제거함
+- 쿠키만 있는 `/` 요청이 여전히 화면 콘텐츠를 제공함
+- 헬퍼가 WebSocket URL에 `sessionStorage` 키를 사용함
+- 동일 출처 쿠키 WebSocket이 정상적으로 열림
+- 교차 출처 쿠키 WebSocket이 거부되고 어떠한 이벤트도 기록하지 않음
+- `Origin`이 없는 직접 키 WebSocket이 여전히 정상적으로 열림
+- `state/server-info`를 가리키는 `content/` 하위의 심볼릭 링크가 404를 반환함
+- 일반 HTML, 부트스트랩, 403, 파일 응답에 보안 헤더가 존재함
+- 동일 포트/토큰 재시작 시 저장된 키로 재연결을 인증할 수 있음
+- 수정된 셸 스크립트가 셸 린트를 통과함
+- 라이프사이클 스위트가 Codex 환경에서 멈추지 않음
 
-## Acceptance Criteria
+## 인수 기준 (Acceptance Criteria)
 
-- `cd tests/brainstorm-server && npm test` passes repeatedly without hanging.
-- The security probe that previously wrote `attacker-injected` from another
-  localhost origin now fails to open the WebSocket and leaves `state/events`
-  unchanged.
-- The symlink-to-`server-info` probe returns 404.
-- A headed or headless browser keyed load ends on a bare `/` URL and the status
-  pill reaches Connected.
-- A same-port/same-token restart reconnects automatically without manual reload.
-- `scripts/lint-shell.sh` passes for the touched shell scripts.
+- `cd tests/brainstorm-server && npm test`가 멈추지 않고 반복해서 통과합니다.
+- 이전에 다른 localhost 출처에서 `attacker-injected`를 기록했던 보안 프로브가 이제 WebSocket 열기에 실패하고 `state/events`를 변경하지 않은 상태로 유지합니다.
+- `server-info`를 가리키는 심볼릭 링크 프로브가 404를 반환합니다.
+- 헤디드 또는 헤드리스 브라우저에서 키가 포함된 로드를 수행하면 최종적으로 깔끔한 `/` URL에 도달하고 상태 표시줄(status pill)이 Connected 상태가 됩니다.
+- 동일 포트/동일 토큰 재시작 시 수동 새로고침 없이 자동으로 재연결됩니다.
+- 수정된 셸 스크립트에 대해 `scripts/lint-shell.sh`가 통과합니다.
 
-## Deferred Work
+## 보류된 작업 (Deferred Work)
 
-If the project later needs to treat screen HTML as untrusted, design a separate
-sandboxed iframe architecture. That should isolate generated screens on a
-separate origin or sandboxed frame and expose only a narrow `postMessage` bridge
-for user choices. Do not bundle that into this fix.
+향후 프로젝트에서 화면 HTML을 신뢰할 수 없는(untrusted) 것으로 취급해야 하는 경우, 별도의 샌드박스 iframe 아키텍처를 설계하세요. 생성된 화면을 별도의 출처나 샌드박스 프레임에 격리하고 사용자 선택을 위한 좁은 `postMessage` 브리지만 노출해야 합니다. 해당 작업은 이번 수정에 함께 묶지 마세요.

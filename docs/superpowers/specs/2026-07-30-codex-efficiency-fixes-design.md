@@ -1,252 +1,129 @@
-# Codex Efficiency Fixes — Design
+# Codex 효율성 개선 — 설계
 
-Date: 2026-07-30
-Status: approved by Jesse (in-session)
-Branch: `codex-efficiency-fixes` off `dev`
+날짜: 2026-07-30
+상태: Jesse 승인 완료 (세션 내)
+브랜치: `dev`에서 분기한 `codex-efficiency-fixes`
 
-## Sources
+## 참고 자료 (Sources)
 
-- Eval campaign closeout: `superpowers-autoresearch/reports/2026-07-codex-efficiency-campaign.md`
-  (treatment table §4; every treatment below has a scorer and a measured
-  `dev` baseline).
-- Codex source recon: `superpowers-autoresearch/docs/2026-07-29-codex-multiagent-v2-capabilities.md`
-  (file:line citations against the Codex CLI source; grounds T2, T3, T5).
-- Published experiment write-ups: `superpowers-evals/docs/experiments/`.
-- Drew's spinout stack (PRs #2036, #2035) is **evidence, not adopted text**:
-  Jesse wants to dig into those fixes in more detail before adopting any
-  of them; they inform the problem statements only.
+- 평가 캠페인 종료 보고서: `superpowers-autoresearch/reports/2026-07-codex-efficiency-campaign.md` (처치(treatment) 표 §4; 아래의 모든 처치 항목에는 채점기(scorer)와 측정된 `dev` 베이스라인이 있음).
+- Codex 소스 코드 사전 분석: `superpowers-autoresearch/docs/2026-07-29-codex-multiagent-v2-capabilities.md` (Codex CLI 소스에 대한 `file:line` 인용 포함; T2, T3, T5의 근거 자료).
+- 게시된 실험 보고서: `superpowers-evals/docs/experiments/`.
+- Drew의 스핀아웃 스택(PR #2036, #2035)은 **채택할 텍스트가 아니라 참고 증거**입니다: Jesse는 해당 수정 사항들을 채택하기 전에 더 자세히 살펴보기를 원하므로, 문제 정의를 위한 참고 자료로만 활용합니다.
 
-## Goal
+## 목표
 
-Ship the five evidence-strong treatments from the codex-efficiency eval
-campaign as superpowers skill/doc changes, each graded against its
-pre-registered criterion by the campaign's scorers before its PR is cut.
-Phase 2 (everything else in the closeout treatment table) follows, each
-item gated on new baseline work first.
+codex-efficiency 평가 캠페인에서 강력한 증거가 확보된 다섯 가지 처치(treatments)를 superpowers 스킬/문서 변경 사항으로 출시합니다. 각 처치는 PR을 생성하기 전에 캠페인의 채점기를 통해 사전 등록된 기준에 따라 채점됩니다. Phase 2(종료 보고서 처치 표의 나머지 항목들)는 각 항목에 대해 새로운 베이스라인 작업을 먼저 수행하는 것을 조건으로 후속 진행합니다.
 
-## Scope decisions (settled with Jesse)
+## 범위 결정 사항 (Jesse와 합의 완료)
 
-- **Phase 1 = the evidence-strong five** (T1–T5 below). Phase 2 items
-  each need a failing baseline before any fix ships (discrimination
-  rule: inconclusive-by-zero is a stop).
-- **One branch, PR per treatment.** Development and batteries happen on
-  `codex-efficiency-fixes`; when a treatment beats its criterion, it is
-  cut into its own PR against `dev` with its eval evidence. No merge
-  without Jesse's per-PR approval.
-- **T4 ships cross-harness with a global regression battery** (Claude
-  Code, Codex, Gemini), variant C shape: ceremony scales, approval never
-  does.
+- **Phase 1 = 강력한 증거가 확보된 5개 항목** (아래 T1–T5). Phase 2 항목들은 수정을 출시하기 전에 각각 실패하는 베이스라인이 먼저 필요합니다(변별 규칙: 0건으로 인한 판정 불가(inconclusive-by-zero)는 작업 중단 사유임).
+- **단일 브랜치 작업, 처치별 개별 PR.** 개발과 테스트 배터리는 `codex-efficiency-fixes`에서 진행하며, 특정 처치가 기준을 통과하면 평가 증거와 함께 `dev`를 타겟으로 하는 개별 PR로 분리합니다. Jesse의 PR별 승인 없이는 병합하지 않습니다.
+- **T4는 글로벌 회귀 배터리와 함께 모든 하네스 공통(cross-harness)으로 출시** (Claude Code, Codex, Gemini), 변형 C(variant C) 형태 적용: 의례(ceremony)의 규모는 조절하되, 승인은 절대 생략하지 않음.
 
-## The five treatments
+## 다섯 가지 처치 (The five treatments)
 
-### T1. SDD worker-review prohibition
+### T1. SDD 작업자(worker)의 자체 리뷰 디스패치 금지
 
-**Evidence:** 9/9 depth-2 spawns across 4 corpora were implementer-issued
-reviewers; all 9 were same-task duplicates of the review the controller
-dispatches anyway. The dispatch contract never says review is not the
-worker's job; "self-review" in the implementer prompt gets reified into a
-reviewer subagent on harnesses where children can spawn (Codex).
+**증거:** 4개 코퍼스에서 발생한 9/9개의 깊이-2(depth-2) 스폰이 모두 구현자가 호출한 리뷰어였으며, 9개 모두 어차피 컨트롤러가 디스패치하는 리뷰와 동일한 태스크에 대한 중복 리뷰였습니다. 디스패치 계약 어디에도 리뷰가 작업자의 일이 아니라는 말이 없기 때문에, 자식 에이전트를 스폰할 수 있는 하네스(Codex)에서는 구현자 프롬프트의 "자체 리뷰(self-review)"가 리뷰어 서브에이전트 스폰으로 구체화(reified)됩니다.
 
-**Changes:**
-- `skills/subagent-driven-development/implementer-prompt.md`: an explicit
-  "You do not dispatch subagents" clause — self-review means reading your
-  own diff; the controller owns all review dispatch; a reviewer you spawn
-  duplicates a review the process already provides.
-- `skills/subagent-driven-development/SKILL.md`: one dispatch-contract
-  line in the task loop, plus a Red Flags row: "An independent review
-  would strengthen my report" → review is the controller's next step;
-  your reviewer is a duplicate seat.
-- Harness-agnostic wording (no-op where children cannot spawn).
+**변경 사항:**
+- `skills/subagent-driven-development/implementer-prompt.md`: 명시적인 "당신은 서브에이전트를 디스패치하지 않습니다(You do not dispatch subagents)" 조항 추가 — 자체 리뷰란 자신의 diff를 직접 읽는 것을 의미하며, 모든 리뷰 디스패치 권한은 컨트롤러에게 있고, 당신이 스폰한 리뷰어는 프로세스가 이미 제공하는 리뷰를 중복 수행하는 것입니다.
+- `skills/subagent-driven-development/SKILL.md`: 태스크 루프에 디스패치 계약 한 줄 추가, 및 Red Flags 행 추가: "독립적인 리뷰를 거치면 내 리포트가 더 탄탄해질 것이다" → 리뷰는 컨트롤러의 다음 단계입니다. 당신이 부른 리뷰어는 중복된 자리일 뿐입니다.
+- 하네스에 구애받지 않는 문구 사용 (자식을 스폰할 수 없는 환경에서는 아무 영향 없음).
 
-**Graded by:** `score_e6.py` (depth-2 spawns by spawner role, duplicate
-review families); `score_e5.py` for the same-scope variant.
-**Baseline:** 9/9 worker-issued, 0 counter-examples.
-**Criterion:** 0 worker-issued depth-2 spawns AND review coverage
-preserved (every task still gets exactly one controller-dispatched task
-review).
+**채점 도구:** `score_e6.py` (스폰 주체 역할별 깊이-2 스폰 수, 중복 리뷰 패밀리); 동일 범위 변형에 대해서는 `score_e5.py`.
+**베이스라인:** 9/9 작업자 호출, 반례 0건.
+**기준:** 작업자가 호출한 깊이-2 스폰 0건 **및** 리뷰 커버리지 유지 (모든 태스크가 여전히 컨트롤러가 디스패치한 태스크 리뷰를 정확히 1회 받음).
 
-### T2. Event-driven waiting
+### T2. 이벤트 기반 대기 (Event-driven waiting)
 
-**Evidence:** 60–78% of `wait_agent` calls time out in every corpus
-(dev 67.1%, spinout 60.2%). Source recon: V2 waits are event
-subscriptions, not polls — one long wait has the same wake latency as a
-10s poll at ~1/90th the calls; a completed child's FINAL_ANSWER is pushed
-into the parent's mailbox and drained into the next model request with no
-wait at all.
+**증거:** 모든 코퍼스에서 `wait_agent` 호출의 60–78%가 타임아웃됩니다(dev 67.1%, spinout 60.2%). 소스 코드 분석 결과: V2 대기는 폴링(poll)이 아니라 이벤트 구독입니다 — 한 번의 긴 대기는 10초 단위의 폴링과 깨어나는 지연 시간(wake latency)이 동일하면서도 호출 횟수는 ~1/90에 불과합니다. 완료된 자식 에이전트의 `FINAL_ANSWER`는 부모의 메일박스로 푸시되어 대기 호출 없이도 다음 모델 요청에 자동으로 포함됩니다.
 
-**Changes** (`skills/using-superpowers/references/codex-tools.md`):
-- Never short-timeout poll.
-- While local work remains, do not wait — child results arrive with your
-  next turn via the mailbox.
-- When genuinely idle, issue ONE `wait_agent` with a long `timeout_ms`
-  (900000+; harness max 3600000).
-- V2 caveat stated: completion mail carries `trigger_turn=false` and will
-  not wake an idle controller — that is the one job `wait_agent` has.
+**변경 사항** (`skills/using-superpowers/references/codex-tools.md`):
+- 절대 짧은 타임아웃으로 폴링하지 마세요.
+- 로컬에서 할 작업이 남아 있는 동안에는 대기하지 마세요 — 자식 에이전트의 결과는 메일박스를 통해 다음 턴에 함께 도착합니다.
+- 진정으로 유휴(idle) 상태일 때만 긴 `timeout_ms`(900000 이상; 하네스 최대값 3600000)를 지정하여 단 한 번의 `wait_agent`를 호출하세요.
+- V2 주의 사항 명시: 완료 메일은 `trigger_turn=false`를 가지므로 유휴 상태의 컨트롤러를 깨우지 않습니다 — 그것이 바로 `wait_agent`가 맡은 유일한 역할입니다.
 
-**Graded by:** `score_e7.py` (timeout rate, inter-poll cadence,
-cache-rebill estimate — the rebill figure stays labeled as an estimate).
-**Baseline:** dev 67.1% timeout rate.
-**Criterion:** timeout rate < 25% with no loss of task completion.
+**채점 도구:** `score_e7.py` (타임아웃 비율, 폴링 간격, 캐시 재청구 추정치 — 재청구 수치는 추정치로 라벨링 유지).
+**베이스라인:** dev 타임아웃 비율 67.1%.
+**기준:** 태스크 완료 손실 없이 타임아웃 비율 < 25%.
 
-### T3. codex-tools.md corrections
+### T3. `codex-tools.md` 오류 수정
 
-**Evidence:** five claims in the current guidance are contradicted by the
-Codex source (all file:line-cited in the capabilities doc):
-1. `close_agent` does not exist in multi-agent V2 (V1-only). V2 LRU-evicts
-   finished children automatically; not closing costs nothing;
-   `followup_task` transparently reloads an evicted child.
-2. Fix rounds can always resume the implementer via `followup_task` —
-   dev's "if your harness cannot send another message to a spawned agent,
-   dispatch each fix round as a fresh implementer" branch is dead on V2.
-3. Role files (`~/.codex/agents/**.toml`) DO attach to spawns via
-   `agent_type` on isolated forks (0.145+).
-4. Full-history forks accept `model`/`reasoning_effort` overrides; only
-   `agent_type` is refused. (Isolated forks remain the SDD guidance for
-   context-hygiene reasons, stated accurately.)
-5. Dispatch guidance must never name non-V2 model presets — the V2 spawn
-   allowlist is v2 presets only; others hard-error.
+**증거:** 현재 가이드라인의 다섯 가지 주장이 Codex 소스 코드와 배치됩니다(모두 기능 분석 문서에 `file:line`으로 인용됨):
+1. 멀티 에이전트 V2에는 `close_agent`가 존재하지 않습니다(V1 전용). V2는 완료된 자식 에이전트를 자동으로 LRU 퇴거(evict)시키므로 닫지 않아도 아무런 비용이 들지 않으며, `followup_task`는 퇴거된 자식을 투명하게 다시 로드합니다.
+2. 수정 라운드는 언제나 `followup_task`를 통해 구현자를 재개할 수 있습니다 — dev의 "하네스가 스폰된 에이전트에 추가 메시지를 보낼 수 없다면 매 수정 라운드를 새로운 구현자로 디스패치하라"는 분기문은 V2에서 사문화(dead)되었습니다.
+3. 역할 파일(`~/.codex/agents/**.toml`)은 격리된 포크(isolated forks)에서 `agent_type`을 통해 스폰에 정상적으로 첨부됩니다(0.145 이상).
+4. 전체 히스토리 포크(full-history forks)는 `model`/`reasoning_effort` 오버라이드를 수락하며, 오직 `agent_type`만 거부됩니다. (컨텍스트 위생상의 이유로 격리된 포크를 권장하는 SDD 가이드라인은 정확한 설명과 함께 그대로 유지합니다.)
+5. 디스패치 가이드라인은 절대 비-V2 모델 프리셋을 언급해서는 안 됩니다 — V2 스폰 허용 목록(allowlist)은 v2 프리셋만 허용하며 그 외에는 하드 에러가 발생합니다.
 
-**Changes:** rewrite the multi-agent paragraph of
-`skills/using-superpowers/references/codex-tools.md` to be
-version-honest (V1 vs V2 behavior labeled where they differ).
+**변경 사항:** `skills/using-superpowers/references/codex-tools.md`의 멀티 에이전트 단락을 버전에 맞게 정직하게 재작성합니다(차이가 있는 부분은 V1 대 V2 동작을 구분하여 라벨링함).
 
-**Graded by:** source citation (already verified); no scorer regressions
-on the shared battery. `score_e8.py` is retained as a V1/V2 schema
-detector, not a hygiene grader — no `close_agent` checklist ships.
+**채점 도구:** 소스 코드 인용(이미 검증 완료); 공유 배터리에서 채점기 회귀 없음. `score_e8.py`는 위생 채점기가 아닌 V1/V2 스키마 감지기로 유지하며 — `close_agent` 체크리스트는 출시하지 않습니다.
 
-### T4. Brainstorming three-path router (variant C: approval always)
+### T4. 브레인스토밍 3-경로 라우터 (변형 C: 승인은 언제나 필수)
 
-**Evidence:** micro — the current HARD-GATE text pushes a bounded task to
-FULL ceremony 5/5, while Z-null (no guidance) and a three-path router
-both differentiate 5/5: the absolute wording suppresses discrimination
-the model draws natively. FULL battery — ceremony volume scales
-moderately (16.7 vs 24.0 tool calls, bounded vs arch), but the
-two-document ritual (spec file → plan file) ran unconditionally in every
-rep. The measured waste is the unconditional artifact ritual, not the
-approval gate.
+**증거:** 마이크로 테스트 — 현재의 HARD-GATE 텍스트는 범위가 명확한(bounded) 태스크도 5/5 모두 전체(FULL) 의례로 밀어붙이는 반면, Z-null(가이드라인 없음)과 3-경로 라우터는 둘 다 5/5 정확히 구분해 냅니다. 즉, 절대적인 문구가 모델이 본래 가지고 있는 변별력을 억누르고 있습니다. 전체 배터리 — 의례의 분량은 중간 정도로 조절되지만(도구 호출 16.7회 대 24.0회, bounded 대 arch), 두 개의 문서를 작성하는 의식(사양 파일 → 계획 파일)은 모든 반복 실행에서 무조건 실행되었습니다. 측정된 낭비는 승인 게이트가 아니라 무조건적인 아티팩트 작성 의식입니다.
 
-**Design (variant C):** three paths scale the ARTIFACT; every path keeps
-human approval before implementation:
-- **Spike** (feasibility question, explicitly throwaway): present the
-  question and the intended probe in 2–3 sentences, get a nod, go. No
-  docs. Findings return as a recommendation; anything built stays labeled
-  throwaway.
-- **Bounded** (well-scoped change to an existing, understood flow):
-  present a short design in chat, get approval, implement. No spec file,
-  no writing-plans invocation.
-- **Architectural** (restructures components, new subsystem, public
-  interface change): the full current flow — spec doc, review,
-  writing-plans.
+**설계 (변형 C):** 세 가지 경로가 **아티팩트(ARTIFACT)**의 규모를 조절하되, 모든 경로는 구현 전 인간의 승인을 유지합니다:
+- **Spike** (타당성 확인 질문, 명시적인 일회성 코드): 질문과 의도한 프로브를 2–3문장으로 제시하고 동의를 얻은 뒤 진행합니다. 문서는 작성하지 않습니다. 결과는 권장 사항으로 반환하며, 만들어진 모든 코드는 일회성(throwaway)으로 라벨링된 상태를 유지합니다.
+- **Bounded** (이해된 기존 흐름에 대한 범위가 명확한 변경): 채팅으로 짧은 설계를 제시하고 승인을 받은 뒤 구현합니다. 사양 파일도 작성하지 않고 `writing-plans`도 호출하지 않습니다.
+- **Architectural** (컴포넌트 재구조화, 새로운 서브시스템, 공개 인터페이스 변경): 현재의 전체 흐름 — 사양 문서 작성, 리뷰, `writing-plans` 호출을 모두 수행합니다.
 
-**Guards (all ship with the router):**
-- Classification is said out loud ("this looks bounded, so I'll present a
-  short design here rather than write a spec") so the human can override.
-- When in doubt between two paths, take the heavier one.
-- One-way ratchet: hidden complexity discovered mid-path upgrades the
-  path; never downgrade mid-task.
-- New Red Flags rows targeting classification-as-escape-hatch ("I'll call
-  it bounded to skip the doc").
+**가드 장치 (모두 라우터와 함께 출시):**
+- 인간이 오버라이드할 수 있도록 분류 결과를 소리 내어 말합니다("이 작업은 범위가 명확해 보이므로 사양서를 작성하는 대신 여기에 짧은 설계를 제시하겠습니다").
+- 두 경로 사이에서 의심스러울 때는 더 무거운 경로를 선택합니다.
+- 단방향 래칫(one-way ratchet): 경로 진행 중에 숨겨진 복잡성이 발견되면 경로를 상위 단계로 업그레이드하며, 절대 작업 도중에 하위 단계로 다운그레이드하지 않습니다.
+- 분류를 탈출구로 악용하는 행위("문서 작성을 건너뛰기 위해 bounded라고 부르자")를 겨냥한 새로운 Red Flags 행을 추가합니다.
 
-**Changes** (`skills/brainstorming/SKILL.md`): HARD-GATE keeps "no
-implementation before approval" and drops "regardless of perceived
-simplicity" as the ceremony driver; anti-pattern section reframed (the
-sin is skipping approval, not skipping documents); checklist steps 6–9
-become the architectural path; process-flow graph gains the router; Red
-Flags rows added. This is carefully-tuned content — the edit follows
-writing-skills methodology and ships only with the full eval evidence
-below.
+**변경 사항** (`skills/brainstorming/SKILL.md`): HARD-GATE는 "승인 전 구현 금지"는 유지하되 의례를 강제하는 동인이었던 "인지된 단순함과 무관하게(regardless of perceived simplicity)" 문구를 제거합니다. 안티패턴 섹션을 재구성하고(잘못은 문서를 건너뛰는 것이 아니라 승인을 건너뛰는 것임), 체크리스트 6–9단계를 architectural 경로로 지정하며, 프로세스 흐름 그래프에 라우터를 추가하고 Red Flags 행을 추가합니다. 이 부분은 정교하게 튜닝된 콘텐츠이므로 — 편집은 `writing-skills` 방법론을 따르며 아래의 전체 평가 증거가 확보된 경우에만 출시합니다.
 
-**Graded by (three layers):**
-1. **Micro** (`ceremony-path-micro.py`, adapted): variant C literal text,
-   plus adversarially ambiguous briefs the campaign never tested (a task
-   that pattern-matches bounded but hides a public interface change).
-   Criteria: spike/bounded/arch differentiate (≥4/5 per cell); ambiguous
-   briefs escalate to FULL (≥4/5); arch never downgrades (5/5).
-2. **Codex ceremony battery:** `cx-ceremony-{spike,bounded,arch}` on the
-   fix arm, 3 reps each, `score_e4.py` census. Criteria: bounded reps
-   show an approval turn but zero committed spec files and zero
-   writing-plans ritual; arch reps keep the full two-doc flow; spike reps
-   stay minimal.
-3. **Global regression battery:** the same three ceremony scenarios on
-   Claude Code and Gemini (rig work: those scenarios are currently
-   codex-gated), 3 reps each; plus the triggering acceptance check
-   ("Let's make a react todo list" auto-triggers brainstorming into the
-   full/architectural path) on all three harnesses.
+**채점 도구 (3계층):**
+1. **마이크로 테스트** (`ceremony-path-micro.py`, 수정본): 변형 C 원문 텍스트에 더해 캠페인에서 테스트하지 않았던 적대적으로 모호한 브리프(패턴상으로는 bounded처럼 보이지만 공개 인터페이스 변경을 숨기고 있는 태스크)를 추가합니다. 기준: spike/bounded/arch 변별(셀당 ≥4/5); 모호한 브리프는 FULL로 에스컬레이션(≥4/5); arch는 절대 다운그레이드하지 않음(5/5).
+2. **Codex 의례 배터리:** 수정 실험군에서 `cx-ceremony-{spike,bounded,arch}`를 각 3회 반복 실행하고 `score_e4.py`로 전수 조사합니다. 기준: bounded 실행은 승인 턴은 존재하되 커밋된 사양 파일 0개 및 `writing-plans` 의식 0회여야 함; arch 실행은 전체 2-문서 흐름 유지; spike 실행은 최소한의 동작 유지.
+3. **글로벌 회귀 배터리:** Claude Code와 Gemini에서 동일한 세 가지 의례 시나리오를 각 3회 반복 실행(테스트 장비 작업 필요: 해당 시나리오들은 현재 codex 전용으로 게이트가 설정되어 있음); 이에 더해 세 하네스 모두에서 트리거 인수 테스트("Let's make a react todo list" 입력 시 브레인스토밍이 자동으로 트리거되어 full/architectural 경로로 진입하는지 확인)를 수행합니다.
 
-### T5. Explicit model on child-issued spawns
+### T5. 자식 에이전트가 호출한 스폰에 명시적 모델 지정
 
-**Evidence:** root spawns are 100% explicit-model at CLI 0.146 (dev
-14/14); the live gap is depth-2 — 2/2 child-issued spawns omitted
-`model`. Source recon: `model` without `reasoning_effort` resets effort
-to the MODEL's default, not the parent's.
+**증거:** 루트 스폰은 CLI 0.146에서 100% 모델을 명시하고 있으나(dev 14/14), 실제 공백은 깊이-2(depth-2)에 있습니다 — 자식이 호출한 스폰 2/2개가 `model`을 생략했습니다. 소스 코드 분석 결과: `reasoning_effort` 없이 `model`만 지정하면 추론 노력 수준이 부모의 설정이 아닌 **해당 모델(MODEL)**의 기본값으로 초기화됩니다.
 
-**Changes** (`skills/using-superpowers/references/codex-tools.md`):
-- Every spawn you issue — including as a child — sets `model` AND
-  `reasoning_effort`; the effort-reset trap is named.
-- Advise `[agents].default_subagent_model` and
-  `[agents].default_subagent_reasoning_effort` in `~/.codex/config.toml`
-  as the machine-level backstop for anything that slips through.
+**변경 사항** (`skills/using-superpowers/references/codex-tools.md`):
+- 자식 에이전트로서 호출하는 경우를 포함하여, 당신이 발행하는 모든 스폰에는 `model`과 `reasoning_effort`를 **모두** 설정해야 합니다(추론 노력 수준 초기화 함정을 명시적으로 언급함).
+- 누락되는 경우를 대비한 머신 레벨의 안전장치(backstop)로서 `~/.codex/config.toml`에 `[agents].default_subagent_model` 및 `[agents].default_subagent_reasoning_effort`를 설정하도록 안내합니다.
 
-**Graded by:** `score_e1.py` (per-spawn explicit-model rate, by depth) on
-the shared battery.
-**Baseline:** depth-2: 0/2 explicit.
-**Criterion:** every spawn at every depth carries explicit model +
-effort. Pre-registered caveat: if T1 eliminates depth-2 spawns entirely,
-T5 grades as root-spawn regression (hold 100%) plus doc correctness and
-is recorded inconclusive-by-zero at depth-2 — the config backstop is then
-the operative mechanism.
+**채점 도구:** 공유 배터리에서 `score_e1.py` (깊이별 스폰당 명시적 모델 지정 비율).
+**베이스라인:** 깊이-2: 0/2 명시됨.
+**기준:** 모든 깊이의 모든 스폰이 명시적 모델 + 추론 노력 수준을 포함함. 사전 등록된 단서 조항: 만약 T1이 깊이-2 스폰을 완전히 제거한다면, T5는 루트 스폰 회귀(100% 유지) 및 문서 정확성으로 채점하고 깊이-2에서는 0건으로 인한 판정 불가(inconclusive-by-zero)로 기록합니다 — 이 경우 설정 파일 백스톱이 실질적인 작동 메커니즘이 됩니다.
 
-## Grading plan
+## 채점 계획 (Grading plan)
 
-- **Shared SDD battery** carries T1, T2, T5: `cx-sdd-small`, fix-branch
-  arm (`/tmp/sp-arm-fix`), 8 reps across both container lanes. Dev
-  baselines are already measured; no baseline re-runs.
-- **T4 batteries** as listed above (micro + codex ceremony + global
-  regression).
-- **Pre-registration:** every battery gets a hypothesis-log entry
-  (prediction, scorer, criterion) in
-  `superpowers-autoresearch/logs/2026-07-30-codex-efficiency-fixes.md`
-  BEFORE it runs. Standing rules carry over: append-only log, manual
-  inspection of scorer matches on fix-arm runs (non-circular
-  verification), no raw rollouts committed, correctness rides beside
-  cost in every verdict.
-- **Attribution:** orthogonal scorers on one combined branch; unexpected
-  regressions bisect by treatment commit.
-- **Budget:** shared battery ~$40, codex ceremony ~$40, global
-  regression ~$40–80, micros ~$5 → phase 1 ≈ $150–200 of the ~$850
-  remaining from the campaign's $1000.
+- **공유 SDD 배터리**가 T1, T2, T5를 함께 검증합니다: `cx-sdd-small`, 수정 브랜치 실험군(`/tmp/sp-arm-fix`), 두 컨테이너 레인에 걸쳐 8회 반복 실행. Dev 베이스라인은 이미 측정되어 있으므로 베이스라인 재실행은 하지 않습니다.
+- **T4 배터리**는 위에 나열된 대로 진행합니다(마이크로 + codex 의례 + 글로벌 회귀).
+- **사전 등록(Pre-registration):** 모든 배터리는 실행하기 **전에** `superpowers-autoresearch/logs/2026-07-30-codex-efficiency-fixes.md`에 가설 로그 항목(예측, 채점기, 기준)을 먼저 기록합니다. 상시 규칙이 그대로 적용됩니다: 추가 전용(append-only) 로그, 수정 실험군 실행에서 채점기 매칭 결과의 수동 검사(비순환적 검증), 원시 롤아웃 파일 커밋 금지, 모든 판정에서 비용과 함께 정확성 동시 평가.
+- **효과 귀속(Attribution):** 하나의 결합된 브랜치에서 서로 직교(orthogonal)하는 채점기들을 사용하며, 예상치 못한 회귀가 발생하면 처치 커밋 단위로 이진 탐색(bisect)합니다.
+- **예산:** 공유 배터리 ~$40, codex 의례 ~$40, 글로벌 회귀 ~$40–80, 마이크로 ~$5 → Phase 1은 캠페인 예산 $1000 중 남은 ~$850에서 약 $150–200를 사용합니다.
 
-## Process
+## 프로세스
 
-- Work happens in the `codex-efficiency-fixes` worktree (branched off
-  `dev`); execution via subagent-driven-development from a written plan.
-- Skill-text changes follow writing-skills methodology.
-- Scenario/rig changes (un-gating ceremony scenarios for Claude
-  Code/Gemini, adversarial micro briefs) land in `superpowers-evals`
-  main, as authorized.
-- PR-per-treatment against `dev`, each with its eval evidence and the
-  standard identification block; merges only on Jesse's per-PR approval.
+- 작업은 `codex-efficiency-fixes` 워크트리(`dev`에서 분기)에서 이루어지며, 작성된 계획을 바탕으로 `subagent-driven-development`를 통해 실행합니다.
+- 스킬 텍스트 변경은 `writing-skills` 방법론을 따릅니다.
+- 시나리오/장비 변경(Claude Code/Gemini를 위한 의례 시나리오 게이트 해제, 적대적 마이크로 브리프 추가)은 승인된 대로 `superpowers-evals`의 `main`에 반영합니다.
+- `dev`를 타겟으로 처치당 하나의 PR을 생성하며, 각 PR에는 평가 증거와 표준 신원 공개 블록을 포함합니다. 병합은 오직 Jesse의 PR별 승인이 있을 때만 수행합니다.
 
-## Phase 2 queue (baseline-first; not in this plan's tasks)
+## Phase 2 대기열 (베이스라인 우선; 이 계획의 태스크에는 포함되지 않음)
 
-Each item requires a failing baseline before any fix ships:
-1. **Dispatch routing / long-session drift** — needs a long-session
-   elicitation rig (fresh sessions don't reproduce the pathology at CLI
-   0.146). Drew's stack informs the treatment shape.
-2. **Verification leases / evidence receipts** — needs the
-   substring-aware duplicate counter added to `score_e3.py` first
-   (current baseline 1/23 exact-string pairs is too weak).
-3. **Remediation cap** — small-n baseline (2/3 reps) needs more reps.
-4. **Cross-task-race probe redesign** — `score_e5.py`'s probe is
-   inconclusive-by-zero by design tradeoff; needs a stronger probe.
-5. **E5 D4 shell-command parser** — fix-review-scope classifier cannot
-   parse compound commands; scorer work, not skill work.
+각 항목은 수정을 출시하기 전에 실패하는 베이스라인이 먼저 필요합니다:
+1. **디스패치 라우팅 / 장기 세션 드리프트** — 장기 세션 유도 장비가 필요합니다(새로운 세션에서는 CLI 0.146 기준 해당 병폐가 재현되지 않음). Drew의 스택을 처치 형태의 참고 자료로 활용합니다.
+2. **검증 임대(Verification leases) / 증거 영수증** — `score_e3.py`에 부분 문자열을 인식하는 중복 카운터를 먼저 추가해야 합니다(현재 베이스라인인 1/23 정확히 일치하는 문자열 쌍은 너무 약함).
+3. **교정 상한선(Remediation cap)** — 작은 표본(2/3회 반복 실행) 베이스라인에 더 많은 반복 실행이 필요합니다.
+4. **태스크 간 경쟁 상태(Cross-task-race) 프로브 재설계** — `score_e5.py`의 프로브는 설계 트레이드오프상 0건으로 인한 판정 불가 상태이므로 더 강력한 프로브가 필요합니다.
+5. **E5 D4 셸 명령어 파서** — 수정 리뷰 범위 분류기가 복합 명령어를 파싱하지 못함; 스킬 작업이 아닌 채점기 작업임.
 
-## Out of scope
+## 범위 외 (Out of scope) 항목
 
-- Adopting Drew's spinout stack (#2036/#2035) or its text.
-- RoboRev, Codex token telemetry (separate codebases).
-- A `close_agent` hygiene checklist (V2 has no such tool — closed as
-  do-not-ship in the campaign).
-- Claude Code/Gemini-specific efficiency treatments beyond the T4
-  regression battery.
+- Drew의 스핀아웃 스택(#2036/#2035) 또는 그 텍스트를 그대로 채택하는 것.
+- RoboRev, Codex 토큰 텔레메트리 (별도의 코드베이스).
+- `close_agent` 위생 체크리스트 (V2에는 해당 도구가 없음 — 캠페인에서 출시하지 않기로 종결됨).
+- T4 회귀 배터리 외의 Claude Code/Gemini 전용 효율성 처치 항목.

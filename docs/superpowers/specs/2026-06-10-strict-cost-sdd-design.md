@@ -1,265 +1,91 @@
-# Strict-Cost SDD — Design Spec
+# 비용 최적화(Strict-Cost) SDD — 설계 사양서
 
-**Status:** Proposed experiment ladder (not implementation). Each rung ships
-only with its gate evidence; abort any rung whose gates fail.
-**Objective:** minimize dollars per plan-execution. Wall-clock is
-unconstrained; token count matters only as a cost driver.
-**Hard invariant:** quality. Concretely: `sdd-quality-reviewer-catches-
-planted-defect` pass rate over **N=5 runs** (not 1 — single-run gates were
-this campaign's weakest methodology), `sdd-rejects-extra-features` pass,
-all end-to-end scenarios pass, blind A/B deliverable parity with the
-current config. Any quality regression kills the rung, full stop.
+**상태:** 제안된 실험 단계(구현 아님). 각 단계(rung)는 게이트 검증 증거가 확보된 경우에만 반영되며, 게이트를 통과하지 못한 단계는 즉시 폐기합니다.
+**목표:** 계획 실행당 달러($) 비용 최소화. 소요 시간(wall-clock)은 제약하지 않으며, 토큰 수는 오직 비용 동인으로서만 의미를 가집니다.
+**절대 불변 조건(Hard invariant):** 품질. 구체적으로는 **N=5회 실행** 기준(단 1회가 아님 — 단일 실행 게이트는 이번 캠페인에서 가장 취약한 방법론이었음) `sdd-quality-reviewer-catches-planted-defect` 통과율, `sdd-rejects-extra-features` 통과, 모든 엔드투엔드(end-to-end) 시나리오 통과, 그리고 현재 설정과의 블라인드 A/B 결과물 동등성(deliverable parity)입니다. 어떠한 품질 저하라도 발생하면 해당 단계는 즉시 폐기됩니다.
 
-## Where the dollars are (final 2026-06-10 config, go-fractals, ~$13/run)
+## 비용 발생 지점 (2026-06-10 최종 설정, go-fractals, 실행당 ~$13)
 
-| Component | $ | Driver |
+| 구성 요소 | 비용 ($) | 주요 동인 |
 |---|---|---|
-| Controller (session model, opus) | ~6-7 | ~150 turns × resident context; prompt-immune turn floor (46% thinking/narration) |
-| Implementers (sonnet, 10-13 dispatches) | ~5-6 | the actual work; ~25 turns each; ~13 pre-edit exploration calls each |
-| Task reviewers (sonnet, 10) | ~1-1.5 | 3-9 turns each with package |
-| Final review + fixes | ~1 | 6 turns with branch package |
+| 컨트롤러 (세션 모델, opus) | ~6-7 | ~150턴 × 상주 컨텍스트; 프롬프트로 줄일 수 없는 최소 턴 수(46%가 사고/내레이션) |
+| 구현자 (sonnet, 10-13회 디스패치) | ~5-6 | 실제 구현 작업; 각 ~25턴; 편집 전 탐색 호출 각 ~13회 |
+| 태스크 리뷰어 (sonnet, 10회) | ~1-1.5 | 패키지 포함 각 3-9턴 |
+| 최종 리뷰 + 수정 | ~1 | 브랜치 패키지 포함 6턴 |
 
-Review-loop count (2-4 per run) is the biggest run-to-run cost variance;
-loops are mostly caused by plan ambiguity the implementer resolved wrongly.
+리뷰 루프 횟수(실행당 2-4회)가 실행 간 비용 편차의 가장 큰 원인이며, 루프는 대부분 계획의 모호함을 구현자가 잘못 해석하여 발생합니다.
 
-## Judgment guardrail (co-invariant with quality)
+## 판단력 가드레일 (품질과의 공동 불변 조건)
 
-**Cheapen mechanics, never judgment.** Every rung must enumerate which
-decisions it moves to a cheaper model and show each is *mechanical* —
-deterministic, scriptable, or cheaply verifiable after the fact. Judgment
-stays at the highest tier or with the human. The judgment points in SDD,
-explicitly:
+**기계적 작업의 비용만 낮추고, 판단(judgment)의 비용은 절대 낮추지 마세요.** 모든 실험 단계는 더 저렴한 모델로 이전하는 의사결정 항목을 명시적으로 나열해야 하며, 각 결정이 *기계적(mechanical)*임(결정론적이거나, 스크립트화가 가능하거나, 사후에 저렴한 비용으로 검증 가능함)을 입증해야 합니다. 판단력은 최상위 티어 모델이나 인간에게 유지되어야 합니다. SDD에서의 명시적인 판단 지점은 다음과 같습니다:
 
-- **BLOCKED / NEEDS_CONTEXT handling** — diagnosing why a subagent is stuck
-  and choosing the remedy
-- **⚠️ "cannot verify from diff" resolution** — the controller adjudicating
-  with cross-task context
-- **Dispatch curation** — ambiguity resolution and task-boundary drawing
-  (measured load-bearing: the Task 5 gradient-direction note prevented a
-  wrong implementation)
-- **Review verdicts and severity calibration** — what is Important vs Minor
-- **Review-loop adjudication** — deciding a finding is a false positive
-- **Escalate-to-human recognition** — knowing the plan itself is wrong
+- **BLOCKED / NEEDS_CONTEXT 처리** — 서브에이전트가 막힌 원인을 진단하고 해결책을 선택하는 작업
+- **⚠️ "diff만으로 검증 불가(cannot verify from diff)" 해결** — 컨트롤러가 태스크 간 컨텍스트를 바탕으로 판정을 내리는 작업
+- **디스패치 큐레이션** — 모호함 해소 및 태스크 경계 설정 (핵심 역할 수행 확인됨: Task 5의 그라디언트 방향 참고 사항이 잘못된 구현을 방지함)
+- **리뷰 판정 및 심각도 보정** — 무엇이 Important이고 Minor인지 판단하는 작업
+- **리뷰 루프 판정(adjudication)** — 지적 사항이 오탐(false positive)인지 결정하는 작업
+- **인간에게 에스컬레이션할 상황 인지** — 계획 자체가 잘못되었음을 알아차리는 작업
 
-A rung that would move any of these to a cheaper model must either (a)
-restructure so the decision is made once by the expensive model at plan
-time, (b) add an explicit escalation rule routing it back up at execution
-time, or (c) die. "The cheap model usually gets it right" is not
-acceptance evidence — judgment failures are rare-event, high-blast-radius,
-and largely invisible to pass/fail gates, which is why every tier change
-below carries a judgment audit (session-resume interrogation of each
-judgment point in the gate runs, compared against the expensive-controller
-baseline) in addition to the N=5 scenario gates.
+이 중 어느 하나라도 더 저렴한 모델로 옮기려는 단계는 반드시 (a) 계획 수립 시점에 고성능 모델이 해당 결정을 단 한 번 내리도록 구조를 재편하거나, (b) 실행 시점에 이를 다시 상위 모델로 라우팅하는 명시적 에스컬레이션 규칙을 추가하거나, (c) 폐기되어야 합니다. "저렴한 모델도 대체로 맞춘다"는 것은 수용 근거가 될 수 없습니다 — 판단 실패는 드물게 발생하지만 폭발 반경(blast radius)이 크고 패스/페일 게이트에서는 대부분 보이지 않기 때문입니다. 따라서 아래의 모든 모델 티어 변경에는 N=5 시나리오 게이트 외에도 판단력 감사(judgment audit: 게이트 실행의 각 판단 지점을 세션 재개 방식으로 심문하여 고비용 컨트롤러 베이스라인과 비교)가 수반됩니다.
 
-## Thesis guardrail
+## 핵심 명제(Thesis) 가드레일
 
-SDD's thesis: **a fresh subagent per task with precisely curated context,
-gated per task.** Rungs below must preserve it. Dispatch-time task batching
-(one implementer dispatch handling several plan tasks) is **counter-thesis**
-— it pollutes the fresh-context property and coarsens the gates — and is
-deliberately NOT on the ladder. The thesis-compatible route to the same
-dispatch economics is plan-time task right-sizing (L1): if the plan defines
-fewer, better-sized tasks, SDD still runs one fresh subagent per task.
+SDD의 핵심 명제: **정밀하게 큐레이션된 컨텍스트를 가진 태스크당 새로운 서브에이전트, 그리고 태스크별 게이트 검증.** 아래의 모든 단계는 이를 보존해야 합니다. 디스패치 시점의 태스크 배칭(하나의 구현자 디스패치가 여러 계획 태스크를 처리하는 것)은 **핵심 명제에 위배(counter-thesis)**됩니다 — 이는 새로운 컨텍스트(fresh-context) 속성을 오염시키고 게이트를 느슨하게 만듭니다 — 따라서 의도적으로 실험 단계에서 제외했습니다. 동일한 디스패치 경제성을 달성하면서 명제와 양립할 수 있는 경로는 계획 수립 시점의 태스크 적정 크기 조정(L1)입니다. 즉, 계획이 더 적고 적절한 크기의 태스크를 정의하면 SDD는 여전히 태스크당 하나의 새로운 서브에이전트를 실행할 수 있습니다.
 
-## The ladder (in expected $/leverage order)
+## 실험 단계 (예상 절감액/레버리지 순서)
 
-### L1 — Plan-side crispness (writing-plans changes; est. −$1.5-3/run, plus variance reduction)
+### L1 — 계획 측면의 명확성 향상 (writing-plans 변경; 실행당 예상 -$1.5-3, 및 편차 감소)
 
-**Status 2026-06-11 (final): elicitation tested end-to-end; claims
-re-attributed.** Micro-tests: constraints header and Interfaces blocks
-elicit deterministically (0→5/5, 0→100% of tasks, exact values);
-right-sizing is modest and scale-dependent (9.4→8.4 tasks at svelte
-scale, nothing to move at fractals scale). Full runs: an elicited plan
-executed at $6.34/$8.49 — but the no-guidance control (opus plan,
-complete code) hit $7.59/$7.73, inside that range. **The cost win
-belongs to opus-written complete-code plans; the hand-written prose
-fixture plans all prior numbers used are unrepresentative and ~2×
-costlier to execute.** The guidance owns fidelity and variance instead:
-deterministic constraints propagation (the one elicited-run fix was a
-version-floor catch), exact cross-task interfaces, fix waves 1 vs 2-4
-(the control plan shipped a real Sierpinski bug both runs had to fix).
-The writing-plans PR claims those grounds, not dollars. Draft at
-/tmp/sdd-exp/writing-plans-l1 (branch writing-plans-crisp).
+**2026-06-11 상태 (최종): 유도(elicitation) 엔드투엔드 테스트 완료; 효과 귀속 재조정.** 마이크로 테스트: 제약 조건 헤더와 Interfaces 블록은 결정론적으로 유도됨(0→5/5, 태스크의 0→100%, 정확한 값); 태스크 적정 크기 조정은 소폭이며 규모에 따라 달라짐(svelte 규모에서는 9.4→8.4개 태스크, fractals 규모에서는 변동 없음). 전체 실행: 유도된 계획은 $6.34/$8.49에 실행되었으나, 가이드라인 없는 대조군(opus 계획, 전체 코드 포함)도 $7.59/$7.73를 기록하여 해당 범위 내에 들어왔습니다. **비용 절감 효과는 opus가 작성한 전체 코드 포함 계획 덕분이며, 이전 수치들이 모두 사용했던 수기 산문 픽스처 계획들은 대표성이 없고 실행 비용이 ~2배 더 비쌉니다.** 대신 이 가이드라인은 충실도(fidelity)와 편차 감소를 담당합니다: 결정론적 제약 조건 전파(유도된 실행의 유일한 수정 사항은 버전 하한선 적발이었음), 정확한 태스크 간 인터페이스, 수정 웨이브 1회 대 2-4회(대조군 계획은 두 실행 모두 수정해야 했던 실제 시어핀스키(Sierpinski) 버그를 발생시킴). writing-plans PR은 달러 비용이 아닌 이러한 근거를 주장합니다. 초안은 `/tmp/sdd-exp/writing-plans-l1`(브랜치 `writing-plans-crisp`)에 있습니다.
 
-The plan is upstream of every cost: task count sets dispatch count; plan
-ambiguity sets review-loop count; plan completeness sets implementer
-exploration. Current writing-plans optimizes for implementer success, not
-execution economics. Changes to test:
+계획은 모든 비용의 상류(upstream)에 있습니다: 태스크 수는 디스패치 횟수를 결정하고, 계획의 모호함은 리뷰 루프 횟수를 결정하며, 계획의 완전성은 구현자의 탐색량을 결정합니다. 현재의 `writing-plans`는 실행 경제성이 아니라 구현자의 성공에 최적화되어 있습니다. 테스트할 변경 사항:
 
-1. **Task right-sizing guidance.** Today's plans produce tasks as small as
-   "create .gitignore" — each costing a full dispatch + review cycle
-   (~$0.60-1.00 fixed overhead). Add: "A task is the smallest unit that
-   carries its own test cycle and is worth a fresh reviewer's gate. Merge
-   setup/config steps into the task that needs them; split only at
-   boundaries where a reviewer could meaningfully reject." Fractals' plan
-   would drop from 10 tasks to ~7. Validate: dispatch count falls, gates
-   hold, review granularity still catches the planted defect.
-2. **Structured `## Global Constraints` section** in the plan header
-   (version floors, naming/copy rules, platform requirements). Today these
-   live in design.md prose and reach reviewers only if the controller
-   remembers to paste them (a `go 1.26.1` floor violation shipped because
-   none did). A fixed heading makes them mechanically extractable —
-   `task-brief` can append them to every brief automatically (small script
-   change), removing a controller responsibility entirely.
-3. **Per-task `Interfaces:` line** (consumes/produces, exact signatures).
-   The controller currently re-derives cross-task interfaces per dispatch
-   (its main legitimate "restating"), and implementers spend ~13 tool calls
-   re-discovering context. The planner already knows the interfaces; one
-   line per task moves the work to where it is done once.
-4. **Per-task model-tier recommendation** from the planner ("mechanical /
-   standard / judgment"). The planner has the best information for the
-   Model Selection decision the controller currently re-makes per dispatch;
-   the controller keeps override authority.
+1. **태스크 적정 크기 조정 가이드라인.** 현재의 계획들은 ".gitignore 생성"처럼 작은 태스크까지 만들어내며, 각각 전체 디스패치 + 리뷰 사이클(~$0.60-1.00의 고정 오버헤드)을 소모합니다. 다음 내용을 추가합니다: "태스크는 자체적인 테스트 사이클을 가지며 새로운 리뷰어의 게이트 검증을 거칠 가치가 있는 최소 단위입니다. 설정/구성 단계는 이를 필요로 하는 태스크에 병합하고, 리뷰어가 유의미하게 반려할 수 있는 경계에서만 분리하세요." Fractals 계획은 10개 태스크에서 ~7개로 줄어들 것입니다. 검증 항목: 디스패치 횟수 감소, 게이트 통과 유지, 리뷰 세밀도가 여전히 심어둔 결함(planted defect)을 잡아내는지 확인.
+2. **계획 헤더의 구조화된 `## Global Constraints` 섹션** (버전 하한선, 명명/복사 규칙, 플랫폼 요구사항). 현재 이것들은 `design.md` 산문에 흩어져 있으며 컨트롤러가 기억해서 붙여넣어야만 리뷰어에게 전달됩니다(아무도 전달하지 않아 `go 1.26.1` 버전 하한선 위반이 그대로 통과된 사례가 있음). 고정된 헤딩을 사용하면 이를 기계적으로 추출할 수 있어, `task-brief`가 모든 브리프에 자동으로 첨부할 수 있으므로(작은 스크립트 변경) 컨트롤러의 책임을 완전히 하나 덜어낼 수 있습니다.
+3. **태스크별 `Interfaces:` 라인** (소비/생성 항목, 정확한 시그니처). 현재 컨트롤러는 디스패치마다 태스크 간 인터페이스를 다시 도출하고 있으며(컨트롤러의 주된 정당한 "재진술(restating)" 작업), 구현자는 컨텍스트를 재발견하는 데 ~13회의 도구 호출을 소비합니다. 플래너는 이미 인터페이스를 알고 있으므로, 태스크당 한 줄만 추가하면 작업을 단 한 번만 수행하는 곳으로 옮길 수 있습니다.
+4. **플래너의 태스크별 모델 티어 추천** ("mechanical / standard / judgment"). 현재 컨트롤러가 디스패치마다 새로 내리는 모델 선택(Model Selection) 결정을 내리기에 가장 좋은 정보를 가진 것은 플래너입니다(컨트롤러는 오버라이드 권한을 유지함).
 
-Validation: micro-test the planner output shape (recipe-style, per the
-instruction-design doctrine), then full runs. Note the 2026-06-10 result:
-plan *placeholders* cannot be elicited from current opus — these changes
-target economics and ambiguity, not placeholder hygiene.
+검증: 플래너 출력 형태를 마이크로 테스트(지시문 설계 원칙에 따라 레시피 스타일로)한 후 전체 실행을 진행합니다. 2026-06-10 결과 참고: 계획의 *플레이스홀더(placeholders)*는 현재 opus에서 유도해낼 수 없으므로, 이 변경 사항들은 플레이스홀더 위생이 아니라 경제성과 모호함 해소를 타겟으로 합니다.
 
-### L2 — Controller tier (est. −$4-5/run; the biggest single lever, gated hardest)
+### L2 — 컨트롤러 티어 조정 (실행당 예상 -$4-5; 가장 큰 단일 레버, 가장 엄격한 게이트 적용)
 
-**Status 2026-06-11 (final): DIED AT THE GATES, as pre-registered — with
-useful anatomy.** Recon was positive ($6.68/$8.05, n=2, mechanics clean).
-The full battery split the judgment surface: the new
-`sdd-escalates-broken-plan` scenario (explicit plan self-contradiction;
-the human never volunteers it) passed **5/5 at sonnet** ($1.02-1.37/run;
-opus baseline 2/2) — explicit conflicts get escalated. But the
-planted-defect battery failed decisively: under a sonnet controller the
-per-task quality gate collapsed into plan-compliance advocacy ("no
-assertion, as required" listed under Strengths), the defect shipped in
-4/5 runs (deterministic check), and only the tier-pinned opus final
-reviewer ever caught it — while the same sonnet-tier reviewers under an
-opus controller flagged it 5/5. Cheap controllers handle explicit
-escalation; they absorb implicit authority-vs-quality adjudication.
-A possible L2b (discrete rule: "a reviewer finding that conflicts with
-the plan's text is the human's decision — escalate it") would route the
-failing judgment through the escalation behavior that held.
+**2026-06-11 상태 (최종): 사전 등록된 기준에 따라 게이트에서 탈락(DIED AT THE GATES) — 단, 유용한 분석 결과를 남김.** 사전 탐색(recon)은 긍정적이었습니다($6.68/$8.05, n=2, 기계적 동작 깔끔함). 그러나 전체 테스트 배터리가 판단력 표면을 갈라놓았습니다: 새로운 `sdd-escalates-broken-plan` 시나리오(명시적인 계획 자기모순; 인간이 먼저 알려주지 않음)는 **sonnet에서 5/5 통과**($1.02-1.37/실행; opus 베이스라인 2/2)하여 명시적 충돌은 에스컬레이션됨을 확인했습니다. 하지만 심어둔 결함(planted-defect) 배터리는 결정적으로 실패했습니다: sonnet 컨트롤러 하에서 태스크별 품질 게이트는 계획 준수 옹호("요구된 대로 단언문(assertion) 없음"을 강점(Strengths) 항목에 기재)로 무너졌고, 결함은 5회 중 4회 실행에서 그대로 출시되었으며(결정론적 체크), 오직 티어가 고정된 opus 최종 리뷰어만이 이를 잡아냈습니다 — 반면 opus 컨트롤러 하의 동일한 sonnet 티어 리뷰어들은 이를 5/5 모두 잡아냈습니다. 저렴한 컨트롤러는 명시적 에스컬레이션은 처리하지만, 암묵적인 권위 대 품질(authority-vs-quality) 판정은 임의로 흡수해 버립니다. 가능한 L2b(개별 규칙: "계획 텍스트와 충돌하는 리뷰어 지적 사항은 인간의 결정 사안이므로 에스컬레이션하라")를 도입하면 실패한 판단을 정상 작동했던 에스컬레이션 동작으로 라우팅할 수 있을 것입니다.
 
-**L2b tested 2026-06-11 (E35/E36, evals
-`docs/experiments/2026-06-11-build-loop-autoresearch.md`): improves the
-opus stack, does NOT rescue the sonnet rung.** Two rules: a reviewer
-tripwire (a plan-mandated defect IS a finding — Important, labeled
-plan-mandated; the human decides) and a controller escalation rule
-(plan-mandated findings go to the human like any plan contradiction).
-Micro on frozen sonnet-composed inputs: 0/6 → 6/6 labeled findings.
-Full battery: opus controllers 2/2 internalized the rule, caught their
-reviewer's miss as self-described backstop, and escalated for a
-sanctioned fix (the 4241 ad-hoc behavior made structural); escalation
-sanity 2/2 unbroken. Sonnet controllers: 1/5 full pass — paraphrase
-drops the tripwire from dispatches (2/5 transmitted), transmission
-alone doesn't fire it live (read-once dilution across the reviewer's
-tool reads; placement within the dispatch refuted as the variable),
-and no sonnet controller showed backstop behavior; 1/5 shipped the
-defect. The L2b rules are a candidate commit for the opus stack.
-A future L2c for the sonnet rung would pair the SKILL.md
-constraints-recipe (the one channel sonnet transmits verbatim) with a
-mandatory output-format slot for plan-mandated findings (the skeleton
-survives every observed paraphrase and is consulted at composition
-time); untested. Original recon notes follow.
+**2026-06-11 L2b 테스트 완료 (E35/E36, evals `docs/experiments/2026-06-11-build-loop-autoresearch.md`): opus 스택은 개선하지만, sonnet 단계를 구제하지는 못함.** 두 가지 규칙을 적용했습니다: 리뷰어 트립와이어(계획이 지시한 결함도 지적 사항임 — Important로 분류하고 `plan-mandated` 라벨을 붙임; 인간이 결정함)와 컨트롤러 에스컬레이션 규칙(계획이 지시한 결함 지적은 다른 계획 모순과 마찬가지로 인간에게 전달함). 고정된 sonnet 작성 입력에 대한 마이크로 테스트: 0/6 → 6/6 라벨링된 지적 사항 도출. 전체 배터리: opus 컨트롤러는 2/2 모두 규칙을 내재화하여 리뷰어가 놓친 부분을 스스로 백스톱(backstop)으로 잡아내고 승인된 수정을 위해 에스컬레이션했으며(4241의 임시 동작을 구조화함), 에스컬레이션 정상 동작 여부(sanity)도 2/2 깨지지 않았습니다. Sonnet 컨트롤러: 1/5만 완전 통과 — 패러프레이징 과정에서 디스패치의 트립와이어가 누락되었고(2/5만 전달됨), 전달되더라도 실제 실행에서 작동하지 않았으며(리뷰어의 도구 읽기 과정에서 한 번 읽고 희석됨; 디스패치 내 위치가 변수라는 가설은 기각됨), 어떤 sonnet 컨트롤러도 백스톱 동작을 보이지 않았고 1/5은 결함을 그대로 출시했습니다. L2b 규칙은 opus 스택에 대한 커밋 후보입니다. 향후 sonnet 단계를 위한 L2c는 `SKILL.md`의 제약 조건 레시피(sonnet이 그대로 전달하는 유일한 채널)와 계획이 지시한 결함 지적 사항을 위한 필수 출력 포맷 슬롯(관찰된 모든 패러프레이징에서 살아남고 작성 시점에 참조되는 골격)을 짝지어야 할 것이나, 아직 테스트되지 않았습니다. 아래는 원래의 사전 탐색 기록입니다.
 
-**Recon (superseded):**
-Sonnet-controller runs (claude-sonnet coding-agent): all gates green at
-**$6.68 and $8.05** / 31-41 min (combo band $11.67-14.84), tokens inside
-the combo band — no cheap-controller turn inflation. 26/26 and 31/31
-dispatches model-explicit, with heavier (and sane) haiku tiering than
-opus controllers showed; review loops, per-task Important→fix→re-review,
-and omnibus-fixer rules followed in both runs; the run-1 controller
-caught a fixer side-effect (`go mod tidy` removed cobra) before
-re-review — real adjudication, not silent absorption. But neither run
-surfaced a BLOCKED/⚠️ event (the escalation points were never stressed)
-and final reviews ran on sonnet rather than the most capable tier. The
-N=5 quality gates + full judgment audit below remain mandatory before
-any skill change.
+**사전 탐색 (대체됨):**
+Sonnet 컨트롤러 실행(`claude-sonnet` 코딩 에이전트): 모든 게이트 통과, **$6.68 및 $8.05** / 31-41분(콤보 밴드 $11.67-14.84), 토큰 사용량도 콤보 밴드 내 위치 — 저비용 컨트롤러로 인한 턴 부풀림(turn inflation) 없음. 26/26 및 31/31 디스패치가 모델을 명시했으며, opus 컨트롤러보다 더 빈번하게(그리고 합리적으로) haiku 티어를 활용함; 두 실행 모두 리뷰 루프, 태스크별 Important→수정→재리뷰, 옴니버스 수정자(omnibus-fixer) 규칙을 준수함; 1차 실행 컨트롤러는 재리뷰 전에 수정자의 부작용(`go mod tidy`가 cobra를 제거함)을 잡아냄 — 조용히 넘어간 것이 아니라 실제 판정을 수행함. 그러나 두 실행 모두 BLOCKED/⚠️ 이벤트가 발생하지 않았고(에스컬레이션 지점이 압박 테스트를 받지 않음), 최종 리뷰가 최고 성능 티어가 아닌 sonnet에서 실행되었습니다. 스킬을 변경하기 전에 아래의 N=5 품질 게이트 + 전체 판단력 감사는 여전히 필수입니다.
 
-The controller is half the dollars solely because it inherits the session
-model. Its turn floor is prompt-immune, so the lever is the rate per turn —
-but the controller is also where most judgment points live, so this rung is
-designed judgment-first:
+컨트롤러가 전체 달러 비용의 절반을 차지하는 이유는 순전히 세션 모델을 그대로 물려받기 때문입니다. 최소 턴 수는 프롬프트로 줄일 수 없으므로 레버는 턴당 단가이지만, 컨트롤러는 대부분의 판단 지점이 존재하는 곳이기도 하므로 이 단계는 판단력 우선(judgment-first)으로 설계되었습니다:
 
-1. **Primary form — judgment moved up front, mechanics cheapened:** the
-   expensive model does the judgment-dense work at plan time (L1's
-   Interfaces lines, ambiguity resolutions, per-task constraints — i.e.
-   the dispatch curation is pre-written into the plan). The mid-tier
-   execution session then runs a loop that is genuinely mechanical:
-   extract brief, dispatch, run script, route verdicts. Explicit
-   escalation rules in the skill: on BLOCKED, on any ⚠️ item, on a
-   suspected false positive, or on anything the plan does not already
-   answer, the cheap controller STOPS and escalates (to the human, or to
-   a fresh expensive-model consultation dispatch) — it never resolves
-   judgment alone.
-2. **Gates beyond the standard N=5:** a judgment audit — every
-   BLOCKED/⚠️/adjudication event in the gate runs interrogated via
-   session-resume and scored against how the opus-controller baseline
-   handled the same class of event; any silently-absorbed judgment call
-   (cheap controller resolving what it should have escalated) fails the
-   rung regardless of scenario verdicts.
-3. **User authority preserved:** the skill recommends, never enforces, the
-   execution-session tier.
+1. **기본 형태 — 판단은 앞단으로 이동하고 기계적 작업은 저렴화:** 고비용 모델이 계획 수립 시점에 판단 집약적인 작업을 수행합니다(L1의 Interfaces 라인, 모호함 해소, 태스크별 제약 조건 — 즉, 디스패치 큐레이션이 계획에 미리 작성됨). 그런 다음 중간 티어(mid-tier) 실행 세션이 진정으로 기계적인 루프(브리프 추출, 디스패치, 스크립트 실행, 판정 라우팅)를 실행합니다. 스킬 내 명시적 에스컬레이션 규칙: BLOCKED 발생 시, 모든 ⚠️ 항목 발생 시, 오탐이 의심될 때, 또는 계획에 이미 답이 나와 있지 않은 모든 사안에 대해 저비용 컨트롤러는 즉시 멈추고(STOPS) 인간에게(또는 새로운 고비용 모델 자문 디스패치로) 에스컬레이션하며, 절대 스스로 판단을 해결하지 않습니다.
+2. **표준 N=5를 넘어선 추가 게이트:** 판단력 감사 — 게이트 실행에서 발생한 모든 BLOCKED/⚠️/판정 이벤트를 세션 재개(session-resume)를 통해 심문하고 opus 컨트롤러 베이스라인이 동일한 유형의 이벤트를 처리한 방식과 비교하여 채점합니다. 조용히 흡수된 판단(저비용 컨트롤러가 에스컬레이션했어야 할 사안을 자체 해결한 경우)이 하나라도 있으면 시나리오 판정 결과와 무관하게 해당 단계는 실패 처리됩니다.
+3. **사용자 권한 보존:** 스킬은 실행 세션 티어를 권장할 뿐, 절대 강제하지 않습니다.
 
-Caveat from this campaign: cheap-model turn inflation was measured on
-multi-step *work*, not dispatch loops; whether a mid-tier controller holds
-~150 turns is part of what the experiment determines.
+이번 캠페인의 주의 사항: 저비용 모델의 턴 부풀림은 디스패치 루프가 아니라 다단계 *실제 작업*에서 측정되었습니다. 중간 티어 컨트롤러가 ~150턴을 유지할 수 있는지 여부는 실험을 통해 규명해야 할 부분입니다.
 
-### L3 — Reviewer tier (est. −$0.7-1/run; most likely rung to die on the judgment guardrail)
+### L3 — 리뷰어 티어 조정 (실행당 예상 -$0.7-1; 판단력 가드레일에서 탈락할 가능성이 가장 높은 단계)
 
-**Status 2026-06-11: DEAD, as pre-registered.** Planted-defect ×5 with
-forced-haiku task reviewers: 2 pass / 1 indeterminate / 2 fail (baseline
-5/5); per-task haiku cleanly flagged 0 of 10 planted defects at correct
-severity — 1 found-but-downgraded with the exact prohibited rationale,
-9 missed or rationalized (DRY praised as YAGNI; assert-nothing test
-called plan-compliant). Cheap reviewers fail by *advocating* for
-defects; passing runs survived only on controller redundancy or the
-final review. Recorded in the experiments log, Batch A-E. Do not
-re-propose without a structurally different design.
+**2026-06-11 상태: 사전 등록된 기준에 따라 폐기됨(DEAD).** 강제 haiku 태스크 리뷰어를 사용한 심어둔 결함(planted-defect) ×5 테스트: 2회 통과 / 1회 판정 불가 / 2회 실패 (베이스라인은 5/5); 태스크별 haiku 리뷰어는 심어둔 결함 10개 중 단 0개만 올바른 심각도로 깔끔하게 잡아냈습니다 — 1개는 발견했으나 금지된 바로 그 합리화 논리로 심각도를 낮추었고, 9개는 놓치거나 합리화했습니다(DRY 위반을 YAGNI라며 칭찬함; 아무것도 검증하지 않는 테스트를 계획 준수라고 부름). 저렴한 리뷰어는 결함을 *옹호(advocating)*함으로써 실패하며, 통과한 실행들은 오직 컨트롤러의 중복 확인이나 최종 리뷰 덕분에 살아남았습니다. 실험 로그 Batch A-E에 기록되었습니다. 구조적으로 다른 설계 없이는 다시 제안하지 마세요.
 
-The package reviewer is near-single-step mechanically (3 turns / 1 Read
-when calm), which invalidates the original turn-inflation rationale for the
-mid-tier floor — but reviewing is judgment through and through: severity
-calibration, spec verdicts, knowing what not to flag. Mechanical cheapness
-does not make the decisions mechanical. Test haiku-with-package only with
-the full judgment battery: planted-defect ×5, a severity-calibration check
-(seeded Minor-vs-Important pairs; miscalibration fails the rung), and the
-escape-hatch variance re-measured at that tier. Prior expectation: this
-rung dies, and that is a fine outcome — it converts "we suspect cheap
-reviewers are bad" into recorded evidence.
+패키지 리뷰어는 기계적으로 거의 단일 단계에 가깝기 때문에(문제가 없을 때 3턴 / Read 1회) 중간 티어 하한선을 두었던 원래의 턴 부풀림 근거는 무효화됩니다 — 하지만 리뷰는 처음부터 끝까지 판단력의 영역입니다(심각도 보정, 사양 판정, 무엇을 지적하지 말아야 할지 아는 것). 기계적 작업이 저렴해졌다고 해서 의사결정까지 기계적인 것이 되지는 않습니다. 패키지 기반 haiku는 전체 판단력 배터리(심어둔 결함 ×5, 시드된 Minor 대 Important 쌍을 이용한 심각도 보정 체크(보정 실패 시 단계 탈락), 해당 티어에서 재측정된 탈출구(escape-hatch) 편차)를 통해서만 테스트하세요. 사전 예상: 이 단계는 탈락할 것이며, 그것도 좋은 결과입니다 — "저렴한 리뷰어는 나쁠 것이다"라는 의심을 기록된 증거로 전환하기 때문입니다.
 
-### L4 — Resident-context diet (est. −$0.5-1/run)
+### L4 — 상주 컨텍스트 다이어트 (실행당 예상 -$0.5-1)
 
-- `task-brief --list` mode: controller reads task headings + Global
-  Constraints, never the full plan (the plan body is already delivered via
-  briefs).
-- Reports trim 15 → 8 lines.
-- SKILL.md minification pass (every section added this week re-justified
-  at composition-recipe density; Codex pays ~10k chars × ~500 re-reads per
-  long session).
+- `task-brief --list` 모드: 컨트롤러는 태스크 헤딩과 Global Constraints만 읽고 전체 계획은 읽지 않습니다(계획 본문은 이미 브리프를 통해 전달됨).
+- 리포트 분량을 15줄 → 8줄로 축소합니다.
+- `SKILL.md` 경량화 패스 (이번 주에 추가된 모든 섹션을 작성 레시피 밀도 기준으로 재검증; Codex는 긴 세션당 ~10k 문자 × ~500회 재읽기 비용을 지불함).
 
-### L5 — Re-litigations (explicitly flagged, maintainer-vetoed or counter-thesis)
+### L5 — 재논의 항목 (명시적으로 플래그 지정됨, 메인테이너 거부권 행사 또는 핵심 명제 위배)
 
-Recorded for completeness; each requires Jesse's explicit reversal before
-any experiment:
-- **Scoped re-reviews** (verify fix + regression scan instead of full
-  re-review): vetoed 2026-06-09; worth ~$0.50/run at most.
-- **Dispatch-time task batching**: counter-thesis (see guardrail). L1.1
-  is the sanctioned form.
+완전성을 위해 기록해 두며, 어떤 실험이든 시작하려면 Jesse의 명시적인 번복이 필요합니다:
+- **범위가 제한된 재리뷰(Scoped re-reviews)** (전체 재리뷰 대신 수정 확인 + 회귀 스캔만 수행): 2026-06-09에 거부됨; 가치는 최대 실행당 ~$0.50 수준.
+- **디스패치 시점의 태스크 배칭(Dispatch-time task batching)**: 핵심 명제 위배(가드레일 참조). 승인된 형태는 L1.1입니다.
 
-## Budget and sequencing
+## 예산 및 진행 순서
 
-L1 and L2.1 are independent — run both first (~$80: micro-tests + 2×5-run
-gates + A/B). L3 after L2 settles the controller (reviewer behavior depends
-on dispatch quality; ~$25 — planted-defect runs are $2-3 each). L4 last
-(cheap, but re-gate once after the stack; ~$30). Total ≲ $150 for the full
-ladder with honest N=5 gates. Expected end state if every rung survives its gates: **$5-7/run on
-fractals (from $12-15)**; if the judgment-sensitive rungs (L2 beyond its
-primary form, L3) die as expected, **$8-10/run** — the honest target, since
-the guardrail prices judgment above dollars by construction.
+L1과 L2.1은 독립적이므로 두 가지를 먼저 실행합니다(~$80: 마이크로 테스트 + 2×5회 게이트 실행 + A/B). L3는 L2가 컨트롤러를 확정한 후에 실행합니다(리뷰어 동작은 디스패치 품질에 의존함; ~$25 — 심어둔 결함 실행은 회당 $2-3). L4는 마지막에 실행합니다(저렴하지만 스택 적용 후 한 번 재검증 필요; ~$30). 정직한 N=5 게이트를 포함한 전체 단계에 총 ≲ $150가 소요됩니다. 모든 단계가 게이트를 통과할 경우 예상되는 최종 상태: **fractals 기준 실행당 $5-7 ($12-15에서 감소)**; 만약 판단력에 민감한 단계(기본 형태를 넘어선 L2, L3)가 예상대로 탈락할 경우 **실행당 $8-10** — 가드레일이 설계상 달러 비용보다 판단력의 가치를 높게 매기므로 이것이 정직한 목표치입니다.
 
-## Relationship to existing work
+## 기존 작업과의 관계
 
-Builds on the 2026-06-09 task-scoped review dispatch design (PR #1717) and
-the 2026-06-10 experiment campaign (evals
-`docs/experiments/2026-06-10-sdd-cost-experiments.md` — consult the
-negative-results section before adding rungs; turn-discipline and
-parallel-call mechanisms are dead). Instruction wording for any new prose
-follows the positive-instruction doctrine spec and gets micro-tested before
-full runs. L1 is a writing-plans change → its own PR with eval evidence;
-L2-L4 are SDD changes → separate PR(s).
+2026-06-09 태스크 범위 리뷰 디스패치 설계(PR #1717) 및 2026-06-10 실험 캠페인(evals `docs/experiments/2026-06-10-sdd-cost-experiments.md` — 단계를 추가하기 전에 부정적 결과(negative-results) 섹션을 참고할 것; 턴 규율 및 병렬 호출 메커니즘은 폐기됨)을 기반으로 합니다. 새로운 산문의 지시문 문구는 긍정적 지시문 원칙(positive-instruction doctrine) 사양을 따르며 전체 실행 전에 마이크로 테스트를 거칩니다. L1은 `writing-plans` 변경 사항이므로 평가 증거와 함께 별도의 PR로 제출하고, L2-L4는 SDD 변경 사항이므로 별도의 PR(들)로 제출합니다.

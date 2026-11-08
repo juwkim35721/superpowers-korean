@@ -1,30 +1,18 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Repeated work
+분석 차원(Dimension): 반복 작업 (Repeated work)
 
-Find work the session did more than once.
+세션에서 두 번 이상 수행한 작업을 찾으세요.
 
-1. Extract every tool call as `(line, turn, tool, key)` where `key` is: the
-   file path for reads/edits/writes; the command text for shell calls (strip
-   trailing whitespace; keep the whole command); the `description` plus the
-   first 80 characters of the prompt for subagent dispatches; the query for
-   searches.
-2. Group by `(tool, key)` and report the groups at or over threshold:
+1. 모든 도구 호출을 `(line, turn, tool, key)` 형태로 추출하세요. 여기서 `key`는 다음과 같습니다: 읽기/편집/쓰기의 경우 파일 경로; 셸 호출의 경우 명령어 텍스트(끝부분 공백은 제거하되 전체 명령어 유지); 서브에이전트 디스패치의 경우 `description`과 프롬프트의 첫 80자; 검색의 경우 검색 쿼리.
+2. `(tool, key)` 기준으로 그룹화하고 아래 임계값(Threshold) 이상인 그룹들을 보고하세요:
 
-   | Category | Threshold | Exempt |
+   | 카테고리 (Category) | 임계값 (Threshold) | 예외 (Exempt) |
    |---|---|---|
-   | reads, searches | 3 | |
-   | edits | 2 | |
-   | shell commands | 2 | status checks and test runs (`git status`, `ls`, `pwd`, test runners) |
-   | subagent dispatches | 2 with the same description | |
-3. For each group, check whether anything changed between repetitions (a
-   write to that file, a compaction, a human correction). Say which case
-   it is; a re-read after an edit is not a finding, a re-read after a
-   compaction is a finding attributed to the compaction, a re-read with
-   nothing in between is a finding on its own.
-4. Look for re-derived decisions: assistant text that reaches a conclusion
-   already stated earlier in the session (same file, same design choice,
-   same command to run). Quote both places.
-5. One finding per group, with the first and last line numbers and the
-   count.
+   | 읽기, 검색 (reads, searches) | 3 | |
+   | 편집 (edits) | 2 | |
+   | 셸 명령어 (shell commands) | 2 | 상태 확인 및 테스트 실행 (`git status`, `ls`, `pwd`, 테스트 러너) |
+   | 서브에이전트 디스패치 (subagent dispatches) | 동일한 description으로 2회 | |
+3. 각 그룹에 대해 반복 사이에 무언가 변경된 것이 있는지(해당 파일에 대한 쓰기, 컴팩션, 인간의 교정 등) 확인하세요. 어떤 경우에 해당하는지 명시하세요. 편집 후 다시 읽는 것은 문제(finding)가 아니며, 컴팩션 후 다시 읽는 것은 컴팩션에 기인한 결과로 보고하고, 사이에 아무 일도 없었는데 다시 읽는 것은 그 자체로 독립된 결과로 보고하세요.
+4. 재도출된 결정(re-derived decisions)을 찾으세요: 세션 앞부분에서 이미 내렸던 결론(동일한 파일, 동일한 설계 선택, 실행할 동일한 명령어)에 다시 도달하는 어시스턴트 텍스트를 찾으세요. 두 곳을 모두 인용하세요.
+5. 그룹당 하나의 분석 결과(finding)로 작성하되, 첫 번째와 마지막 줄 번호 및 반복 횟수를 포함하세요.

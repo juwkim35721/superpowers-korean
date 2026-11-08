@@ -1,16 +1,16 @@
-# Installing Superpowers for OpenCode
+# OpenCode용 Superpowers 설치하기
 
-## Prerequisites
+## 사전 요구사항 (Prerequisites)
 
-- [OpenCode.ai](https://opencode.ai) installed
+- [OpenCode.ai](https://opencode.ai) 설치됨
 
-## Installation
+## 설치 (Installation)
 
-OpenCode V2 requires version 2.0.4 or later.
+OpenCode V2는 버전 2.0.4 이상이 필요합니다.
 
 ### OpenCode V1
 
-Use the existing V1 plugin configuration:
+기존 V1 플러그인 설정을 사용하세요:
 
 ```json
 {
@@ -18,9 +18,9 @@ Use the existing V1 plugin configuration:
 }
 ```
 
-### OpenCode V2 (2.0.4 or later)
+### OpenCode V2 (2.0.4 이상)
 
-Use the V2 plugin configuration:
+V2 플러그인 설정을 사용하세요:
 
 ```json
 {
@@ -28,54 +28,45 @@ Use the V2 plugin configuration:
 }
 ```
 
-For a local V2 installation, configure the repository directory containing
-`index.js`. OpenCode 2.0.4 and 2.0.7 reject a configured direct JavaScript-file
-path. Discovered plugin symlinks remain supported.
+로컬 V2 설치의 경우, `index.js`가 포함된 저장소 디렉토리를 설정하세요. OpenCode 2.0.4 및 2.0.7은 직접 지정된 JavaScript 파일 경로 설정을 거부합니다. 탐색된 플러그인 심볼릭 링크(symlink)는 계속 지원됩니다.
 
-Restart OpenCode. V2 uses the `opencode` command; `opencode2` may be available
-as an alias. The plugin installs through OpenCode's plugin manager and
-registers all skills.
+OpenCode를 재시작하세요. V2는 `opencode` 명령어를 사용하며, `opencode2`가 별칭(alias)으로 제공될 수도 있습니다. 플러그인은 OpenCode의 플러그인 매니저를 통해 설치되고 모든 스킬을 등록합니다.
 
-Verify by asking: "Tell me about your superpowers"
+다음과 같이 질문하여 설치를 확인하세요: "Tell me about your superpowers"
 
-OpenCode uses its own plugin install. If you also use Claude Code, Codex, or
-another harness, install Superpowers separately for each one.
+OpenCode는 자체적인 플러그인 설치 방식을 사용합니다. 만약 Claude Code, Codex 또는 다른 하네스(harness)도 함께 사용한다면 각각에 대해 Superpowers를 별도로 설치하세요.
 
-## Migrating from the old symlink-based install
+## 기존 심볼릭 링크 기반 설치에서 마이그레이션하기
 
-If you previously installed superpowers using `git clone` and symlinks, remove the old setup:
+이전에 `git clone`과 심볼릭 링크를 사용해 superpowers를 설치했다면 기존 설정을 제거하세요:
 
 ```bash
-# Remove old symlinks
+# 기존 심볼릭 링크 제거
 rm -f ~/.config/opencode/plugins/superpowers.js
 rm -rf ~/.config/opencode/skills/superpowers
 
-# Optionally remove the cloned repo
+# 선택 사항: 클론된 저장소 제거
 rm -rf ~/.config/opencode/superpowers
 
-# Remove skills.paths from opencode.json if you added one for superpowers
+# superpowers를 위해 opencode.json에 추가한 skills.paths가 있다면 제거
 ```
 
-Then follow the installation steps above.
+그런 다음 위의 설치 단계를 따르세요.
 
-## Usage
+## 사용법 (Usage)
 
-Use OpenCode's native `skill` tool:
+OpenCode의 네이티브 `skill` 도구를 사용하세요:
 
 ```
 use skill tool to list skills
 use skill tool to load brainstorming
 ```
 
-## Updating
+## 업데이트 (Updating)
 
-OpenCode installs Superpowers through a git-backed package spec. Some OpenCode
-and Bun versions pin that resolved git dependency in a lockfile or cache, so a
-restart may not pick up the newest Superpowers commit. If updates do not appear,
-clear OpenCode's package cache or reinstall the plugin.
+OpenCode는 git 기반 패키지 스펙을 통해 Superpowers를 설치합니다. 일부 OpenCode 및 Bun 버전은 확인된(resolved) git 의존성을 락파일(lockfile)이나 캐시에 고정(pin)하므로, 재시작만으로는 최신 Superpowers 커밋이 반영되지 않을 수 있습니다. 업데이트가 나타나지 않으면 OpenCode의 패키지 캐시를 지우거나 플러그인을 재설치하세요.
 
-To pin a specific version, add a tag or commit to the spec (same form for the
-V1 `plugin` key and the V2 `plugins` key):
+특정 버전을 고정하려면 스펙에 태그나 커밋을 추가하세요(V1의 `plugin` 키와 V2의 `plugins` 키 모두 형식은 동일합니다):
 
 ```json
 {
@@ -83,34 +74,28 @@ V1 `plugin` key and the V2 `plugins` key):
 }
 ```
 
-On V2, pin `v6.4.1` or later; `v6.3.0` and earlier releases load only on V1.
+V2에서는 `v6.4.1` 이상을 고정하세요. `v6.3.0` 및 이전 릴리스는 V1에서만 로드됩니다.
 
-## Troubleshooting
+## 문제 해결 (Troubleshooting)
 
-### Plugin not loading
+### 플러그인이 로드되지 않는 경우
 
-1. Check logs. V1: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`.
-   V2 loads plugins in the background server, so add `--standalone`:
+1. 로그를 확인하세요. V1: `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`.
+   V2는 백그라운드 서버에서 플러그인을 로드하므로 `--standalone`을 추가하세요:
    `opencode run --standalone --print-logs "hello" 2>&1 | grep -i superpowers`,
-   or inspect `~/.local/share/opencode/log/opencode.log` filtering for `role=server`.
-2. Verify the plugin line in your `opencode.json`
-3. Make sure you're running a recent version of OpenCode
+   또는 `~/.local/share/opencode/log/opencode.log`에서 `role=server`로 필터링하여 확인하세요.
+2. `opencode.json`의 플러그인 항목을 확인하세요.
+3. 최신 버전의 OpenCode를 실행 중인지 확인하세요.
 
-### Windows install issues
+### Windows 설치 문제
 
-Some Windows OpenCode builds have upstream installer issues with git-backed
-plugin specs, including cache paths for `git+https` URLs and Bun not finding
-`git.exe` even when it works in a normal terminal. If OpenCode cannot install
-the plugin, try installing with system npm and pointing OpenCode at the local
-package:
+일부 Windows용 OpenCode 빌드에는 `git+https` URL의 캐시 경로 문제나 일반 터미널에서는 정상 작동하는 `git.exe`를 Bun이 찾지 못하는 문제 등 git 기반 플러그인 스펙과 관련된 업스트림 설치 관리자 이슈가 있습니다. OpenCode가 플러그인을 설치하지 못한다면 시스템 npm으로 설치한 뒤 OpenCode가 로컬 패키지를 가리키도록 설정해 보세요:
 
 ```powershell
 npm install superpowers@git+https://github.com/obra/superpowers.git --prefix "$HOME\.config\opencode"
 ```
 
-Then use the absolute path of the installed package in `opencode.json` for your
-OpenCode version. OpenCode does not expand `~`; a `~/...` entry is treated as a
-package name, not a local directory.
+그런 다음 사용 중인 OpenCode 버전에 맞게 `opencode.json`에 설치된 패키지의 절대 경로를 지정하세요. OpenCode는 `~`를 확장하지 않으므로 `~/...` 항목은 로컬 디렉토리가 아닌 패키지 이름으로 처리됩니다.
 
 **V1:**
 
@@ -120,7 +105,7 @@ package name, not a local directory.
 }
 ```
 
-**V2 (2.0.4 or later):**
+**V2 (2.0.4 이상):**
 
 ```json
 {
@@ -128,39 +113,39 @@ package name, not a local directory.
 }
 ```
 
-### Skills not found
+### 스킬을 찾을 수 없는 경우
 
-1. Use `skill` tool to list what's discovered
-2. Check that the plugin is loading (see above)
+1. `skill` 도구를 사용해 탐색된 스킬 목록을 확인하세요.
+2. 플러그인이 로드되고 있는지 확인하세요(위 내용 참조).
 
-### Tool mapping
+### 도구 매핑 (Tool mapping)
 
-Skills speak in actions ("create a todo", "dispatch a subagent", "read a file"). The plugin injects a flavor-specific mapping — check your OpenCode version:
+스킬은 동작("할 일 생성(create a todo)", "서브에이전트 디스패치(dispatch a subagent)", "파일 읽기(read a file)") 단위로 서술됩니다. 플러그인은 버전에 맞는 매핑을 주입합니다 — 사용 중인 OpenCode 버전을 확인하세요:
 
 **V1 (`opencode` 1.x):**
 
 - "Create a todo" / "mark complete in todo list" → `todowrite`
-- `Subagent (general-purpose):` template → `task` tool with `subagent_type: "general"` (or `"explore"` for codebase exploration)
-- "Invoke a skill" → OpenCode's native `skill` tool
+- `Subagent (general-purpose):` 템플릿 → `subagent_type: "general"`(또는 코드베이스 탐색의 경우 `"explore"`)을 사용하는 `task` 도구
+- "Invoke a skill" → OpenCode의 네이티브 `skill` 도구
 - "Read a file" → `read`
 - "Create a file" / "edit a file" / "delete a file" → `apply_patch`
 - "Run a shell command" → `bash`
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 
-**V2 (`opencode` 2.0.4 or later; `opencode2` may be available as an alias):**
+**V2 (`opencode` 2.0.4 이상; `opencode2`가 별칭으로 제공될 수 있음):**
 
-- "Create a todo" → V2 has no todo tool; track the plan in a markdown file instead
-- `Subagent (general-purpose):` template → `subagent` tool with `agent: "general"` (or `"explore"`); pass `sessionID` to continue a previous subagent
-- "Invoke a skill" → OpenCode's native `skill` tool
+- "Create a todo" → V2에는 할 일(todo) 도구가 없습니다. 대신 마크다운 파일에서 계획을 추적하세요
+- `Subagent (general-purpose):` 템플릿 → `agent: "general"`(또는 `"explore"`)을 사용하는 `subagent` 도구; 이전 서브에이전트를 이어서 실행하려면 `sessionID`를 전달하세요
+- "Invoke a skill" → OpenCode의 네이티브 `skill` 도구
 - "Read a file" → `read`
-- "Create, edit, or delete files" → use `patch` with `patchText` when available; otherwise use `write` to create or overwrite files, `edit` for targeted changes, and `shell` for deletion
+- "Create, edit, or delete files" → 사용 가능한 경우 `patchText`와 함께 `patch`를 사용하세요. 그렇지 않으면 파일 생성 및 덮어쓰기에는 `write`, 특정 부분 수정에는 `edit`, 삭제에는 `shell`을 사용하세요
 - "Run a shell command" → `shell` (`command`, `workdir`, `timeout`, `background`)
 - "Search file contents" / "find files by name" → `grep`, `glob`
 - "Fetch a URL" → `webfetch`
 - "Search the web" → `websearch`
 
-## Getting Help
+## 도움 받기 (Getting Help)
 
-- Report issues: https://github.com/obra/superpowers/issues
-- Full documentation: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md
+- 이슈 제보: https://github.com/obra/superpowers/issues
+- 전체 문서: https://github.com/obra/superpowers/blob/main/docs/README.opencode.md

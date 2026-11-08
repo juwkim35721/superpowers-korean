@@ -1,29 +1,15 @@
-Read `prompts/analyst-common.md` first; it gives your role, inputs,
-context-safety rules, and the return format. This file adds the dimension.
+먼저 `prompts/analyst-common.md`를 읽으세요. 해당 파일에 당신의 역할, 입력값, 컨텍스트 안전 규칙, 반환 형식이 정의되어 있습니다. 이 파일은 분석 차원(dimension)을 추가합니다.
 
-Dimension: Plan adherence
+분석 차원(Dimension): 계획 준수 (Plan adherence)
 
-Recover the plan the session agreed to, then map each plan step to what
-happened. "Plan" here means any agreed course of action, not git commits.
+세션에서 합의된 계획을 복원한 다음, 각 계획 단계를 실제로 일어난 일에 매핑하세요. 여기서 "계획(Plan)"이란 git 커밋이 아니라 합의된 모든 행동 방침을 의미합니다.
 
-1. Find the agreed plan: a design or plan agreed in chat (look for the
-   assistant text preceding a human "yes/ok/go ahead"), a spec or plan file
-   written during the session (tool calls that write under `docs/`,
-   `plans/`, `specs/`, or any file the human named), a todo-list record whose
-   meaning was established in the case file, or any numbered checklist in
-   assistant text. Quote each plan step with its `path:line`.
-2. Mark structural events between the plan and its execution: compaction
-   events identified during discovery, resumes, aborted turns, and associated
-   session dispatches. Note their line numbers; plan drift right after one of
-   these is a distinct finding.
-3. For each plan step, find the tool calls and assistant text that
-   executed it, or establish that none did. Report:
-   - steps skipped (no execution found; quote the plan step);
-   - steps executed out of order (line numbers show the order);
-   - steps silently changed (execution differs from the plan step in a
-     way the assistant never announced; quote both);
-   - steps invented (work done that no plan step covers);
-   - drift immediately after a structural event (cite the event line and
-     the first divergent action).
-4. If there is no recoverable plan, say so as the only finding, with
-   the lines you checked.
+1. 합의된 계획 찾기: 채팅에서 합의된 설계나 계획(인간의 "yes/ok/go ahead" 응답 직전에 나온 어시스턴트 텍스트 확인), 세션 중에 작성된 스펙이나 계획 파일(`docs/`, `plans/`, `specs/` 아래에 쓰거나 인간이 지정한 파일에 쓰는 도구 호출), 케이스 파일에서 의미가 확립된 할 일 목록(todo-list) 레코드, 또는 어시스턴트 텍스트 내의 번호 매겨진 체크리스트를 찾으세요. 각 계획 단계를 `path:line`과 함께 인용하세요.
+2. 계획 수립과 실행 사이에 발생한 구조적 이벤트 표시하기: 탐색(discovery) 단계에서 식별된 컴팩션(compaction) 이벤트, 재개(resumes), 중단된 턴(aborted turns), 연관된 세션 디스패치를 표시하세요. 해당 줄 번호를 기록하세요. 이러한 구조적 이벤트 직후에 발생하는 계획 이탈(plan drift)은 별도의 유의미한 분석 결과(finding)입니다.
+3. 각 계획 단계에 대해 이를 실행한 도구 호출과 어시스턴트 텍스트를 찾거나, 실행된 적이 없음을 확인하세요. 다음을 보고하세요:
+   - 건너뛴 단계(steps skipped: 실행 내역을 찾을 수 없음; 해당 계획 단계 인용);
+   - 순서가 어긋나게 실행된 단계(steps executed out of order: 줄 번호로 순서 제시);
+   - 조용히 변경된 단계(steps silently changed: 어시스턴트가 알리지 않은 방식으로 실행 내용이 계획 단계와 달라짐; 계획과 실행 양쪽 모두 인용);
+   - 임의로 추가된 단계(steps invented: 어떤 계획 단계에서도 다루지 않은 작업이 수행됨);
+   - 구조적 이벤트 직후의 계획 이탈(이벤트 줄 번호와 처음으로 이탈한 동작을 인용).
+4. 복원 가능한 계획이 없다면 확인한 줄 번호들과 함께 복원 가능한 계획이 없다는 사실만 유일한 분석 결과로 보고하세요.

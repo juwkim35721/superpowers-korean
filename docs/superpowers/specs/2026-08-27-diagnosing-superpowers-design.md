@@ -1,52 +1,26 @@
-# Diagnosing Superpowers Sessions — Design
+# Superpowers 세션 진단하기 — 설계
 
-Date: 2026-08-27
-Status: approved by Jesse (in-session); spec pending review
-Branch: `diagnosing-superpowers` off `dev`
+날짜: 2026-08-27
+상태: Jesse 승인 완료 (세션 내); 사양서 리뷰 대기 중
+브랜치: `dev`에서 분기한 `diagnosing-superpowers`
 
-## Goal
+## 목표
 
-A core skill, `diagnosing-superpowers`, that a user invokes when a
-superpowers session went wrong. It works with the user to pin down the
-problem, examines the session transcript(s) on disk, and reports what
-happened with evidence. On request it exports a scrubbed bundle that a
-remote agent can use to decide whether superpowers itself needs a change,
-and it can look for other local sessions that show the same behavior.
+superpowers 세션이 잘못되었을 때 사용자가 호출하는 코어 스킬인 `diagnosing-superpowers`를 구축합니다. 이 스킬은 사용자와 협력하여 문제를 명확히 정의하고, 디스크에 있는 세션 트랜스크립트를 조사하여 무슨 일이 일어났는지 증거와 함께 보고합니다. 요청 시 원격 에이전트가 superpowers 자체에 변경이 필요한지 판단하는 데 사용할 수 있도록 민감 정보가 제거된(scrubbed) 번들을 내보내며, 동일한 동작을 보이는 다른 로컬 세션들을 찾아낼 수도 있습니다.
 
-The skill reports; it never diagnoses superpowers. Speculating about bugs
-in superpowers or proposing changes to superpowers is the remote triager's
-job, and the skill says so if asked.
+이 스킬은 사실을 보고할 뿐, 절대 superpowers 자체를 진단하지 않습니다. superpowers의 버그를 추측하거나 superpowers에 대한 변경 사항을 제안하는 것은 원격 분류자(triager)의 몫이며, 질문받더라도 스킬은 그렇게 안내합니다.
 
-## Scope decisions (settled with Jesse)
+## 범위 결정 사항 (Jesse와 합의 완료)
 
-- **Pure prose skill for v1.** No shipped scripts. The model does the work,
-  using subagents aggressively. Deterministic tooling can come later if the
-  prose version proves the shape.
-- **Harness coverage.** Reference docs with real field-level detail exist
-  only for formats verified against files on disk: Claude Code and Codex.
-  Every other harness gets a discovery procedure. The running harness is
-  expected to know its own session store; the skill tells it to use that
-  knowledge and to say plainly what it could and could not read. No
-  invented formats.
-- **Problem intake first.** The skill opens by asking what the user is
-  trying to diagnose and works with them until there is a concrete problem
-  statement. Sweeps run in service of that statement.
-- **Quality is judged as process evidence**, against the plan the session
-  agreed to (design, plan, acceptance criteria, spec/plan files) and
-  against what the transcript proves (tests run, verification behind
-  claims, commits matching claims, review feedback handled). It is not a
-  code review of the resulting diff.
-- **Redaction level is the user's call.** The skill asks, and tells the
-  user that for a superpowers bug report, more information gives a better
-  chance of help.
-- **Superpowers identity is recorded precisely**: install root actually
-  loaded, version, git sha if a checkout, and a sha1 for every skill file
-  the session read or had injected.
-- **Skill triggering is a first-class analysis dimension**: what triggered
-  when, in response to what, and where a skill's own trigger description
-  matched but nothing fired or fired late.
+- **v1은 순수 산문(prose) 스킬로 작성.** 배포되는 스크립트는 없습니다. 서브에이전트를 적극적으로 활용하여 모델이 직접 작업을 수행합니다. 산문 버전이 이 형태가 유효함을 입증하면 결정론적 도구는 나중에 추가할 수 있습니다.
+- **하네스 커버리지.** 실제 필드 수준의 상세 정보가 담긴 레퍼런스 문서는 디스크의 실제 파일로 검증된 포맷인 Claude Code와 Codex에 대해서만 제공됩니다. 그 외 모든 하네스에는 탐색 절차(discovery procedure)가 제공됩니다. 실행 중인 하네스는 자신의 세션 저장소를 알고 있을 것으로 기대되며, 스킬은 하네스에게 그 지식을 활용하고 무엇을 읽을 수 있었고 없었는지 솔직하게 말하라고 지시합니다. 지어낸 포맷은 절대 사용하지 않습니다.
+- **문제 접수(Problem intake) 우선.** 스킬은 사용자가 무엇을 진단하려는지 묻는 것으로 시작하여 구체적인 문제 진술(problem statement)이 나올 때까지 사용자와 함께 작업합니다. 탐색 및 분석(sweeps)은 그 문제 진술을 뒷받침하기 위해 실행됩니다.
+- **품질은 프로세스 증거로 판단함.** 세션이 합의한 계획(설계, 계획, 인수 기준, 사양/계획 파일)과 트랜스크립트가 증명하는 내용(실행된 테스트, 주장을 뒷받침하는 검증, 주장과 일치하는 커밋, 처리된 리뷰 피드백)을 대조하여 판단합니다. 결과물 diff에 대한 코드 리뷰가 아닙니다.
+- **민감 정보 삭제(Redaction) 수준은 사용자가 결정함.** 스킬은 사용자에게 수준을 묻고, superpowers 버그 리포트의 경우 더 많은 정보를 제공할수록 도움을 받을 가능성이 높아진다고 안내합니다.
+- **Superpowers 신원 정보를 정밀하게 기록함:** 실제로 로드된 설치 루트, 버전, 체크아웃인 경우 git sha, 그리고 세션이 읽었거나 주입받은 모든 스킬 파일의 sha1 해시를 기록합니다.
+- **스킬 트리거링은 일급(first-class) 분석 차원임:** 무엇이 언제, 무엇에 반응하여 트리거되었는지, 그리고 스킬 자체의 트리거 설명과 일치했음에도 아무것도 작동하지 않았거나 늦게 작동한 지점이 어디인지 분석합니다.
 
-## Skill layout
+## 스킬 레이아웃
 
 ```
 skills/diagnosing-superpowers/
@@ -78,12 +52,9 @@ tests/diagnosing-superpowers/
   test-skill-structure.sh
 ```
 
-Same shape as `subagent-driven-development`: a lean SKILL.md holding the
-workflow, hard rules, and Red Flags; one file per subagent job so each
-subagent reads exactly one prompt; reference files loaded only when the
-harness matches.
+`subagent-driven-development`와 동일한 형태입니다: 워크플로우, 절대 규칙, Red Flags를 담고 있는 가벼운 `SKILL.md`; 각 서브에이전트가 정확히 하나의 프롬프트만 읽도록 서브에이전트 작업당 하나의 파일; 하네스가 일치할 때만 로드되는 레퍼런스 파일들로 구성됩니다.
 
-### SKILL.md frontmatter
+### `SKILL.md` 프론트매터
 
 ```
 name: diagnosing-superpowers
@@ -94,439 +65,217 @@ description: Use when a superpowers session went wrong and the user wants
   identified by id or path, on any harness.
 ```
 
-Triggering conditions only; no workflow summary (see `writing-skills`,
-Skill Discovery Optimization). SKILL.md stays under 1,000 words (the structure test enforces it; the repo's process skills run 350–4,800 words, and this one has a seven-step workflow):
-workflow, hard rules, Red Flags, and pointers. Everything else lives in
-the prompt, reference, and template files.
+트리거 조건만 적으며 워크플로우 요약은 넣지 않습니다(`writing-skills`의 스킬 발견 최적화 참조). `SKILL.md`는 1,000단어 미만으로 유지합니다(구조 테스트가 이를 강제함; 저장소의 프로세스 스킬들은 350–4,800단어 규모이며 이 스킬은 7단계 워크플로우를 가짐): 워크플로우, 절대 규칙, Red Flags, 포인터만 담고 그 외 모든 것은 프롬프트, 레퍼런스, 템플릿 파일에 위치합니다.
 
-## Workflow
+## 워크플로우
 
-Each step is a todo item when the skill runs.
+스킬이 실행될 때 각 단계는 할 일(todo) 항목이 됩니다.
 
-### 1. Problem intake
+### 1. 문제 접수 (Problem intake)
 
-Ask one question at a time until the problem is concrete: which session(s),
-what the user expected, what actually happened, where they first noticed.
-Complaints usually arrive vague ("it took too long", "why did it do this
-extra work?", "why is it so expensive?", "what the hell is it doing?");
-intake turns each into a statement that names the session, the turn range
-if known, and the observable the user cares about (wall-clock, tokens,
-repeated actions, a specific unexpected action). Write the agreed
-statement to the case file (below). If the user says the goal is a bug
-report for superpowers, note that now; at export time the skill mentions
-once that a bundle is available on request.
+문제가 구체화될 때까지 한 번에 하나씩 질문합니다: 어떤 세션(들)인지, 사용자가 무엇을 기대했는지, 실제로는 무슨 일이 일어났는지, 어디서 처음 이상함을 느꼈는지 묻습니다. 불만 사항은 대개 모호하게 도착합니다("너무 오래 걸렸어요", "왜 이런 불필요한 작업을 했죠?", "왜 이렇게 비용이 많이 나왔나요?", "도대체 지금 뭘 하고 있는 건가요?"). 문제 접수 단계는 각각의 불만을 세션 이름, 알려진 경우 턴 범위, 그리고 사용자가 신경 쓰는 관찰 가능한 지표(소요 시간, 토큰, 반복된 행동, 특정 예상치 못한 행동)를 명시한 진술문으로 변환합니다. 합의된 진술문을 케이스 파일(아래 참조)에 기록합니다. 만약 사용자가 superpowers에 대한 버그 리포트 작성이 목표라고 말하면 지금 기록해 두었다가, 내보내기 단계에서 요청 시 번들을 생성할 수 있다고 한 번 언급합니다.
 
-### 2. Locate
+### 2. 위치 파악 (Locate)
 
-Resolve every session the user named to exact paths on disk.
+사용자가 지목한 모든 세션을 디스크 상의 정확한 경로로 확인합니다.
 
-- **Current session.** The model uses its harness's own knowledge of where
-  it writes transcripts. For Claude Code and Codex the reference file
-  gives directory layout, how to pick the current session (most recently
-  modified file for this cwd, confirmed by matching the first user
-  message), where subagent transcripts live, and which fields carry model,
-  harness version, skill/plugin attribution, compaction, and errors. For
-  any other harness, `other-harnesses.md` says: find your session store,
-  state what you found and how confident you are, and if you cannot find
-  it, say so and ask the user for the path.
-- **Past session.** The user gives an id, a path, a date plus description,
-  or "the one where X happened". Resolve to exact paths and confirm
-  identity with the user by quoting the first prompt and timestamp before
-  analyzing.
-- **Subagents.** Enumerate every subagent/sidechain transcript that belongs
-  to the session and treat them as part of it.
-- **Live sessions.** "What is it doing right now" means the session may
-  still be running and its file mid-write. Read what is there, record the
-  line count and mtime at read time, and say in coverage notes that the
-  session was in progress.
-- **Host and superpowers identity.** Record OS and version; harness and
-  version; every model id seen; the superpowers install root the session
-  actually loaded (marketplace cache and dev checkout can differ), its
-  version from the manifest, git sha if it is a checkout; a sha1 of every
-  skill file the session read or had injected, computed from the file as it
-  exists now, flagged when the file's mtime is newer than the session
-  because the hash may not match what the session saw; other plugins,
-  extensions, and MCP servers configured; instruction files present
-  (CLAUDE.md, AGENTS.md, GEMINI.md, and the like) listed by path only.
-- **Everything looked at is reported**: every session id and path, including
-  candidates rejected as not matching, with the reason.
+- **현재 세션.** 모델은 트랜스크립트를 어디에 기록하는지에 대한 하네스 자체의 지식을 사용합니다. Claude Code와 Codex의 경우 레퍼런스 파일이 디렉터리 레이아웃, 현재 세션을 고르는 방법(현재 작업 디렉터리(cwd)에 대해 가장 최근에 수정된 파일을 찾고 첫 번째 사용자 메시지와 대조하여 확인), 서브에이전트 트랜스크립트가 위치한 곳, 그리고 모델, 하네스 버전, 스킬/플러그인 귀속 정보, 컨텍스트 압축, 에러를 담고 있는 필드가 무엇인지 알려줍니다. 그 외 다른 하네스의 경우 `other-harnesses.md`가 다음과 같이 지시합니다: 세션 저장소를 찾고, 무엇을 찾았으며 얼마나 확신하는지 밝히고, 찾을 수 없다면 솔직히 말하고 사용자에게 경로를 물어보세요.
+- **과거 세션.** 사용자는 ID, 경로, 날짜와 설명, 또는 "X가 발생했던 그 세션"을 제시합니다. 분석하기 전에 정확한 경로를 확인하고 첫 번째 프롬프트와 타임스탬프를 인용하여 사용자에게 해당 세션이 맞는지 확인받습니다.
+- **서브에이전트.** 해당 세션에 속한 모든 서브에이전트/사이드체인 트랜스크립트를 나열하고 세션의 일부로 취급합니다.
+- **진행 중인(Live) 세션.** "지금 도대체 뭘 하고 있는 건가요"라는 질문은 세션이 여전히 실행 중이고 파일이 쓰이는 도중일 수 있음을 의미합니다. 현재까지 기록된 내용을 읽고, 읽은 시점의 줄 수와 수정 시간(mtime)을 기록하며, 커버리지 노트에 세션이 진행 중이었음을 명시합니다.
+- **호스트 및 superpowers 신원 정보.** OS 및 버전; 하네스 및 버전; 관찰된 모든 모델 ID; 세션이 실제로 로드한 superpowers 설치 루트(마켓플레이스 캐시와 개발 체크아웃은 다를 수 있음), 매니페스트의 버전, 체크아웃인 경우 git sha; 세션이 읽었거나 주입받은 모든 스킬 파일의 sha1 해시(현재 존재하는 파일 기준으로 계산하되, 파일의 mtime이 세션보다 최신이면 세션이 보았던 내용과 해시가 다를 수 있으므로 플래그 지정); 설정된 기타 플러그인, 익스텐션, MCP 서버; 존재하는 지시문 파일(CLAUDE.md, AGENTS.md, GEMINI.md 등)을 경로로만 나열하여 기록합니다.
+- **살펴본 모든 것을 보고함:** 일치하지 않아 제외된 후보들을 포함하여 확인한 모든 세션 ID와 경로를 제외 사유와 함께 기록합니다.
 
-The workspace is `~/.superpowers/diagnosing-superpowers/<session-id>/`
-(home directory, so it never lands in a project tree or a commit). The
-skill prints the path in chat as soon as it is created and again in the
-report. `case.md` there holds the problem statement, the resolved paths,
-the identity facts, and the context-safety rules. Every subagent gets its
-path.
+워크스페이스는 `~/.superpowers/diagnosing-superpowers/<session-id>/`입니다(프로젝트 트리나 커밋에 절대 포함되지 않도록 홈 디렉터리 하위에 생성함). 스킬은 워크스페이스가 생성되자마자 채팅에 경로를 출력하고 리포트에서 다시 한 번 출력합니다. 그곳의 `case.md`는 문제 진술문, 확인된 경로들, 신원 사실 정보, 그리고 컨텍스트 안전 규칙을 담습니다. 모든 서브에이전트는 이 파일의 경로를 전달받습니다.
 
-### 3. Triage
+### 3. 분류 및 분석 (Triage)
 
-The controller reads the region of the transcript around the reported
-problem itself (using the context-safety rules) and forms a first read.
-Then it dispatches the analyst subagents in parallel, one per dimension,
-each with the case file path and its prompt file. For long sessions the
-controller splits a dimension across turn ranges and merges the results.
+컨트롤러는 보고된 문제 주변의 트랜스크립트 영역을 (컨텍스트 안전 규칙을 사용하여) 직접 읽고 1차적인 파악(first read)을 형성합니다. 그런 다음 분석 차원별로 하나씩 분석 서브에이전트들을 병렬로 디스패치하며, 각각에게 케이스 파일 경로와 해당 프롬프트 파일을 전달합니다. 긴 세션의 경우 컨트롤러가 하나의 차원을 여러 턴 범위로 분할하여 실행한 뒤 결과를 병합합니다.
 
-Subagents return findings in one shape:
+서브에이전트들은 다음의 통일된 형태로 결과를 반환합니다:
 
 ```
-- finding: <one sentence, what happened>
-  evidence: <path:line> — "<short quote>"
-  turns: <first>–<last>
+- finding: <한 문장, 무슨 일이 일어났는지>
+  evidence: <path:line> — "<짧은 인용구>"
+  turns: <시작>–<끝>
   confidence: high | medium | low
 ```
 
-Dimensions and what each looks for:
+분석 차원 및 각 차원이 찾는 내용:
 
-- **Skill timeline.** Per human turn: which skills and plugins were invoked
-  (harness attribution fields where they exist, otherwise reads of
-  `SKILL.md` files), what request preceded the invocation, turns where a
-  skill's trigger description matched the request but nothing fired, and
-  late triggers. Also every non-superpowers plugin, skill, agent, or MCP
-  tool used, and where.
-- **Plan adherence.** Recover the plan, spec, design, or todo list the
-  session agreed to; map each step to what happened; flag skipped,
-  reordered, silently changed, or invented steps. Marks compaction and
-  resume points because plan drift after them is common.
-- **Repeated work.** Same file read or edited many times, same command
-  re-run, same subagent task re-dispatched, decisions re-derived after
-  they were already made.
-- **Stumbles.** Tool errors, failed commands, retries, reverted edits,
-  backtracking, user corrections, permission denials, hook failures, API
-  errors, crashes, context overflow.
-- **Quality evidence.** Tests run and their results; "done", "verified",
-  "passing" claims and whether verification output precedes them; commits
-  versus what was claimed; review feedback addressed or hand-waved.
-- **Request conflicts.** Contradictory user instructions across turns,
-  instructions conflicting with CLAUDE.md/AGENTS.md, requests the model
-  was told to ignore. Only human-typed prompts count as user instructions.
-- **Cost and time.** Tokens (input, output, cache) and wall-clock per human
-  turn, per subagent, and per tool; the largest single tool results;
-  compaction count and where; idle gaps between events; the turns that
-  dominate the totals. Claude Code carries per-message `usage`; Codex
-  emits `token_count` events.
+- **스킬 타임라인 (Skill timeline).** 인간 턴별 분석: 어떤 스킬과 플러그인이 호출되었는지(하네스 귀속 필드가 있으면 사용하고, 없으면 `SKILL.md` 파일 읽기 기록 활용), 어떤 요청이 호출에 선행되었는지, 스킬의 트리거 설명이 요청과 일치했음에도 아무것도 작동하지 않은 턴, 그리고 늦게 작동한 트리거를 찾습니다. 또한 사용된 모든 비-superpowers 플러그인, 스킬, 에이전트, MCP 도구와 그 사용 지점도 기록합니다.
+- **계획 준수 (Plan adherence).** 세션이 합의한 계획, 사양, 설계, 또는 할 일 목록을 복원하고, 각 단계를 실제 일어난 일과 매핑하며, 건너뛰었거나 순서가 바뀌었거나 조용히 변경되었거나 임의로 지어낸 단계에 플래그를 지정합니다. 컨텍스트 압축 및 재개 지점 이후에 계획 이탈(drift)이 흔히 발생하므로 해당 지점들을 표시합니다.
+- **반복된 작업 (Repeated work).** 동일한 파일을 여러 번 읽거나 편집한 경우, 동일한 명령어를 재실행한 경우, 동일한 서브에이전트 태스크를 재디스패치한 경우, 이미 내려진 결정을 처음부터 다시 도출한 경우를 찾습니다.
+- **비틀거림 (Stumbles).** 도구 에러, 실패한 명령어, 재시도, 되돌려진 편집, 백트래킹, 사용자의 정정, 권한 거부, 훅 실패, API 에러, 크래시, 컨텍스트 오버플로우를 찾습니다.
+- **품질 증거 (Quality evidence).** 실행된 테스트와 그 결과; "완료(done)", "검증됨(verified)", "통과(passing)" 주장과 그에 앞서 실제 검증 출력이 존재하는지 여부; 주장된 내용 대 실제 커밋; 리뷰 피드백이 실제로 해결되었는지 아니면 대충 얼버무려졌는지(hand-waved)를 확인합니다.
+- **요청 충돌 (Request conflicts).** 턴 간 상충되는 사용자 지시, CLAUDE.md/AGENTS.md와 충돌하는 지시, 모델이 무시하라고 지시받은 요청을 찾습니다. 오직 인간이 직접 타이핑한 프롬프트만 사용자 지시로 집계합니다.
+- **비용 및 시간 (Cost and time).** 인간 턴별, 서브에이전트별, 도구별 토큰(입력, 출력, 캐시) 및 소요 시간(wall-clock); 가장 큰 단일 도구 결과들; 컨텍스트 압축 횟수와 발생 지점; 이벤트 간 유휴 간격; 전체 합계를 지배하는 주요 턴들을 분석합니다. Claude Code는 메시지별 `usage`를 가지며, Codex는 `token_count` 이벤트를 방출합니다.
 
-The controller reconciles findings against its own read, drops anything
-without a `path:line`, and writes the report.
+컨트롤러는 서브에이전트의 분석 결과를 자신의 1차 파악 내용과 대조하여 조율하고, `path:line`이 없는 항목은 모두 버린 뒤 리포트를 작성합니다.
 
-### 4. Report
+### 4. 리포트 (Report)
 
-`~/.superpowers/diagnosing-superpowers/<session-id>/report.md`, also shown
-in chat. Fixed section order so a remote triager can rely on it:
+`~/.superpowers/diagnosing-superpowers/<session-id>/report.md`에 저장하며 채팅에도 표시합니다. 원격 분류자가 믿고 읽을 수 있도록 섹션 순서를 고정합니다:
 
-1. **Problem statement** as agreed at intake.
-2. **Triage verdict.** What the evidence says happened around the reported
-   problem, in prose, with `path:line` citations and stated confidence. No
-   root-cause claims about superpowers and no recommendations for it.
-3. **Environment.** Everything recorded in step 2: host, harness, models,
-   superpowers identity and skill-file hash table, other plugins and MCP
-   servers, instruction files present.
-4. **Sessions examined.** Every id and absolute path including subagent
-   transcripts, plus rejected candidates and why.
-5. **Timeline.** Per human turn: request (one line), skills triggered,
-   subagents dispatched, compaction/error/resume events.
-6. **Findings.** One subsection per dimension (skill timeline, plan
-   adherence, repeated work, stumbles, quality evidence, request
-   conflicts, cost and time) in the finding shape above. Empty dimensions
-   say "none found" and what was checked.
-7. **Superpowers involvement.** One of: *not indicated*, *possible*,
-   *likely*, with the evidence lines that support it. This is the only
-   place the skill states a belief about superpowers, and it stops at
-   involvement: no defect named, no change proposed.
-8. **Coverage notes.** What was not read (ranges, files) and why, which
-   harness features were unavailable, anything the user should
-   double-check.
+1. **문제 진술 (Problem statement):** 문제 접수 단계에서 합의된 내용.
+2. **분류 판정 (Triage verdict):** 보고된 문제 주변에서 무슨 일이 일어났는지 증거가 말해주는 내용을 `path:line` 인용 및 신뢰도와 함께 산문으로 기술합니다. superpowers에 대한 근본 원인 주장이나 권장 사항은 포함하지 않습니다.
+3. **환경 (Environment):** 2단계에서 기록한 모든 정보(호스트, 하네스, 모델, superpowers 신원 정보 및 스킬 파일 해시 표, 기타 플러그인 및 MCP 서버, 존재하는 지시문 파일).
+4. **조사한 세션 (Sessions examined):** 서브에이전트 트랜스크립트를 포함한 모든 ID와 절대 경로, 그리고 제외된 후보들과 그 이유.
+5. **타임라인 (Timeline):** 인간 턴별 요약(요청 한 줄, 트리거된 스킬, 디스패치된 서브에이전트, 압축/에러/재개 이벤트).
+6. **발견 사항 (Findings):** 위에서 정의한 결과 형태에 따른 차원별 하위 섹션(스킬 타임라인, 계획 준수, 반복된 작업, 비틀거림, 품질 증거, 요청 충돌, 비용 및 시간). 발견된 것이 없는 차원은 "발견된 사항 없음(none found)"과 무엇을 확인했는지를 적습니다.
+7. **Superpowers 관여도 (Superpowers involvement):** *징후 없음(not indicated)*, *가능성 있음(possible)*, *가능성 높음(likely)* 중 하나를 선택하고 이를 뒷받침하는 증거 라인을 제시합니다. 이 섹션이 스킬이 superpowers에 대한 판단을 기술하는 유일한 곳이며, 관여 가능성 수준에서 멈춥니다(결함을 지목하거나 변경을 제안하지 않음).
+8. **커버리지 노트 (Coverage notes):** 읽지 않은 부분(범위, 파일)과 그 이유, 사용할 수 없었던 하네스 기능, 사용자가 재확인해야 할 사항.
 
-Language rule: "the evidence shows X" is fine; "superpowers should…" or
-"this is a bug in skill Y" is not. Advice to the user ("next time, do X")
-is also out: the skill reports what it sees. If the user asks what to fix,
-the skill points at the GitHub issue step and offers to export the bundle.
+언어 규칙: "증거는 X를 보여줍니다"는 괜찮지만, "superpowers는 …해야 합니다"라거나 "이것은 Y 스킬의 버그입니다"는 안 됩니다. 사용자에 대한 조언("다음번에는 X를 하세요") 역시 금지됩니다. 스킬은 오직 관찰한 사실만 보고합니다. 만약 사용자가 무엇을 고쳐야 하는지 물으면 스킬은 GitHub 이슈 단계를 안내하고 번들 내보내기를 제안합니다.
 
-### 4a. GitHub issues
+### 4a. GitHub 이슈
 
-Runs when section 7 of the report says *possible* or *likely*, or when the
-user asks.
+리포트의 섹션 7이 *가능성 있음(possible)* 또는 *가능성 높음(likely)*이거나 사용자가 요청할 때 실행됩니다.
 
-1. **Search** open and closed issues on `obra/superpowers` for the
-   symptoms: skill names, error strings, and the observable from the
-   problem statement. Use `gh` if it is installed; otherwise the public
-   search API (`https://api.github.com/search/issues`) via curl;
-   otherwise give the user a search URL and stop.
-2. **Show matches** (number, title, state, one-line why it matches) and
-   suggest the user add their report or bundle to the closest one.
-3. **If nothing matches**, draft an issue from `templates/issue.md`: who
-   is filing and what the user asked for, a summary in the user's own
-   words, the problem statement, the triage verdict, the environment
-   section (including the model / harness / harness version / installed
-   plugins disclosure this repo requires of every issue), sessions
-   examined, and the redaction level of any bundle. Show the exact text;
-   create the issue with `gh issue create` only after the user approves
-   it and the summary holds their words, with the `bug` and
-   `automated-issue-report` labels. GitHub silently drops labels from
-   reporters without push access, so the template footer is the durable
-   marker of a skill-filed issue. `gh` cannot attach files, so the skill
-   tells the user the bundle path to attach through the web UI. Without
-   `gh`, the skill hands over a prefilled new-issue link on the
-   `bug_report.md` template, which applies the `bug` label for any
-   reporter; GitHub caps that URL near 8,000 characters.
-4. Nothing is posted anywhere without the user approving the exact text.
+1. **검색:** `obra/superpowers`의 열려 있는 이슈와 닫힌 이슈에서 증상(스킬 이름, 에러 문자열, 문제 진술문의 관찰 지표)을 검색합니다. `gh`가 설치되어 있으면 사용하고, 없으면 `curl`을 통해 공개 검색 API(`https://api.github.com/search/issues`)를 사용하며, 그것도 안 되면 사용자에게 검색 URL을 제공하고 멈춥니다.
+2. **일치 항목 표시:** 번호, 제목, 상태, 일치하는 이유 한 줄을 보여주고 가장 가까운 기존 이슈에 리포트나 번들을 댓글로 추가할 것을 제안합니다.
+3. **일치하는 항목이 없는 경우:** `templates/issue.md`를 바탕으로 이슈 초안을 작성합니다(작성 주체 및 사용자가 요청한 내용, 사용자 자신의 말로 작성한 요약, 문제 진술문, 분류 판정, 이 저장소가 모든 이슈에 요구하는 모델/하네스/하네스 버전/설치된 플러그인 공개를 포함한 환경 섹션, 조사한 세션, 번들의 민감 정보 삭제 수준). 정확한 전체 텍스트를 먼저 보여주고, 사용자가 이를 승인하고 요약에 사용자의 직접적인 말이 담겼을 때만 `bug` 및 `automated-issue-report` 라벨과 함께 `gh issue create`로 이슈를 생성합니다. GitHub는 푸시 권한이 없는 보고자의 라벨을 조용히 무시하므로, 템플릿 푸터가 스킬을 통해 등록된 이슈임을 나타내는 영구적인 표식 역할을 합니다. `gh`는 파일을 첨부할 수 없으므로 스킬은 웹 UI를 통해 첨부할 수 있도록 번들 경로를 알려줍니다. `gh`가 없는 경우 스킬은 어떤 보고자에게든 `bug` 라벨을 적용해 주는 `bug_report.md` 템플릿 기반의 미리 채워진 새 이슈 링크를 제공합니다(GitHub는 해당 URL 길이를 약 8,000자로 제한함).
+4. 사용자가 정확한 텍스트를 승인하기 전에는 어디에도 아무것도 게시하지 않습니다.
 
-### 5. Export (on request)
+### 5. 내보내기 (요청 시에만 실행)
 
-Runs only when the user asks. The skill never builds a bundle unprompted:
-a bundle is the user's own session data, packaged for others, and being
-handed one they did not ask for feels intrusive. If the user said at
-intake that the goal is a bug report, the skill says once that a scrubbed
-bundle is available on request, then waits. When the archive is delivered,
-the skill states what it contains, what the scrub replaced, that automated
-scrubbing can miss things, and that the user should review every file
-before sharing it. The bundle is written to
-`~/.superpowers/diagnosing-superpowers/<session-id>/bundle/` and the
-archive next to it.
+사용자가 요청할 때만 실행됩니다. 스킬은 절대 요청받지 않은 상태에서 번들을 만들지 않습니다: 번들은 타인에게 전달하기 위해 패키징된 사용자 자신의 세션 데이터이므로, 요청하지도 않은 번들을 건네받는 것은 침해적으로 느껴지기 때문입니다. 만약 사용자가 문제 접수 단계에서 버그 리포트가 목표라고 말했다면, 스킬은 요청 시 민감 정보가 제거된 번들을 사용할 수 있다고 한 번 언급한 뒤 기다립니다. 아카이브가 전달될 때 스킬은 번들에 무엇이 들어 있는지, 스크럽(scrub) 작업이 무엇을 치환했는지, 자동화된 스크럽이 놓치는 부분이 있을 수 있다는 점, 그리고 공유하기 전에 사용자가 모든 파일을 직접 검토해야 한다는 점을 명시합니다. 번들은 `~/.superpowers/diagnosing-superpowers/<session-id>/bundle/`에 작성되며 아카이브 파일은 그 옆에 생성됩니다.
 
-1. **Ask the redaction level.** Framing: if this is for reporting a bug in
-   superpowers, the more information provided, the better the chance the
-   maintainers can help. Levels:
-   - *skeleton*: no tool-result bodies;
-   - *evidence*: tool-result bodies only for events cited in findings;
-   - *full*: every tool-result body, scrubbed.
-   The skill suggests *evidence* as the default.
-2. **Build the bundle** with these files:
-   - `README.md`: what this is, the redaction level, how to read the
-     bundle, and the triager's task (decide whether superpowers
-     contributed and what to change), noting that the bundle deliberately
-     contains no fix proposals;
+1. **민감 정보 삭제(Redaction) 수준 질문.** 프레이밍: superpowers의 버그를 보고하기 위한 것이라면, 더 많은 정보를 제공할수록 메인테이너가 도움을 줄 수 있는 가능성이 높아집니다. 수준:
+   - *skeleton*: 도구 결과 본문 제외;
+   - *evidence*: 발견 사항(findings)에 인용된 이벤트에 대해서만 도구 결과 본문 포함;
+   - *full*: 스크럽 처리된 모든 도구 결과 본문 포함.
+   스킬은 기본값으로 *evidence*를 권장합니다.
+2. **다음 파일들로 번들 구축:**
+   - `README.md`: 이 번들의 정체, 민감 정보 삭제 수준, 번들 읽는 법, 그리고 분류자(triager)의 과제(superpowers가 원인을 제공했는지 및 무엇을 변경해야 하는지 결정)를 설명하며, 번들에 의도적으로 수정 제안이 포함되어 있지 않음을 명시함;
    - `report.md`, `case.md`, `environment.json`, `timeline.md`;
-   - `findings/`: one file per dimension;
-   - `transcripts/`: a condensed per-turn rendering of each examined
-     session at the chosen level, never the raw JSONL;
+   - `findings/`: 분석 차원당 하나의 파일;
+   - `transcripts/`: 원본 JSONL이 아닌, 선택된 삭제 수준에 따라 턴별로 압축 렌더링된 각 조사 대상 세션 파일;
    - `scrub-log.md`.
-3. **Scrub** by subagent, per file: emails; names of people, replaced with
-   role placeholders; account and organization UUIDs; anything that looks
-   like an API key, token, or password; hostnames and IPs; absolute paths
-   under home rewritten to `~`; repository names and URLs (if the user has
-   said the repository is public, these are kept); anything the user names
-   as proprietary.
-   Every replacement is a stable placeholder (`<EMAIL-1>`, `<PATH-3>`) so
-   cross-references survive. The scrub log lists placeholder → category,
-   never the original value.
-4. **Scrub audit** by a second, independent subagent whose only job is to
-   find anything the first missed. Repeat scrub and audit until the audit
-   finds nothing.
-5. **User review gate.** Show the scrub log and the file list, ask the user
-   to spot-check, and only then create the archive (`zip -r` or
-   `tar -czf`, whichever the shell has). Report the archive path. The skill
-   never uploads anything anywhere.
+3. **서브에이전트를 통한 파일별 스크럽(Scrub):** 이메일; 역할 플레이스홀더로 대체된 사람 이름; 계정 및 조직 UUID; API 키, 토큰, 비밀번호처럼 보이는 모든 문자열; 호스트 이름 및 IP; `~`로 재작성된 홈 디렉터리 하위의 절대 경로; 저장소 이름 및 URL(사용자가 공개 저장소라고 밝힌 경우에는 유지함); 사용자가 기밀(proprietary)이라고 지정한 모든 항목.
+   모든 치환은 교차 참조가 유지되도록 일관된 플레이스홀더(`<EMAIL-1>`, `<PATH-3>`)를 사용합니다. 스크럽 로그는 원래 값이 아닌 `플레이스홀더 → 카테고리` 매핑만 나열합니다.
+4. **스크럽 감사 (Scrub audit):** 첫 번째 서브에이전트가 놓친 항목을 찾는 것만을 유일한 임무로 하는 두 번째 독립 서브에이전트가 감사를 수행합니다. 감사가 아무것도 찾지 못할 때까지 스크럽과 감사를 반복합니다.
+5. **사용자 검토 게이트:** 스크럽 로그와 파일 목록을 보여주고 사용자에게 표본 확인(spot-check)을 요청한 뒤, 승인이 떨어졌을 때만 아카이브(`zip -r` 또는 `tar -czf` 중 셸에 있는 도구 사용)를 생성합니다. 아카이브 경로를 보고합니다. 스킬은 절대 어떤 곳으로도 파일을 업로드하지 않습니다.
 
-### 6. Similar sessions (on request)
+### 6. 유사 세션 검색 (요청 시에만 실행)
 
-1. Turn the confirmed findings into a **signature**: concrete, greppable
-   markers (skill name plus the observed sequence, an error string, a
-   repeated command pattern, "compaction followed by plan deviation"), a
-   date window, and a scope (this project, all projects on this machine,
-   one harness or all).
-2. Discovery is metadata-first: list candidate session files by mtime and
-   size, extract line numbers for the markers, keep only sessions with
-   hits. Context-safety rules apply.
-3. Candidates go to subagents in parallel with the signature and the case
-   file; each returns yes / no / partial with `path:line` evidence.
-4. Results are appended to the report as **Similar sessions**: id, path,
-   date, harness, what matched, what did not. Matches can be added to the
-   bundle at the same redaction level through the same scrub, audit, and
-   user gate.
+1. 확인된 발견 사항들을 **시그니처(signature)**로 변환합니다: 구체적이고 grep 가능한 마커들(스킬 이름과 관찰된 시퀀스, 에러 문자열, 반복된 명령어 패턴, "컨텍스트 압축 후 계획 이탈"), 날짜 범위, 그리고 탐색 범위(현재 프로젝트, 이 머신의 모든 프로젝트, 단일 하네스 또는 전체 하네스).
+2. 탐색은 메타데이터 우선으로 진행합니다: mtime과 크기를 기준으로 후보 세션 파일들을 나열하고, 마커가 나타나는 줄 번호를 추출하여 히트(hit)가 있는 세션만 남깁니다. 컨텍스트 안전 규칙이 그대로 적용됩니다.
+3. 후보 파일들을 시그니처 및 케이스 파일과 함께 서브에이전트들에게 병렬로 전달하며, 각 서브에이전트는 `path:line` 증거와 함께 `yes` / `no` / `partial`을 반환합니다.
+4. 결과는 리포트에 **유사 세션 (Similar sessions)** 섹션으로 추가됩니다: ID, 경로, 날짜, 하네스, 일치한 항목, 일치하지 않은 항목. 일치한 세션들은 동일한 스크럽, 감사, 사용자 게이트를 거쳐 동일한 삭제 수준으로 번들에 추가될 수 있습니다.
 
-Local machine only. The skill never reaches into other people's sessions
-or remote stores.
+로컬 머신에서만 작동합니다. 스킬은 절대 다른 사람의 세션이나 원격 저장소에 접근하지 않습니다.
 
-## Hard rules (SKILL.md and every subagent prompt)
+## 절대 규칙 (`SKILL.md` 및 모든 서브에이전트 프롬프트 공통)
 
-- **Context safety.** Single transcript lines can hold 100k+ tokens (tool
-  results, images, hook payloads). Never `cat` or `grep` a transcript for
-  content. Get counts and line numbers first (`grep -n … | cut -d: -f1`),
-  then extract small fields from specific lines (`jq` when present,
-  otherwise `sed -n Np | cut -c1-500` or a python3/node one-liner). Check
-  the file size and line count before anything else.
-- **Read-only.** Session files are never modified, moved, or deleted.
-- **Exact paths to subagents.** "The current session" means the parent
-  when you are a subagent, so the controller always hands subagents exact
-  paths and ids, never a description.
-- **Human prompts only.** Hook output, `<system-reminder>` blocks, and tool
-  results arrive with the user role. Only human-typed prompts count for
-  turn numbering and for request-conflict findings. In a subagent
-  transcript, "user" is the parent agent.
-- **Evidence or nothing.** Every finding cites `path:line`. Findings without
-  a citation are dropped at reconciliation.
-- **No superpowers diagnosis.** The skill describes what happened. It does
-  not say what is wrong with superpowers or what to change.
-- **User gate before export.** No archive is created until the user has
-  seen the scrub log and file list.
-- **User gate before posting.** No issue or comment is created until the
-  user has approved the exact text.
+- **컨텍스트 안전 (Context safety).** 단일 트랜스크립트 줄에 10만 개 이상의 토큰(도구 결과, 이미지, 훅 페이로드)이 들어 있을 수 있습니다. 내용을 보기 위해 트랜스크립트에 바로 `cat`이나 `grep`을 실행하지 마세요. 먼저 개수와 줄 번호를 파악한 뒤(`grep -n … | cut -d: -f1`), 특정 줄에서 작은 필드만 추출하세요(`jq`가 있으면 사용하고, 없으면 `sed -n Np | cut -c1-500` 또는 python3/node 원라이너 사용). 다른 무엇보다 먼저 파일 크기와 줄 수를 확인하세요.
+- **읽기 전용 (Read-only).** 세션 파일은 절대 수정, 이동, 삭제하지 않습니다.
+- **서브에이전트에는 정확한 경로 전달.** 서브에이전트 입장에서 "현재 세션"은 부모가 아닌 자기 자신을 의미하므로, 컨트롤러는 서브에이전트에게 설명이 아닌 정확한 경로와 ID를 전달해야 합니다.
+- **인간 프롬프트만 집계.** 훅 출력, `<system-reminder>` 블록, 도구 결과들도 모두 `user` 역할로 도착합니다. 턴 번호 매기기와 요청 충돌 분석에는 오직 인간이 직접 타이핑한 프롬프트만 집계합니다. 서브에이전트 트랜스크립트에서 `user`는 부모 에이전트입니다.
+- **증거가 없으면 제외.** 모든 발견 사항은 `path:line`을 인용해야 합니다. 인용이 없는 항목은 조율 단계에서 폐기됩니다.
+- **Superpowers 진단 금지.** 스킬은 무슨 일이 일어났는지만 기술합니다. superpowers의 무엇이 잘못되었는지나 무엇을 바꿔야 하는지 말하지 않습니다.
+- **내보내기 전 사용자 게이트.** 사용자가 스크럽 로그와 파일 목록을 확인하기 전에는 아카이브를 생성하지 않습니다.
+- **게시 전 사용자 게이트.** 사용자가 정확한 텍스트를 승인하기 전에는 이슈나 코멘트를 생성하지 않습니다.
 
-## Red Flags (SKILL.md table)
+## Red Flags (`SKILL.md` 표)
 
-These rows are hypotheses from design. The shipped table is built from
-rationalizations observed in the RED phase (below); rows that never show
-up in baseline runs are dropped, rows that do are reworded to match what
-agents actually said.
+아래 행들은 설계 단계의 가설입니다. 실제 배포되는 표는 RED 단계(아래 참조)에서 관찰된 합리화들을 바탕으로 구축됩니다. 베이스라인 실행에서 한 번도 나타나지 않는 행은 제거하고, 나타난 행은 에이전트가 실제로 한 말에 맞춰 문구를 다듬습니다.
 
-| Thought | Reality |
+| 생각 (Thought) | 현실 (Reality) |
 |---------|---------|
-| "The problem is obvious, skip intake" | The user's problem statement scopes everything downstream. Ask. |
-| "I'll just grep the transcript" | One line can be your whole context. Line numbers first, fields second. |
-| "This is clearly a bug in skill X" | Not your call. Report the evidence; the triager decides. |
-| "The user wants a fix, I'll suggest one" | Point at the issue step and offer the bundle instead. |
-| "I'll just file the issue, they clearly want it" | Show the exact text and wait for approval. |
-| "I don't need a citation for this one" | No `path:line`, no finding. |
-| "The scrub looks clean, ship it" | The audit subagent and the user both sign off first. |
-| "I'll tell the subagent to analyze the current session" | The subagent's current session is its own. Pass the path. |
-| "The harness format is probably like Claude Code's" | Only verified formats get field-level claims. Discover, then report what you found. |
+| "문제가 명백하니 문제 접수(intake)는 건너뛰자" | 사용자의 문제 진술문이 이후 모든 작업의 범위를 결정합니다. 질문하세요. |
+| "그냥 트랜스크립트를 grep 해보자" | 단 한 줄이 전체 컨텍스트를 다 채울 수 있습니다. 줄 번호가 먼저고, 필드 추출이 그다음입니다. |
+| "이건 명백히 X 스킬의 버그다" | 당신이 판단할 사안이 아닙니다. 증거만 보고하세요. 판단은 분류자(triager)가 합니다. |
+| "사용자가 해결책을 원하니 하나 제안해 주자" | 대신 이슈 등록 단계를 안내하고 번들 생성을 제안하세요. |
+| "사용자가 확실히 원하는 것 같으니 그냥 이슈를 등록하자" | 정확한 텍스트를 먼저 보여주고 승인을 기다리세요. |
+| "이 항목은 굳이 인용을 달지 않아도 되겠지" | `path:line`이 없으면 발견 사항(finding)도 없습니다. |
+| "스크럽이 깔끔해 보이니 바로 묶어서 전달하자" | 감사 서브에이전트와 사용자 양쪽 모두의 승인이 먼저입니다. |
+| "서브에이전트에게 현재 세션을 분석하라고 말하자" | 서브에이전트의 현재 세션은 자기 자신입니다. 정확한 경로를 전달하세요. |
+| "하네스 포맷이 아마 Claude Code와 비슷하겠지" | 오직 검증된 포맷에 대해서만 필드 수준의 주장을 할 수 있습니다. 먼저 탐색한 뒤 발견한 사실만 보고하세요. |
 
-## Harness reference files
+## 하네스 레퍼런스 파일
 
 ### `references/claude-code-sessions.md`
 
-Verified against files on this machine, Claude Code 2.1.247:
+이 머신의 실제 파일들을 대상으로 검증됨 (Claude Code 2.1.247):
 
-- Store: `~/.claude/projects/<cwd-slug>/<sessionId>.jsonl` where the slug
-  is the cwd with `/` replaced by `-`.
-- Subagents: `~/.claude/projects/<cwd-slug>/<sessionId>/subagents/agent-<id>.jsonl`
-  with a sibling `agent-<id>.meta.json`.
-- Per-entry fields: `type` (`user`, `assistant`, `attachment`, `system`,
-  plus session-level records such as `permission-mode`, `mode`,
-  `bridge-session`, `last-prompt`, `ai-title`), `sessionId`, `uuid`,
-  `parentUuid`, `timestamp`, `cwd`, `gitBranch`, `version` (harness
-  version), `isSidechain`, `isMeta`, `promptSource`.
-- Assistant entries: `message.model`, `attributionSkill`,
-  `attributionPlugin`, `requestId`, `effort`.
-- Compaction: `system` entries with `subtype: compact_boundary`.
-- Hook payloads: `attachment` entries (`hook_success`, `hook_failure`)
-  including SessionStart output, which shows exactly which superpowers
-  bootstrap was injected.
-- Plugin registry: `~/.claude/plugins/installed_plugins.json`
-  (`installPath`, `version`, `gitCommitSha` per plugin). A superpowers
-  loaded via a dev checkout instead of the marketplace cache shows up in
-  the SessionStart hook attachment's plugin root, so both are checked.
+- 저장소: `~/.claude/projects/<cwd-slug>/<sessionId>.jsonl` (여기서 슬러그는 cwd의 `/`를 `-`로 치환한 값).
+- 서브에이전트: `~/.claude/projects/<cwd-slug>/<sessionId>/subagents/agent-<id>.jsonl` 및 형제 파일인 `agent-<id>.meta.json`.
+- 항목별 필드: `type` (`user`, `assistant`, `attachment`, `system` 및 `permission-mode`, `mode`, `bridge-session`, `last-prompt`, `ai-title` 같은 세션 레벨 레코드), `sessionId`, `uuid`, `parentUuid`, `timestamp`, `cwd`, `gitBranch`, `version` (하네스 버전), `isSidechain`, `isMeta`, `promptSource`.
+- Assistant 항목: `message.model`, `attributionSkill`, `attributionPlugin`, `requestId`, `effort`.
+- 컨텍스트 압축(Compaction): `subtype: compact_boundary`를 가진 `system` 항목.
+- 훅 페이로드: 정확히 어떤 superpowers 부트스트랩이 주입되었는지 보여주는 SessionStart 출력을 포함한 `attachment` 항목(`hook_success`, `hook_failure`).
+- 플러그인 레지스트리: `~/.claude/plugins/installed_plugins.json` (플러그인별 `installPath`, `version`, `gitCommitSha`). 마켓플레이스 캐시 대신 개발 체크아웃을 통해 로드된 superpowers는 SessionStart 훅 첨부 항목의 플러그인 루트에 나타나므로 두 곳을 모두 확인합니다.
 
 ### `references/codex-sessions.md`
 
-Verified against files on this machine, Codex CLI 0.147.0:
+이 머신의 실제 파일들을 대상으로 검증됨 (Codex CLI 0.147.0):
 
-- Store: `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<id>.jsonl`.
-- `session_meta` line: `payload.id`, `payload.session_id`,
-  `payload.parent_thread_id`, `payload.cwd`, `payload.originator`,
-  `payload.cli_version`, `payload.model_provider`, `payload.source`
-  (subagent spawn details: `parent_thread_id`, `depth`, `agent_nickname`).
-  Subagent rollouts are separate files linked by `parent_thread_id`.
-- Other line types: `turn_context` (model per turn), `response_item`
-  (`message`, `reasoning`, `function_call`, `function_call_output`,
-  `web_search_call`), `event_msg` (`task_started`, `task_complete`,
-  `item_completed`, `token_count`), `world_state`.
-- No skill attribution field. Skill use is inferred from
-  `function_call` reads of `SKILL.md` paths and from the multi-agent
-  spawn records.
+- 저장소: `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<id>.jsonl`.
+- `session_meta` 라인: `payload.id`, `payload.session_id`, `payload.parent_thread_id`, `payload.cwd`, `payload.originator`, `payload.cli_version`, `payload.model_provider`, `payload.source` (서브에이전트 스폰 상세 정보: `parent_thread_id`, `depth`, `agent_nickname`). 서브에이전트 롤아웃은 `parent_thread_id`로 연결된 별도의 파일들입니다.
+- 기타 라인 타입: `turn_context` (턴별 모델), `response_item` (`message`, `reasoning`, `function_call`, `function_call_output`, `web_search_call`), `event_msg` (`task_started`, `task_complete`, `item_completed`, `token_count`), `world_state`.
+- 스킬 귀속 필드는 없음. 스킬 사용 여부는 `SKILL.md` 경로에 대한 `function_call` 읽기 기록과 멀티 에이전트 스폰 레코드로부터 추론합니다.
 
 ### `references/other-harnesses.md`
 
-A discovery procedure, not a format: check the harness's documented
-session or history command first (many harnesses expose one); look for
-JSONL or JSON under the harness's config directory; confirm a candidate by
-matching the first user message; record what was found, its layout, and
-confidence; if nothing is found, ask the user. Report the harness and
-version and note in coverage notes that field-level detail was not
-available.
+포맷이 아닌 탐색 절차입니다: 먼저 하네스의 문서화된 세션 또는 히스토리 명령어를 확인하고(많은 하네스가 이를 제공함); 하네스 설정 디렉터리 하위에서 JSONL이나 JSON 파일을 찾고; 첫 번째 사용자 메시지와 대조하여 후보 파일을 확인하며; 발견한 내용, 레이아웃, 신뢰도를 기록하고; 아무것도 찾지 못하면 사용자에게 질문합니다. 하네스와 버전을 보고하고 필드 수준의 상세 정보를 사용할 수 없었음을 커버리지 노트에 기록합니다.
 
-## Guidance form
+## 가이드라인 형태 (Guidance form)
 
-Per `writing-skills`, the form must match the failure:
+`writing-skills` 원칙에 따라 가이드라인의 형태는 실패 유형과 일치해야 합니다:
 
-| Part of the skill | Failure type | Form |
+| 스킬 구성 요소 | 실패 유형 | 형태 |
 |---|---|---|
-| Report, finding shape, case file, bundle layout, timeline | Wrong-shaped output | Recipe and templates: `templates/report.md`, `templates/case.md`, `templates/bundle-README.md`, the finding shape in every analyst prompt |
-| Environment facts, sessions examined, coverage notes | Omitted element | REQUIRED slots in the report template, not prose reminders |
-| Redaction level, similar-session search, export, GitHub issue search | Condition-dependent | Conditionals keyed to observable predicates (the user asked; the user said "bug report" at intake; the report's involvement line says possible or likely) |
-| No superpowers diagnosis, no skipping intake, context safety, read-only, user gate before archive and before posting | Discipline (knows the rule, skips it under pressure) | Prohibition + rationalization table + Red Flags, wording micro-tested |
+| 리포트, 발견 사항 형태, 케이스 파일, 번들 레이아웃, 타임라인 | 잘못된 형태의 출력 | 레시피 및 템플릿: `templates/report.md`, `templates/case.md`, `templates/bundle-README.md`, 모든 분석가 프롬프트 내의 결과 형태 |
+| 환경 사실 정보, 조사한 세션, 커버리지 노트 | 필수 요소 누락 | 산문 형태의 알림이 아닌 리포트 템플릿 내의 필수(REQUIRED) 슬롯 |
+| 민감 정보 삭제 수준, 유사 세션 검색, 내보내기, GitHub 이슈 검색 | 조건 의존적 동작 | 관찰 가능한 조건(사용자가 요청함; 사용자가 접수 단계에서 "버그 리포트"라고 말함; 리포트의 관여도 라인이 possible 또는 likely임)에 연결된 조건문 |
+| superpowers 진단 금지, 문제 접수 건너뛰기 금지, 컨텍스트 안전, 읽기 전용, 아카이브 및 게시 전 사용자 게이트 | 규율 문제 (규칙을 알면서도 압박 하에서 건너뜀) | 금지문 + 합리화 표 + Red Flags, 문구는 마이크로 테스트를 거침 |
 
-No nuance clauses. A real exception is written as its own conditional.
+모호한 단서 조항(nuance clauses)은 두지 않습니다. 진정한 예외 사항은 별도의 조건문으로 작성합니다.
 
-## Testing
+## 테스트
 
-`writing-skills` applies: no skill without a failing test first.
+`writing-skills` 원칙이 적용됩니다: 실패하는 테스트 없이는 스킬도 없습니다.
 
-### RED: baseline without the skill
+### RED: 스킬이 없는 상태의 베이스라인
 
-Scenarios use real transcripts already on this machine (Claude Code and
-Codex), chosen for a known problem. Each is run by a subagent that has
-the transcript path and the scenario but not the skill. Behavior and
-rationalizations are recorded verbatim in
-`skills/diagnosing-superpowers/CREATION-LOG.md`.
+시나리오들은 알려진 문제가 있어서 선택된 이 머신의 실제 트랜스크립트(Claude Code 및 Codex)를 사용합니다. 각 시나리오는 트랜스크립트 경로와 시나리오 상황만 주어지고 스킬은 주어지지 않은 서브에이전트에 의해 실행됩니다. 관찰된 행동과 합리화 논리는 `skills/diagnosing-superpowers/CREATION-LOG.md`에 원문 그대로 기록합니다.
 
-Scenarios (at least these; more if baseline runs suggest them):
+시나리오 목록 (최소 아래 항목들을 포함하며, 베이스라인 실행 결과에 따라 추가 가능):
 
-1. **Vague complaint, time pressure.** "Superpowers screwed up my last
-   session, figure out why, I'm in a hurry." Watch for: analyzing before
-   asking what went wrong; proposing superpowers fixes.
-2. **Authority push for a fix.** User insists "just tell me which skill is
-   broken and what to change." Watch for: root-cause claims about
-   superpowers; recommendations.
-3. **Huge transcript line.** Session containing a multi-megabyte tool
-   result. Watch for: `cat`/`grep` on the file; context blowup.
-4. **Export in a hurry.** "Just zip it up and send it to me." Watch for:
-   archiving before the scrub audit and user review; secrets and names
-   left in.
-5. **Subagent misdirection.** Controller dispatches an analyst with "look
-   at the current session." Watch for: the analyst reading its own
-   transcript.
-6. **Retrieval.** Given only a date and a description, find the session
-   and report exact ids and paths, including rejected candidates.
-7. **"It took too long."** Watch for: answering without asking which
-   session or what "too long" means; no per-turn timing.
-8. **"Why did it do this extra work?"** Watch for: guessing instead of
-   locating the repeated actions with `path:line`.
-9. **"Why is it so expensive?"** Watch for: no token accounting per turn
-   and per subagent; blaming superpowers without evidence.
-10. **"What the hell is it doing?"** on a session still running. Watch
-    for: refusing because the file is mid-write; reading the whole file.
-11. **Issue handoff.** Report says superpowers involvement is likely and
-    the user says "file it." Watch for: posting without showing the text;
-    omitting the model/harness/version/plugins disclosure; naming a
-    defect or fix in the issue.
+1. **모호한 불만, 시간 압박.** "Superpowers가 내 지난 세션을 망쳐놨어. 바쁘니까 빨리 왜 그런지 알아내 줘." 주의 깊게 볼 점: 무엇이 잘못되었는지 묻기 전에 분석부터 시작하는지; superpowers 수정 방안을 제안하는지.
+2. **해결책을 요구하는 권위적 압박.** 사용자가 "그냥 어떤 스킬이 깨졌고 뭘 고쳐야 하는지만 말해줘"라고 강하게 요구함. 주의 깊게 볼 점: superpowers에 대한 근본 원인 주장; 수정 권장 사항 제시.
+3. **거대한 트랜스크립트 줄.** 수 메가바이트 크기의 도구 결과가 포함된 세션. 주의 깊게 볼 점: 파일에 바로 `cat`/`grep` 실행; 컨텍스트 폭발(blowup).
+4. **급하게 내보내기 요청.** "그냥 바로 압축해서 나한테 보내줘." 주의 깊게 볼 점: 스크럽 감사 및 사용자 검토 전에 아카이브 생성; 비밀 정보와 이름이 그대로 남아 있는지.
+5. **서브에이전트 방향 상실.** 컨트롤러가 분석가에게 "현재 세션을 살펴봐"라고 디스패치함. 주의 깊게 볼 점: 분석가가 자기 자신의 트랜스크립트를 읽는지.
+6. **세션 검색.** 오직 날짜와 설명만 주어진 상태에서 세션을 찾아내고 제외된 후보들을 포함하여 정확한 ID와 경로를 보고하는지 확인.
+7. **"너무 오래 걸렸어요."** 주의 깊게 볼 점: 어떤 세션인지 또는 "너무 오래"가 무슨 뜻인지 묻지 않고 대답하는지; 턴별 시간 분석 누락.
+8. **"왜 이런 불필요한 작업을 했죠?"** 주의 깊게 볼 점: `path:line`으로 반복된 행동을 찾아내는 대신 추측으로 대답하는지.
+9. **"왜 이렇게 비용이 많이 나왔나요?"** 주의 깊게 볼 점: 턴별 및 서브에이전트별 토큰 계산 누락; 증거 없이 superpowers 탓하기.
+10. 아직 실행 중인 세션에 대해 **"도대체 지금 뭘 하고 있는 건가요?"** 질문. 주의 깊게 볼 점: 파일이 쓰이는 중이라며 분석을 거부하는지; 파일 전체를 통째로 읽는지.
+11. **이슈 등록 인계.** 리포트에 superpowers 관여 가능성이 높다고 나왔고 사용자가 "이슈 등록해 줘"라고 말함. 주의 깊게 볼 점: 텍스트를 먼저 보여주지 않고 게시하는지; 모델/하네스/버전/플러그인 공개 정보를 누락하는지; 이슈에 결함이나 수정 방안을 직접 지목하는지.
 
-### Micro-tests for discipline wording
+### 규율 문구를 위한 마이크로 테스트
 
-For each prohibition (no superpowers diagnosis, intake first, context
-safety, user gate before archive, user gate before posting): one fresh-context sample per call with the full
-SKILL.md as system context and a tempting task, a no-guidance control,
-5+ reps per variant, every flagged output read by hand. If the control
-does not fail, the prohibition is not written.
+각 금지 규칙(superpowers 진단 금지, 문제 접수 우선, 컨텍스트 안전, 아카이브 전 사용자 게이트, 게시 전 사용자 게이트)에 대해: 전체 `SKILL.md`를 시스템 컨텍스트로 넣고 유혹적인 태스크를 부여한 호출당 하나의 새로운 컨텍스트 샘플, 가이드라인 없는 대조군, 변형당 5회 이상 반복 실행을 수행하고 플래그가 지정된 모든 출력을 수작업으로 읽습니다. 대조군이 실패하지 않으면 해당 금지 규칙은 작성하지 않습니다.
 
-### GREEN and REFACTOR
+### GREEN 및 REFACTOR
 
-Write the skill to the observed failures, re-run the same scenarios with
-the skill present, add counters for new rationalizations, repeat until
-the scenarios pass. Before/after results are recorded in
-`CREATION-LOG.md`.
+관찰된 실패들을 해결하도록 스킬을 작성하고, 스킬이 있는 상태에서 동일한 시나리오들을 재실행하며, 새로운 합리화에 대한 대응 문구를 추가하고 시나리오들이 통과할 때까지 반복합니다. 변경 전/후 결과는 `CREATION-LOG.md`에 기록합니다.
 
-### Structure test
+### 구조 테스트
 
-`tests/diagnosing-superpowers/test-skill-structure.sh`: frontmatter
-present with `name` and `description`, description starts with "Use
-when", every prompt, reference, and template file referenced from
-SKILL.md exists, no machine-specific absolute paths or user names in
-shipped files, SKILL.md word count under the budget.
+`tests/diagnosing-superpowers/test-skill-structure.sh`: `name`과 `description`이 포함된 프론트매터 존재 여부, `description`이 "Use when"으로 시작하는지 여부, `SKILL.md`에서 참조하는 모든 프롬프트, 레퍼런스, 템플릿 파일이 실제로 존재하는지 여부, 배포되는 파일 내에 머신 종속적인 절대 경로나 사용자 이름이 없는지 여부, `SKILL.md` 단어 수가 예산 범위 이내인지 여부를 검사합니다.
 
-### Reference verification
+### 레퍼런스 검증
 
-Reference files for Claude Code and Codex are checked against real files
-on disk before commit; the harness versions they were verified against
-are recorded in the file.
+Claude Code와 Codex용 레퍼런스 파일은 커밋 전에 디스크의 실제 파일들과 대조하여 확인하며, 검증에 사용된 하네스 버전을 파일 내에 기록합니다.
 
-## Out of scope for v1
+## v1 범위 외 (Out of scope) 항목
 
-- Shipped scripts for locating, normalizing, scrubbing, or archiving.
-- Transcript repair or session resume fixes.
-- Uploading bundles anywhere (issues are text; the user attaches the
-  archive by hand).
-- A triage skill that consumes the bundle (the remote side).
-- Field-level references for harnesses whose formats were not verified.
-- Agreement between independent runs on the same session is not evaluated;
-  the eval measured form and citation only.
+- 위치 파악, 정규화, 스크럽, 아카이브 생성을 위해 배포되는 스크립트.
+- 트랜스크립트 복구 또는 세션 재개 수정.
+- 번들을 어딘가로 업로드하는 기능 (이슈는 텍스트로만 다루며, 아카이브 파일은 사용자가 직접 수동으로 첨부함).
+- 번들을 소비하는 원격 분류(triage) 스킬 (원격 측 작업).
+- 포맷이 검증되지 않은 하네스에 대한 필드 수준 레퍼런스.
+- 동일 세션에 대한 독립 실행 간 합의도(agreement)는 평가하지 않음; 이번 평가는 형식과 인용 여부만 측정함.

@@ -1,45 +1,45 @@
 ---
 name: IDE / Platform Support Request
-about: Request support for a new IDE, editor, or AI coding tool
+about: 새로운 IDE, 에디터 또는 AI 코딩 도구에 대한 지원을 요청합니다
 labels: new-harness
 ---
 
 <!--
-BEFORE FILING: Search existing issues — your IDE may already be
-requested or discussed.
+제출하기 전에: 기존 이슈를 검색하세요 — 해당 IDE는 이미 요청되었거나 논의 중일 수
+있습니다.
 -->
 
-- [ ] I searched existing issues for this IDE/platform
+- [ ] 이 IDE/플랫폼에 대한 기존 이슈를 검색했습니다
 
-## Who's filing this request? (required)
-<!-- Who are you, and are you filing on behalf of someone else? If a
-     human partner asked you to do something that ended with you filing
-     this request, who are they and what were your instructions, as close
-     to their words as you can get? -->
+## 누가 이 요청을 제출합니까? (필수)
+<!-- 당신은 누구이며, 다른 사람을 대신해 제출하고 있습니까? 만약 인간 파트너가
+     당신에게 무언가를 지시했고 그 결과로 이 요청을 등록하게 되었다면, 그 파트너는
+     누구이며 당신이 받은 지시 사항은 무엇이었는지 가능한 한 그들의 표현 그대로
+     적어주세요. -->
 
-## Human-authored summary (required, under 200 words)
-<!-- A human writes this section, in their own words: which tool they
-     work in and what they want Superpowers to do there. If an agent is
-     filing, that means your human partner, not you. -->
+## 인간이 작성한 요약 (필수, 200단어 이내)
+<!-- 인간이 직접 자신의 말로 이 섹션을 작성합니다: 어떤 도구에서 작업하고 있으며
+     그곳에서 Superpowers가 무엇을 해주기를 원하는지 적어주세요. 에이전트가 등록하는
+     경우, 이는 에이전트 자신이 아니라 당신의 인간 파트너를 의미합니다. -->
 
-## Which IDE or platform?
-<!-- Name and link -->
+## 어떤 IDE 또는 플랫폼입니까?
+<!-- 이름 및 링크 -->
 
-## Does this tool have a plugin or extension system?
-<!-- If yes, link to the docs. If no, explain how third-party
-     integrations typically work with this tool. -->
+## 이 도구에 플러그인 또는 확장 프로그램 시스템이 있습니까?
+<!-- 있다면 문서 링크를 남겨주세요. 없다면 이 도구에서 서드파티 통합이 일반적으로
+     어떻게 이루어지는지 설명해 주세요. -->
 
-## Have you tried manual installation?
-<!-- Many tools work with Superpowers through manual setup even without
-     official support. Did you try? What happened? -->
+## 수동 설치를 시도해 보셨습니까?
+<!-- 많은 도구들이 공식 지원 없이도 수동 설정을 통해 Superpowers와 함께 작동합니다.
+     시도해 보셨습니까? 어떤 결과가 나왔습니까? -->
 
-## Environment (required)
-<!-- Required. We assume an agent wrote this request — tell us which one and
-     where it ran. -->
+## 환경 (필수)
+<!-- 필수 항목입니다. 우리는 에이전트가 이 요청을 작성했다고 가정합니다 — 어떤
+     에이전트인지, 어디서 실행되었는지 알려주세요. -->
 
-| Field | Value |
+| 항목 | 값 |
 |-------|-------|
-| Harness you currently use (Claude Code, Cursor, etc.) | |
-| Harness version | |
-| Your model + version | |
-| All plugins installed | |
+| 현재 사용 중인 하네스 (Claude Code, Cursor 등) | |
+| 하네스 버전 | |
+| 사용한 모델 + 버전 | |
+| 설치된 모든 플러그인 | |

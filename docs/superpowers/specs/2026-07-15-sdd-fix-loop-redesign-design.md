@@ -1,196 +1,115 @@
-# SDD Fix-Loop Redesign — Design Spec
+# SDD 수정 루프(Fix-Loop) 재설계 — 설계 사양서
 
-**Status:** Approved design (brainstormed with Jesse 2026-07-15); implementation
-plan to follow.
-**Objective:** make the subagent-driven-development skill's review-fix loop
-convergent and autonomous, and make the document readable, without rewriting
-its eval-tuned language.
-**Hard invariant:** existing eval-tuned sentences move; they do not get
-reworded. New machinery ships with drill evidence.
+**상태:** 설계 승인됨 (2026-07-15 Jesse와 브레인스토밍 완료); 구현 계획은 후속 작성 예정.
+**목표:** 평가(eval)를 통해 튜닝된 기존 문구를 다시 쓰지 않고도, `subagent-driven-development` 스킬의 리뷰-수정 루프가 수렴적이고 자율적으로 작동하도록 만들고 문서의 가독성을 높입니다.
+**절대 불변 조건(Hard invariant):** 평가를 통해 튜닝된 기존 문장들은 위치만 이동할 뿐, 문구를 고쳐 쓰지 않습니다. 새로운 메커니즘은 훈련(drill) 검증 증거와 함께 출시됩니다.
 
-## Problems
+## 문제점
 
-Four, all observed in real sessions:
+실제 세션에서 관찰된 네 가지 문제입니다:
 
-1. **Pathological review loops.** The loop is literally "Repeat until
-   approved" — no round cap. Each re-review is a fresh full review of the
-   whole diff, so a nondeterministic frontier reviewer surfaces new findings
-   every round instead of verifying fixes. Result: implement, review, fix,
-   review, review, fix, review, fix — with no circuit breaker. The
-   strict-cost spec (2026-06-10) independently measured review-loop count as
-   the biggest run-to-run cost variance.
-2. **Contradictory fix policy.** The process diagram and "Constructing
-   Reviewer Prompts" dispatch dedicated fix subagents; Red Flags says
-   "Implementer (same subagent) fixes them"; implementer-prompt.md's "After
-   Review Findings" section assumes the implementer will be re-engaged. Three
-   answers to "who fixes?" in one skill.
-3. **Accreted structure.** Thirteen top-level sections; guidance for one
-   activity is scattered across four of them. "Constructing Reviewer Prompts"
-   is a grab-bag holding reviewer guidance, fix policy, final-review policy,
-   and plan-conflict adjudication.
-4. **Red Flags format.** Seven sibling skills use the `| Excuse | Reality |`
-   rationalization table; SDD carries a 17-bullet "Never" list plus three
-   "If X" mini-blocks.
+1. **병적인 리뷰 루프.** 루프가 말 그대로 "승인될 때까지 반복(Repeat until approved)"으로 되어 있어 라운드 상한선(cap)이 없습니다. 매 재리뷰가 전체 diff에 대한 새로운 전체 리뷰로 진행되므로, 비결정론적인 프론티어 리뷰어가 수정 사항을 검증하는 대신 매 라운드마다 새로운 지적 사항을 끄집어냅니다. 그 결과 서킷 브레이커(circuit breaker) 없이 구현, 리뷰, 수정, 리뷰, 리뷰, 수정, 리뷰, 수정이 끝없이 이어집니다. 비용 최적화(strict-cost) 사양서(2026-06-10)에서도 리뷰 루프 횟수를 실행 간 비용 편차의 가장 큰 원인으로 독립 측정한 바 있습니다.
+2. **모순되는 수정 정책.** 프로세스 다이어그램과 "Constructing Reviewer Prompts" 섹션은 전용 수정 서브에이전트(fix subagents)를 디스패치하라고 지시하는 반면, Red Flags는 "구현자(동일한 서브에이전트)가 수정한다"고 말하며, `implementer-prompt.md`의 "After Review Findings" 섹션은 구현자가 다시 투입될 것이라고 가정합니다. 하나의 스킬 안에 "누가 수정하는가?"에 대한 세 가지 다른 답이 공존하고 있습니다.
+3. **누더기처럼 덧붙여진 구조.** 13개의 최상위 섹션이 존재하며, 하나의 활동에 대한 가이드라인이 네 개의 섹션에 흩어져 있습니다. "Constructing Reviewer Prompts"는 리뷰어 가이드라인, 수정 정책, 최종 리뷰 정책, 계획 충돌 판정 규칙이 뒤섞인 잡동사니가 되었습니다.
+4. **Red Flags 포맷.** 7개의 형제 스킬들은 `| Excuse | Reality |`(변명 대 현실) 합리화 표를 사용하는 반면, SDD는 17개의 불릿으로 된 "Never" 목록과 세 개의 "If X" 미니 블록을 가지고 있습니다.
 
-## Design Decisions
+## 설계 결정 사항
 
-| # | Decision | Rationale |
+| # | 결정 사항 | 근거 |
 |---|----------|-----------|
-| 1 | The original implementer fixes its own review findings — resume it in place. | It already holds the task context; ownership beats a drive-by patcher. Fresh "fix subagents" rebuild context per finding and lack the task frame. |
-| 2 | Re-reviews are scoped to the findings. | Fresh full reviews each round are the churn engine. Scoped re-reviews make the loop structurally convergent; the final whole-branch review remains the broad safety net. |
-| 3 | Circuit breaker at five fix rounds: three resumes, then two fresh dispatches on a more capable model. | Jesse's call. A loop that survives three resumes usually means the implementer cannot see its own problem — the fresh capable dispatch de-anchors and capability-bumps in one move. |
-| 4 | At trip, the controller adjudicates and routes. No new human checkpoint — structural failures reach the existing BLOCKED stop. | SDD's point is autonomous execution. The controller holds the plan and cross-task context the reviewer lacks; the existing text already sanctions it ("adjudicate it in the review loop") without ever specifying the mechanism. |
-| 5 | Reorganize SKILL.md by lifecycle, preserving tuned sentences. | Fixes "hard to follow" at the root. Content moves to its point of use, matching the house direction (recent commits fold recap sections into points of use). |
-| 6 | Convert Red Flags to a `| Excuse | Reality |` rationalization table; relocate hard rules to their points of use. | Matches the other seven skills. Excuses get rebuttals; rules get enforced where the reader acts. |
+| 1 | 원래의 구현자가 자신의 리뷰 지적 사항을 직접 수정함 — 제자리에서 재개(resume)시킴. | 이미 태스크 컨텍스트를 보유하고 있으므로, 일회성 패처(drive-by patcher)보다 오너십을 가진 쪽이 낫습니다. 새로운 "수정 서브에이전트"는 지적 사항마다 컨텍스트를 처음부터 다시 구축해야 하며 전체 태스크 프레임이 결여되어 있습니다. |
+| 2 | 재리뷰의 범위를 지적 사항(findings)으로 제한함. | 매 라운드 새로운 전체 리뷰를 수행하는 것이 헛돌기(churn)의 원동력입니다. 범위가 제한된 재리뷰는 루프를 구조적으로 수렴하게 만들며, 광범위한 안전망 역할은 최종 전체 브랜치 리뷰가 그대로 담당합니다. |
+| 3 | 수정 라운드 5회에서 작동하는 서킷 브레이커: 3회 재개(resume) 후, 더 뛰어난 모델로 2회 새로운 디스패치 수행. | Jesse의 결정 사항. 3회의 재개 후에도 루프가 끝나지 않는다는 것은 대개 구현자가 자신의 문제를 스스로 보지 못한다는 뜻입니다 — 더 뛰어난 모델로의 새로운 디스패치는 한 번의 이동으로 기존 고착(anchoring)을 끊어내고 역량을 끌어올립니다. |
+| 4 | 브레이커 작동(trip) 시 컨트롤러가 판정하고 라우팅함. 새로운 인간 체크포인트는 추가하지 않으며 — 구조적 실패는 기존의 BLOCKED 중단으로 연결됨. | SDD의 핵심은 자율적 실행입니다. 컨트롤러는 리뷰어에게 없는 계획과 태스크 간 컨텍스트를 보유하고 있으며, 기존 텍스트도 메커니즘만 명시하지 않았을 뿐 이미 이를 허용하고 있습니다("리뷰 루프에서 판정하라"). |
+| 5 | 튜닝된 문장을 보존하면서 라이프사이클 순서로 `SKILL.md`를 재구성함. | "따라가기 어렵다"는 문제를 근본적으로 해결합니다. 콘텐츠를 실제 사용되는 지점(point of use)으로 이동시켜 저장소 전반의 방향성(최근 커밋들은 요약 섹션을 사용 지점으로 통합하고 있음)과 일치시킵니다. |
+| 6 | Red Flags를 `| Excuse | Reality |` 합리화 표로 변환하고, 절대 규칙(hard rules)들은 각 사용 지점으로 재배치함. | 다른 7개 스킬과 포맷을 통일합니다. 변명에는 반박을 제시하고, 규칙은 읽는 이가 실제로 행동하는 지점에서 강제합니다. |
 
-## The Fix Loop
+## 수정 루프 (The Fix Loop)
 
-Trigger: a task review returns spec ❌ or any Critical/Important finding.
+트리거: 태스크 리뷰가 사양 미달(spec ❌) 또는 Critical/Important 지적 사항을 반환할 때.
 
-**Rounds 1–3 — resume the original implementer.** Send the findings verbatim
-(Critical/Important plus spec gaps). The implementer fixes, re-runs the
-covering tests, appends the fix report to its existing report file, and
-returns the short contract. On a harness without agent resume, a "resume" is
-a fresh dispatch carrying the brief, the report file, and the findings — the
-report file is the persistent memory either way.
+**라운드 1–3 — 원래 구현자 재개(resume).** 지적 사항(Critical/Important 및 사양 누락)을 원문 그대로 전달합니다. 구현자는 코드를 수정하고, 관련 테스트를 다시 실행하며, 기존 리포트 파일에 수정 리포트를 덧붙인 뒤 짧은 계약(contract) 응답을 반환합니다. 에이전트 재개 기능이 없는 하네스에서의 "재개"는 브리프, 리포트 파일, 지적 사항을 담아 새로 디스패치하는 것으로 대체합니다 — 어느 쪽이든 리포트 파일이 영구 메모리 역할을 합니다.
 
-**Rounds 4–5 — fresh implementer, more capable model.** Full task context:
-brief, report file, open findings, and the framing "a prior implementer
-attempted this N times; you own the task now."
+**라운드 4–5 — 새로운 구현자, 더 뛰어난 모델.** 전체 태스크 컨텍스트를 전달합니다: 브리프, 리포트 파일, 미해결 지적 사항, 그리고 "이전 구현자가 이를 N번 시도했으나 해결하지 못했습니다. 이제 당신이 이 태스크의 오너십을 가집니다"라는 프레이밍을 함께 제공합니다.
 
-**Every round's re-review is scoped.** The re-reviewer receives the brief,
-the updated report, the original findings list, and a fix-scoped diff package
-(`review-package FIX_BASE HEAD`, where FIX_BASE is the head the reviewer
-last reviewed; the script already takes arbitrary ranges).
-It verdicts each finding addressed / not addressed and flags new breakage in
-the fix diff only. Novel findings on code the fix did not touch are reported
-as non-blocking; the controller ledgers them for the final review.
+**모든 라운드의 재리뷰는 범위가 제한(scoped)됩니다.** 재리뷰어는 브리프, 업데이트된 리포트, 원래의 지적 사항 목록, 그리고 수정 범위로 제한된 diff 패키지(`review-package FIX_BASE HEAD`, 여기서 `FIX_BASE`는 리뷰어가 마지막으로 리뷰했던 head이며 스크립트는 이미 임의의 범위를 지원함)를 전달받습니다. 재리뷰어는 각 지적 사항에 대해 해결됨(addressed) / 해결되지 않음(not addressed) 판정을 내리고, 수정 diff 내에서 새로 발생한 문제만 플래그를 지정합니다. 수정 작업이 건드리지 않은 코드에 대한 새로운 지적 사항은 비차단(non-blocking) 관찰 사항으로 보고되며, 컨트롤러는 이를 최종 리뷰를 위해 원장에 기록합니다.
 
-**Fix-report completeness gate (existing rule, kept):** before dispatching a
-re-review, confirm the fix report names the covering tests, the command run,
-and the output.
+**수정 리포트 완전성 게이트 (기존 규칙 유지):** 재리뷰를 디스패치하기 전에 수정 리포트에 관련 테스트 이름, 실행한 명령어, 그리고 출력 결과가 명시되어 있는지 확인합니다.
 
-**No early exit.** The controller never adjudicates before the cap — an early
-exit reopens the "pre-judge findings to spare yourself a review loop" hole
-the current content deliberately closed. One exception, unchanged from
-today: a finding that conflicts with what the plan's text mandates goes to
-the human immediately (plan authority, not loop churn).
+**조기 종료 없음 (No early exit).** 컨트롤러는 상한선(cap)에 도달하기 전에 미리 판정을 내리지 않습니다 — 조기 종료를 허용하면 현재 콘텐츠가 의도적으로 막아둔 "리뷰 루프를 피하기 위해 지적 사항을 임의로 사전 판단하는" 구멍이 다시 열리게 됩니다. 오늘날과 변함없는 단 하나의 예외: 계획 텍스트가 지시하는 내용과 충돌하는 지적 사항은 즉시 인간에게 전달합니다(루프 헛돌기가 아닌 계획의 권위 문제임).
 
-**Minor findings** never enter the loop: ledger them as they arrive (existing
-rule, kept).
+**Minor 지적 사항**은 절대 루프에 진입하지 않습니다: 도착하는 즉시 원장에 기록합니다(기존 규칙 유지).
 
-### Adjudication at Trip
+### 브레이커 작동 시 판정 (Adjudication at Trip)
 
-After round five fails, the controller stops dispatching and judges each open
-finding against the brief, the plan, and cross-task context:
+5라운드까지 실패하면 컨트롤러는 디스패치를 멈추고 브리프, 계획, 태스크 간 컨텍스트를 바탕으로 각각의 미해결 지적 사항을 판정합니다:
 
-- **Contested or wrong** → ledger with a one-line adjudication ("controller:
-  reviewer wrong because X"), continue. The final review sees both sides.
-- **Real, not load-bearing** → ledger as known-open, continue. Later
-  dispatches touching that area carry a pointer to the entry.
-- **Real and load-bearing** (later tasks build on it, or it reveals a plan
-  defect) → the existing BLOCKED stop. Park-and-continue defers a structural
-  failure to the most expensive point and lets dependents build on it, so
-  structural failures stop the run — through the stop condition that already
-  exists, not a new checkpoint.
+- **이견이 있거나 잘못된 지적 (Contested or wrong)** → 한 줄짜리 판정 사유("controller: reviewer wrong because X")와 함께 원장에 기록하고 계속 진행합니다. 최종 리뷰에서 양측의 의견을 모두 확인하게 됩니다.
+- **실제 문제이지만 핵심 구조에 영향을 주지 않음 (Real, not load-bearing)** → 알려진 미해결 항목(known-open)으로 원장에 기록하고 계속 진행합니다. 이후 해당 영역을 건드리는 디스패치에는 이 항목에 대한 포인터가 함께 전달됩니다.
+- **실제 문제이며 핵심 구조에 영향을 줌 (Real and load-bearing)** (이후 태스크들이 이 위에 구축되거나, 계획 자체의 결함을 드러내는 경우) → 기존의 BLOCKED 중단으로 이동합니다. 문제를 보류하고 계속 진행(park-and-continue)하면 구조적 실패를 가장 비용이 많이 드는 시점으로 미루고 후속 태스크들이 결함 위에 쌓아 올리게 되므로, 구조적 실패는 새로운 체크포인트가 아닌 이미 존재하는 중단 조건을 통해 실행을 멈춥니다.
 
-Every adjudication is a ledger entry. Silent discards stay forbidden.
+모든 판정 결과는 원장 항목으로 기록됩니다. 조용히 무시하고 넘어가는 것(silent discards)은 계속해서 금지됩니다.
 
-## Document Restructure
+## 문서 구조 개편
 
-New skeleton, in execution order:
+실행 순서에 따른 새로운 골격:
 
-1. Intro — why subagents, core principle, narration, continuous execution
-2. When to Use — unchanged, including the decision graph
-3. The Process — diagram updated for the new loop
-4. Setup — worktree, ledger check/resume, pre-flight plan review, todos
-5. Model Selection — stays one cross-cutting section; every dispatch
-   consults it, so folding it into points of use would repeat it five times
-6. The Task Loop — five numbered steps:
-   1. Dispatch the implementer (task-brief script, five-part dispatch
-      composition, model line required)
-   2. Handle the report (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED)
-   3. Review the task (review-package script, reviewer dispatch composition,
-      constraints lens, no pre-judging, ⚠️ handling)
-   4. Fix loop (the machinery above)
-   5. Complete the task (ledger append, todo update)
-7. Final Review — package, model pin, one fix wave, one scoped re-review,
-   adjudication
-8. Finish — finishing-a-development-branch
-9. Common Rationalizations — the table
-10. Example Workflow — updated to show a resume-based fix round and the
-    breaker not tripping
+1. **Intro** — 서브에이전트를 쓰는 이유, 핵심 원칙, 내레이션, 연속 실행
+2. **When to Use** — 결정 그래프를 포함하여 변경 없음
+3. **The Process** — 새로운 루프를 반영하여 다이어그램 업데이트
+4. **Setup** — 워크트리, 원장 확인/재개, 사전 계획 검토, 할 일(todos) 목록
+5. **Model Selection** — 하나의 범분야(cross-cutting) 섹션으로 유지; 모든 디스패치가 이를 참조하므로 사용 지점마다 통합하면 다섯 번 반복되기 때문임
+6. **The Task Loop** — 번호가 매겨진 5개 단계:
+   1. 구현자 디스패치 (`task-brief` 스크립트, 5부 구성 디스패치 작성, 모델 라인 필수)
+   2. 리포트 처리 (`DONE` / `DONE_WITH_CONCERNS` / `NEEDS_CONTEXT` / `BLOCKED`)
+   3. 태스크 리뷰 (`review-package` 스크립트, 리뷰어 디스패치 작성, 제약 조건 렌즈, 사전 판단 금지, ⚠️ 처리)
+   4. 수정 루프 (위에서 설명한 메커니즘)
+   5. 태스크 완료 (원장 추가, 할 일 목록 업데이트)
+7. **Final Review** — 패키지, 모델 고정(pin), 1회의 수정 웨이브, 1회의 범위 제한 재리뷰, 판정
+8. **Finish** — `finishing-a-development-branch`
+9. **Common Rationalizations** — 합리화 표
+10. **Example Workflow** — 재개 기반 수정 라운드와 브레이커가 작동하지 않는 정상 흐름을 보여주도록 업데이트
 
-"Constructing Reviewer Prompts," "File Handoffs," and "Durable Progress"
-dissolve into the steps where each rule applies. Every eval-tuned sentence
-lands in exactly one new location; a move map in the implementation plan
-tracks source → destination so review can verify nothing was dropped or
-reworded.
+"Constructing Reviewer Prompts", "File Handoffs", "Durable Progress" 섹션은 각 규칙이 실제로 적용되는 단계 속으로 흡수됩니다. 평가를 통해 튜닝된 모든 문장은 정확히 하나의 새로운 위치로 이동하며, 구현 계획에 포함된 이동 맵(move map)이 원본 → 목적지를 추적하여 누락되거나 문구가 바뀐 것이 없음을 리뷰에서 검증할 수 있게 합니다.
 
-## Rationalization Table
+## 합리화 표 (Rationalization Table)
 
-Excuse-shaped Never items convert to rows; new rows cover the loop
-pathology. Draft rows (final wording at implementation):
+변명 형태의 Never 항목들을 표의 행으로 변환하고, 루프 병폐를 다루는 새로운 행을 추가합니다. 초안 행(최종 문구는 구현 시 확정):
 
-| Excuse | Reality |
+| 변명 (Excuse) | 현실 (Reality) |
 |--------|---------|
-| "Close enough on spec compliance" | Reviewer found gaps = not done. |
-| "I'll fix it myself, dispatching is overhead" | Controller fixes pollute your context and skip review. Resume the implementer. |
-| "One more round will converge" | Past the cap, rounds don't converge. Adjudicate. |
-| "The reviewer will just find something new anyway" | Scoped re-reviews check fixes, not taste. New findings on untouched code go to the ledger, not the loop. |
-| "This finding is obviously wrong, I'll drop it" | You adjudicate only at the cap, and every adjudication is a ledger entry. Silent discards are forbidden. |
-| "The fix was small, skip the re-review" | Unreviewed fixes are how regressions land. |
+| "사양 준수는 이 정도면 충분히 가깝다 (Close enough on spec compliance)" | 리뷰어가 누락을 발견했다면 = 완료된 것이 아닙니다. |
+| "디스패치는 오버헤드니 내가 직접 고치겠다 (I'll fix it myself, dispatching is overhead)" | 컨트롤러가 직접 수정하면 컨텍스트가 오염되고 리뷰를 건너뛰게 됩니다. 구현자를 재개(resume)시키세요. |
+| "한 라운드만 더 돌리면 수렴할 것이다 (One more round will converge)" | 상한선(cap)을 넘기면 라운드는 수렴하지 않습니다. 판정(adjudicate)을 내리세요. |
+| "어차피 리뷰어가 또 새로운 걸 찾아낼 것이다 (The reviewer will just find something new anyway)" | 범위가 제한된 재리뷰는 취향이 아니라 수정 사항을 검사합니다. 건드리지 않은 코드에 대한 새로운 지적은 루프가 아니라 원장으로 갑니다. |
+| "이 지적은 명백히 틀렸으니 버리겠다 (This finding is obviously wrong, I'll drop it)" | 판정은 오직 상한선에 도달했을 때만 내릴 수 있으며, 모든 판정은 원장에 기록해야 합니다. 조용히 버리는 것은 금지됩니다. |
+| "수정이 작으니 재리뷰는 건너뛰자 (The fix was small, skip the re-review)" | 리뷰하지 않은 수정이 바로 회귀(regression) 버그가 유입되는 통로입니다. |
 
-Hard rules that are not excuses (never parallel implementers, never dispatch
-a reviewer without a diff file, model line required, never re-dispatch
-ledger-complete tasks) move to their points of use.
+변명이 아닌 절대 규칙들(구현자 병렬 실행 금지, diff 파일 없이 리뷰어 디스패치 금지, 모델 라인 필수, 원장에 완료로 기록된 태스크 재디스패치 금지)은 각 사용 지점으로 이동합니다.
 
-## Prompt Templates
+## 프롬프트 템플릿
 
-- **implementer-prompt.md** — "After Review Findings" rewritten for resume
-  semantics: you will be resumed with findings; fix, re-run covering tests,
-  append to your report file, return the short contract.
-- **task-reviewer-prompt.md** — initial review only; the trailing re-review
-  sentence moves out.
-- **re-review-prompt.md (new)** — the scoped re-review contract: inputs are
-  brief, updated report, original findings, fix-scoped diff package; output
-  is a per-finding verdict (addressed / not addressed), new breakage in the
-  fix diff, and non-blocking observations outside it. A separate template
-  because it is a different contract — overloading the full-review template
-  produced the current ambiguity.
-- **Takeover dispatch (rounds 4–5)** — composed from implementer-prompt.md
-  plus SKILL.md guidance (brief, report path, open findings, takeover
-  framing); no new template file.
+- **`implementer-prompt.md`** — 재개(resume) 시맨틱에 맞춰 "After Review Findings" 섹션 재작성: 지적 사항과 함께 재개될 것이며, 코드를 수정하고, 관련 테스트를 재실행하고, 리포트 파일에 덧붙인 뒤 짧은 계약 응답을 반환하라.
+- **`task-reviewer-prompt.md`** — 초기 리뷰 전용; 끝에 있던 재리뷰 관련 문장은 밖으로 이동함.
+- **`re-review-prompt.md` (신규)** — 범위가 제한된 재리뷰 계약: 입력은 브리프, 업데이트된 리포트, 원래 지적 사항, 수정 범위 diff 패키지이며, 출력은 지적 사항별 판정(해결됨 / 해결되지 않음), 수정 diff 내의 새로운 문제, 그리고 diff 외부의 비차단 관찰 사항입니다. 다른 계약이므로 별도의 템플릿으로 분리합니다 — 전체 리뷰 템플릿에 두 역할을 과적(overloading)했던 것이 현재의 모호함을 낳았습니다.
+- **인수(Takeover) 디스패치 (라운드 4–5)** — 별도의 새 템플릿 파일 없이 `implementer-prompt.md`와 `SKILL.md` 가이드라인(브리프, 리포트 경로, 미해결 지적 사항, 인수 프레이밍)을 조합하여 작성함.
 
-## Final Review Loop
+## 최종 리뷰 루프 (Final Review Loop)
 
-Unchanged: merge-base package, most capable model, ONE fixer with the
-complete findings list. New: exactly one scoped re-review of the fix wave,
-then controller adjudication. Residual load-bearing findings surface at
-finishing-a-development-branch, where the human already is. The end of the
-branch gets a bounded loop too.
+변경 없음: merge-base 패키지, 가장 뛰어난 모델, 전체 지적 사항 목록을 전달받는 단 한 명의 수정자(fixer). 신규 적용: 수정 웨이브에 대해 정확히 단 한 번의 범위 제한 재리뷰를 수행한 후 컨트롤러가 판정합니다. 남아 있는 핵심 구조 관련(load-bearing) 지적 사항들은 인간이 이미 대기하고 있는 `finishing-a-development-branch` 단계에서 표면화됩니다. 브랜치의 마지막 단계 역시 상한선이 있는 루프를 갖게 됩니다.
 
-## Evals
+## 평가 (Evals)
 
-Three new drill scenarios in `evals/`:
+`evals/`에 추가할 세 가지 새로운 훈련(drill) 시나리오:
 
-1. **Resume, don't re-dispatch:** a task review returns findings; the
-   controller must resume the same implementer rather than dispatch a fix
-   subagent.
-2. **Breaker trips:** a seeded never-satisfied reviewer; the controller must
-   stop dispatching after the fifth round fails, adjudicate, ledger, and
-   continue — not loop.
-3. **Structural finding stops:** a load-bearing finding (later tasks depend
-   on it); the controller must stop via BLOCKED rather than park.
+1. **재디스패치 대신 재개 (Resume, don't re-dispatch):** 태스크 리뷰가 지적 사항을 반환했을 때, 컨트롤러는 새로운 수정 서브에이전트를 디스패치하는 대신 동일한 구현자를 재개해야 합니다.
+2. **브레이커 작동 (Breaker trips):** 절대 만족하지 않도록 시드된 리뷰어 환경에서, 컨트롤러는 5라운드 실패 후 디스패치를 멈추고 판정을 내린 뒤 원장에 기록하고 계속 진행해야 하며 — 무한 루프에 빠져서는 안 됩니다.
+3. **구조적 지적 시 중단 (Structural finding stops):** 핵심 구조에 영향을 주는 지적 사항(이후 태스크들이 이에 의존함)이 발생했을 때, 컨트롤러는 보류(park)하는 대신 BLOCKED를 통해 실행을 멈춰야 합니다.
 
-Plus before/after runs of the existing SDD scenarios to catch regressions
-from the reorganization.
+이에 더해 구조 개편으로 인한 회귀를 잡아내기 위해 기존 SDD 시나리오들의 변경 전/후 실행을 함께 수행합니다.
 
-## Non-Goals
+## 비목표 (Non-Goals)
 
-- Ledger session-scoping — PR #1943 owns it. This work touches the same
-  sections, so the implementation plan notes the collision risk.
-- Script changes — task-brief and review-package already do what the new
-  loop needs.
-- Changes to executing-plans or requesting-code-review beyond the final-
-  review pointer continuing to resolve.
+- 원장의 세션/계획 범위 지정 — PR #1943이 담당합니다. 이번 작업이 동일한 섹션들을 건드리므로 구현 계획에 충돌 위험을 명시합니다.
+- 스크립트 변경 — `task-brief`와 `review-package`는 이미 새로운 루프가 필요로 하는 기능을 모두 갖추고 있습니다.
+- 최종 리뷰 포인터가 계속 유효하게 연결되도록 유지하는 것 외에 `executing-plans`나 `requesting-code-review`에 대한 변경은 하지 않습니다.

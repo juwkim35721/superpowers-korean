@@ -1,70 +1,71 @@
 ---
 name: Bug Report
-about: Something isn't working as expected
+about: 예상대로 작동하지 않는 문제가 있습니다
 labels: bug
 ---
 
 <!--
-BEFORE FILING: Search open AND closed issues. The Windows SessionStart
-hook alone has been reported 29 times. If your issue already exists,
-add a comment or reaction to the existing one instead.
+제출하기 전에: 열려 있는(open) 이슈와 닫힌(closed) 이슈를 모두 검색하세요.
+Windows SessionStart 훅 문제만 해도 29번이나 중복 제보되었습니다. 동일한 이슈가
+이미 존재한다면 새 이슈를 여는 대신 기존 이슈에 코멘트나 반응을 남겨주세요.
 -->
 
-- [ ] I searched existing issues and this is not a duplicate
+- [ ] 기존 이슈를 검색했으며 이 이슈는 중복이 아닙니다
 
-## Who's filing this report? (required)
-<!-- Who are you, and are you filing on behalf of someone else? If a
-     human partner asked you to do something that ended with you filing
-     this issue, who are they and what were your instructions, as close
-     to their words as you can get? -->
+## 누가 이 리포트를 제출합니까? (필수)
+<!-- 당신은 누구이며, 다른 사람을 대신해 제출하고 있습니까? 만약 인간 파트너가
+     당신에게 무언가를 지시했고 그 결과로 이 이슈를 등록하게 되었다면, 그 파트너는
+     누구이며 당신이 받은 지시 사항은 무엇이었는지 가능한 한 그들의 표현 그대로
+     적어주세요. -->
 
-## Human-authored summary (required, under 200 words)
-<!-- A human writes this section, in their own words: what went wrong
-     and what should have happened instead. If an agent is filing, that
-     means your human partner, not you. -->
+## 인간이 작성한 요약 (필수, 200단어 이내)
+<!-- 인간이 직접 자신의 말로 이 섹션을 작성합니다: 무엇이 잘못되었고 대신 어떻게
+     작동했어야 하는지 적어주세요. 에이전트가 등록하는 경우, 이는 에이전트 자신이
+     아니라 당신의 인간 파트너를 의미합니다. -->
 
-## Environment (required)
-<!-- Required. We assume an agent filed this report — tell us which one and
-     where it ran. We weigh reports by what produced them. -->
+## 환경 (필수)
+<!-- 필수 항목입니다. 우리는 에이전트가 이 리포트를 작성했다고 가정합니다 — 어떤
+     에이전트인지, 어디서 실행되었는지 알려주세요. 우리는 리포트가 생성된 배경을
+     고려하여 비중을 둡니다. -->
 
-| Field | Value |
+| 항목 | 값 |
 |-------|-------|
-| Superpowers version | |
-| Harness (Claude Code, Cursor, etc.) | |
-| Harness version | |
-| Your model + version | |
-| All plugins installed | |
-| OS + shell | |
+| Superpowers 버전 | |
+| 하네스 (Claude Code, Cursor 등) | |
+| 하네스 버전 | |
+| 사용한 모델 + 버전 | |
+| 설치된 모든 플러그인 | |
+| OS + 셸 | |
 
-## Is this a Superpowers issue or a platform issue?
-<!-- Superpowers is a plugin. Some reported "bugs" are actually issues
-     in the underlying platform or model. If you're not sure, try
-     reproducing without Superpowers installed.
+## 이것이 Superpowers의 문제입니까, 아니면 플랫폼의 문제입니까?
+<!-- Superpowers는 플러그인입니다. 제보되는 일부 "버그"는 실제로는 기반 플랫폼이나
+     모델의 문제입니다. 확실하지 않다면 Superpowers를 설치하지 않은 상태에서 재현해
+     보세요.
 
-     If the problem persists without Superpowers, file the issue with
-     your platform instead. -->
+     Superpowers 없이도 문제가 계속된다면 사용 중인 플랫폼 측에 이슈를 제보하세요. -->
 
-- [ ] I confirmed this issue does not occur without Superpowers installed
+- [ ] Superpowers가 설치되지 않은 상태에서는 이 문제가 발생하지 않음을 확인했습니다
 
-How I verified that this issue does not reproduce without Superpowers:
-<!-- What you ran without Superpowers and what happened. "Not tried" is
-     an honest answer; a ticked box with nothing here is not. -->
+Superpowers 없이 이 문제가 재현되지 않음을 확인한 방법:
+<!-- Superpowers 없이 무엇을 실행했고 어떤 결과가 나왔는지 적으세요. "시도해 보지 않음
+     (Not tried)"은 정직한 답변이지만, 여기에 아무것도 적지 않은 채 체크박스만 표시하는
+     것은 허용되지 않습니다. -->
 
-## What happened?
-<!-- Be specific. "It doesn't work" is not a bug report. -->
+## 무슨 일이 발생했습니까?
+<!-- 구체적으로 작성하세요. "작동하지 않습니다"는 버그 리포트가 아닙니다. -->
 
-## Steps to reproduce
+## 재현 단계 (Steps to reproduce)
 1.
 2.
 3.
 
-## Expected behavior
-<!-- What should have happened? -->
+## 예상 동작 (Expected behavior)
+<!-- 원래 어떻게 작동했어야 합니까? -->
 
-## Actual behavior
-<!-- What happened instead? -->
+## 실제 동작 (Actual behavior)
+<!-- 대신 실제로 무슨 일이 일어났습니까? -->
 
-## Debug log or conversation transcript
-<!-- A debug log or conversation transcript showing the issue is the
-     single most helpful thing you can include. Without one, we're
-     guessing. Screenshots of error output are also useful. -->
+## 디버그 로그 또는 대화 트랜스크립트
+<!-- 문제를 보여주는 디버그 로그나 대화 트랜스크립트는 당신이 포함할 수 있는 가장
+     유용한 정보입니다. 이것이 없으면 우리는 추측할 수밖에 없습니다. 에러 출력의
+     스크린샷도 유용합니다. -->

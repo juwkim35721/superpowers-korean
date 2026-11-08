@@ -1,58 +1,58 @@
 ---
 name: Feature Request
-about: Propose a change or improvement to Superpowers
+about: Superpowers에 대한 변경 사항이나 개선을 제안합니다
 labels: enhancement
 ---
 
 <!--
-BEFORE FILING: Search open AND closed issues. Many features have been
-requested before — some were implemented differently, some are in
-progress, and some were intentionally declined.
+제출하기 전에: 열려 있는(open) 이슈와 닫힌(closed) 이슈를 모두 검색하세요. 많은
+기능들이 이전에 이미 요청된 바 있습니다 — 일부는 다른 방식으로 구현되었고, 일부는
+진행 중이며, 일부는 의도적으로 거절되었습니다.
 -->
 
-- [ ] I searched existing issues and this has not been proposed before
+- [ ] 기존 이슈를 검색했으며 이 내용은 이전에 제안된 적이 없습니다
 
-## Who's filing this request? (required)
-<!-- Who are you, and are you filing on behalf of someone else? If a
-     human partner asked you to do something that ended with you filing
-     this request, who are they and what were your instructions, as close
-     to their words as you can get? -->
+## 누가 이 요청을 제출합니까? (필수)
+<!-- 당신은 누구이며, 다른 사람을 대신해 제출하고 있습니까? 만약 인간 파트너가
+     당신에게 무언가를 지시했고 그 결과로 이 요청을 등록하게 되었다면, 그 파트너는
+     누구이며 당신이 받은 지시 사항은 무엇이었는지 가능한 한 그들의 표현 그대로
+     적어주세요. -->
 
-## Human-authored summary (required, under 200 words)
-<!-- A human writes this section, in their own words: what they were
-     trying to do and what they wished Superpowers did instead. If an
-     agent is filing, that means your human partner, not you. -->
+## 인간이 작성한 요약 (필수, 200단어 이내)
+<!-- 인간이 직접 자신의 말로 이 섹션을 작성합니다: 무엇을 하려고 했으며 Superpowers가
+     대신 어떻게 동작하기를 바랐는지 적어주세요. 에이전트가 등록하는 경우, 이는 에이전트
+     자신이 아니라 당신의 인간 파트너를 의미합니다. -->
 
-## What problem does this solve?
-<!-- Describe the problem from your own experience. What were you doing,
-     what went wrong or was missing, and why did it matter?
+## 이것이 어떤 문제를 해결합니까?
+<!-- 직접 겪은 경험을 바탕으로 문제를 설명하세요. 무엇을 하고 있었으며, 무엇이
+     잘못되었거나 부족했고, 그것이 왜 중요했습니까?
 
-     "It would be cool if..." is not a problem statement. -->
+     "~하면 멋질 것 같습니다(It would be cool if...)"는 문제 정의가 아닙니다. -->
 
-## Proposed solution
-<!-- What specifically do you want to happen? Be concrete. -->
+## 제안하는 해결책 (Proposed solution)
+<!-- 구체적으로 어떻게 동작하기를 원합니까? 명확하게 작성해 주세요. -->
 
-## What alternatives did you consider?
-<!-- What other approaches could solve the same problem? Why is your
-     proposal better? -->
+## 어떤 대안을 고려했습니까?
+<!-- 동일한 문제를 해결할 수 있는 다른 접근 방식에는 무엇이 있습니까? 당신의 제안이
+     더 나은 이유는 무엇입니까? -->
 
-## Is this appropriate for core Superpowers?
-<!-- Would this benefit someone working on a completely different kind
-     of project? If this is specific to your domain, workflow, or a
-     third-party tool, it may belong as its own plugin instead. -->
+## 이 내용이 Superpowers 코어에 적합합니까?
+<!-- 완전히 다른 종류의 프로젝트를 하는 사람에게도 이 기능이 유익할까요? 만약 특정
+     도메인, 워크플로우 또는 서드파티 도구에 국한된 것이라면 별도의 자체 플러그인으로
+     만드는 것이 적합할 수 있습니다. -->
 
-## Environment (required)
-<!-- Required. We assume an agent wrote this request — tell us which one and
-     where it ran. We weigh proposals reasoned from documentation differently
-     than ones grounded in a real session where the problem actually came up. -->
+## 환경 (필수)
+<!-- 필수 항목입니다. 우리는 에이전트가 이 요청을 작성했다고 가정합니다 — 어떤
+     에이전트인지, 어디서 실행되었는지 알려주세요. 우리는 문서를 바탕으로 추론해 낸
+     제안과 실제 세션에서 문제가 발생해 나온 제안을 다르게 평가합니다. -->
 
-| Field | Value |
+| 항목 | 값 |
 |-------|-------|
-| Superpowers version | |
-| Harness (Claude Code, Cursor, etc.) | |
-| Harness version | |
-| Your model + version | |
-| All plugins installed | |
+| Superpowers 버전 | |
+| 하네스 (Claude Code, Cursor 등) | |
+| 하네스 버전 | |
+| 사용한 모델 + 버전 | |
+| 설치된 모든 플러그인 | |
 
-## Context
-<!-- Optional: the workflow where you hit this, links, transcripts. -->
+## 추가 맥락 (Context)
+<!-- 선택 사항: 이 문제를 겪은 워크플로우, 링크, 트랜스크립트 등. -->

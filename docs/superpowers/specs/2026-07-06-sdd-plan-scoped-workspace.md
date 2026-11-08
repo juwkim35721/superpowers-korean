@@ -1,196 +1,100 @@
-# SDD plan-scoped workspace — design
+# SDD 계획 범위 워크스페이스(plan-scoped workspace) — 설계
 
-- **Date:** 2026-07-06
-- **Status:** approved direction (Jesse, 2026-07-06); this spec captures the investigation's recommended fix
-- **Problem owner:** subagent-driven-development skill (`skills/subagent-driven-development/`)
+- **날짜:** 2026-07-06
+- **상태:** 방향 승인됨 (Jesse, 2026-07-06); 이 사양서는 조사 결과 권장된 수정 방안을 담고 있음
+- **문제 담당 범위:** subagent-driven-development 스킬 (`skills/subagent-driven-development/`)
 
-## Problem
+## 문제점
 
-SDD's durable-progress workspace (`.superpowers/sdd/`, introduced v6.0.0/v6.0.3) has
-no plan identity and no end-of-life. Every artifact is keyed by bare task number
-(`progress.md`, `task-N-brief.md`, `task-N-report.md`), and SKILL.md instructs a
-starting controller to treat whatever ledger it finds as its own progress:
+SDD의 영구 진행 기록 워크스페이스(`.superpowers/sdd/`, v6.0.0/v6.0.3에서 도입됨)에는 계획 식별자(plan identity)도 없고 수명 종료(end-of-life) 처리도 없습니다. 모든 아티팩트는 단순 태스크 번호(`progress.md`, `task-N-brief.md`, `task-N-report.md`)로만 키가 지정되며, `SKILL.md`는 시작하는 컨트롤러에게 발견된 원장(ledger)이 무엇이든 자신의 진행 상황으로 취급하라고 지시합니다:
 
 > At skill start, check for a ledger:
 > `cat "$(git rev-parse --show-toplevel)/.superpowers/sdd/progress.md"`. Tasks listed there
 > as complete are DONE — do not re-dispatch them; resume at the first task
 > not marked complete.
 
-A fresh session executing a **follow-up plan** in the same worktree reads the
-previous plan's ledger as its own. A straight-line reading of the skill tells it
-to skip tasks. Nothing ever deletes the workspace, so the stale state persists
-indefinitely and accumulates.
+동일한 워크트리에서 **후속 계획(follow-up plan)**을 실행하는 새로운 세션은 이전 계획의 원장을 자신의 것으로 읽어들입니다. 스킬 지시문을 곧이곧대로 읽으면 태스크를 건너뛰라고 말하는 셈이 됩니다. 아무것도 워크스페이스를 삭제하지 않으므로 오래된(stale) 상태가 무기한 유지되고 누적됩니다.
 
-### Observed failures (serf repo, 2026-06-22 → 2026-07-05)
+### 관찰된 실패 사례 (serf 저장소, 2026-06-22 → 2026-07-05)
 
-- **Cross-plan collisions, worked around ad hoc:** `cc-plugin-marketplaces`
-  worktree accumulated 68 files across three plans. The P2 controller had to
-  invent `progress-p2.md` and `p2-task-N-report.md` to dodge P1's ledger; P2's
-  briefs silently overwrote P1's at the default paths; an abandoned
-  `progress-p3.md` stub remains.
-- **Git contamination, three times over:** SDD scratch was committed and needed
-  two cleanup commits (`8305e340d`, `c966261a5`); three artifacts are tracked on
-  serf main today, including a report authored on a different machine that now
-  materializes in every fresh worktree. A follow-up plan's task-1 report
-  overwrote an unrelated tracked one, leaving permanent `git status` noise.
-- The self-ignoring `.gitignore` is written only when a script runs. Controllers
-  that hand-append the ledger (observed) never create it, and gitignore is
-  powerless once a file is tracked.
+- **임시방편으로 우회한 계획 간 충돌:** `cc-plugin-marketplaces` 워크트리에 세 개의 계획에 걸쳐 68개의 파일이 쌓였습니다. P2 컨트롤러는 P1의 원장을 피하기 위해 `progress-p2.md`와 `p2-task-N-report.md`를 임의로 만들어내야 했고, P2의 브리프는 기본 경로에 있던 P1의 브리프를 조용히 덮어썼으며, 버려진 `progress-p3.md` 스텁이 여전히 남아 있습니다.
+- **세 번에 걸친 Git 오염:** SDD 임시 파일들이 커밋되어 두 번의 정리 커밋(`8305e340d`, `c966261a5`)이 필요했습니다. 다른 머신에서 작성되어 이제 모든 새로운 워크트리에 나타나는 리포트 하나를 포함해 세 개의 아티팩트가 오늘날에도 serf `main`에서 추적되고 있습니다. 후속 계획의 task-1 리포트는 관련 없는 추적 대상 리포트를 덮어써서 영구적인 `git status` 노이즈를 남겼습니다.
+- 자체 무시용 `.gitignore`는 스크립트가 실행될 때만 작성됩니다. 원장을 수동으로 추가하는 컨트롤러(실제 관찰됨)는 이를 생성하지 않으며, 파일이 일단 추적되기 시작하면 gitignore는 무력해집니다.
 
-### Root cause
+### 근본 원인
 
-Identity lives nowhere in the data; correctness relies on cleanup that has no
-trigger. Any fix that relies on end-of-plan cleanup alone fails exactly in the
-crash/compaction cases the ledger exists to survive. Identity must be
-structural.
+데이터 어디에도 식별 정보가 존재하지 않으며, 정확성이 트리거조차 없는 정리(cleanup) 작업에 의존하고 있습니다. 계획 종료 시점의 정리에만 의존하는 수정 방안은 원장이 살아남아야 하는 바로 그 크래시/컨텍스트 압축 상황에서 어김없이 실패합니다. 식별 정보는 반드시 구조적(structural)이어야 합니다.
 
-## Design
+## 설계
 
-### 1. Per-plan workspace directory (structural identity)
+### 1. 계획별 워크스페이스 디렉터리 (구조적 식별)
 
-The workspace becomes `.superpowers/sdd/<plan-slug>/`, where `<plan-slug>` is
-the plan file's basename without its `.md` extension (plan filenames are
-already dated kebab-case, e.g. `2026-07-04-plugin-marketplaces-p1-backend-core`).
-Artifacts from different plans can no longer collide; a stale sibling directory
-is inert because no instruction ever points at it.
+워크스페이스는 `.superpowers/sdd/<plan-slug>/`가 됩니다. 여기서 `<plan-slug>`는 `.md` 확장자를 제외한 계획 파일의 기본 이름(basename)입니다(계획 파일 이름은 이미 `2026-07-04-plugin-marketplaces-p1-backend-core`처럼 날짜가 포함된 케밥 케이스로 되어 있음). 이제 서로 다른 계획의 아티팩트가 충돌할 수 없으며, 오래된 형제 디렉터리는 어떤 지시문도 가리키지 않으므로 비활성 상태로 남습니다.
 
-Script interface (all in `skills/subagent-driven-development/scripts/`):
+스크립트 인터페이스 (모두 `skills/subagent-driven-development/scripts/`에 위치):
 
-- `sdd-workspace PLAN_FILE` — resolves and creates
-  `<repo-root>/.superpowers/sdd/<plan-slug>/`, maintains the self-ignoring
-  `.gitignore` at `.superpowers/sdd/.gitignore` (parent level, content `*`),
-  prints the plan directory's absolute path. Errors (exit 2) on missing
-  argument or nonexistent plan file. Slug must be non-empty after stripping.
-- `task-brief PLAN_FILE N [OUTFILE]` — signature unchanged; default OUTFILE
-  moves to `<workspace>/task-N-brief.md` via `sdd-workspace PLAN_FILE`.
-- `review-package PLAN_FILE BASE HEAD [OUTFILE]` — gains PLAN_FILE as first
-  argument; default OUTFILE moves to `<workspace>/review-<base7>..<head7>.diff`.
+- `sdd-workspace PLAN_FILE` — `<repo-root>/.superpowers/sdd/<plan-slug>/` 경로를 확인 및 생성하고, `.superpowers/sdd/.gitignore`(상위 레벨, 내용은 `*`)에 자체 무시용 `.gitignore`를 유지하며, 계획 디렉터리의 절대 경로를 출력합니다. 인자가 누락되었거나 계획 파일이 존재하지 않으면 오류(종료 코드 2)를 반환합니다. 확장자 제거 후 슬러그(slug)는 비어 있지 않아야 합니다.
+- `task-brief PLAN_FILE N [OUTFILE]` — 시그니처는 변경되지 않으며, 기본 `OUTFILE`이 `sdd-workspace PLAN_FILE`을 통해 `<workspace>/task-N-brief.md`로 이동합니다.
+- `review-package PLAN_FILE BASE HEAD [OUTFILE]` — 첫 번째 인자로 `PLAN_FILE`이 추가되며, 기본 `OUTFILE`이 `<workspace>/review-<base7>..<head7>.diff`로 이동합니다.
 
-No compatibility path for the old flat layout: the scripts and SKILL.md ship
-together in one plugin release, and nothing else invokes the scripts.
-(Explicitly confirmed: no backward-compatibility handling.)
+이전 단일(flat) 레이아웃을 위한 호환성 경로는 두지 않습니다: 스크립트와 `SKILL.md`는 하나의 플러그인 릴리스로 함께 배포되며, 다른 어떤 것도 이 스크립트를 호출하지 않습니다. (하위 호환성 처리를 두지 않는 것으로 명시적 확인 완료.)
 
-### 2. Ledger names its plan (belt for hand-rolled ledgers)
+### 2. 원장에 소속 계획 명시 (수동 작성 원장을 위한 안전장치)
 
-The ledger stays `<workspace>/progress.md`. When created, its first line MUST
-be:
+원장은 계속해서 `<workspace>/progress.md`에 위치합니다. 생성 시 첫 번째 줄은 반드시 다음과 같아야 합니다:
 
 ```
 # SDD ledger — plan: docs/superpowers/plans/<plan-file>.md
 ```
 
-SKILL.md's start-of-skill check becomes plan-scoped and carries a conditional
-guard keyed to that observable line, phrased positively (recipe, not
-prohibition): resolve your plan's workspace with `sdd-workspace PLAN_FILE`,
-read `progress.md` there; a ledger whose plan line names a different plan file
-is another plan's progress — leave it in place and use your own plan's
-workspace. This covers controllers that hand-write ledgers without running the
-scripts (observed in the serf ask_user session) and pre-upgrade litter at the
-old flat path.
+`SKILL.md`의 스킬 시작 시점 검사는 계획 범위로 지정되며, 해당 관찰 가능한 첫 줄을 기준으로 긍정적 형태(금지문이 아닌 레시피 형태)로 작성된 조건부 가드를 포함합니다: `sdd-workspace PLAN_FILE`로 계획의 워크스페이스를 확인하고 거기서 `progress.md`를 읽으세요. 만약 원장의 계획 라인이 다른 계획 파일을 가리킨다면 그것은 다른 계획의 진행 기록이므로, 그대로 두고 자신의 계획 워크스페이스를 사용하세요. 이는 스크립트를 실행하지 않고 원장을 수동으로 작성하는 컨트롤러(serf `ask_user` 세션에서 관찰됨)와 이전 단일 경로에 남은 업그레이드 이전의 잔여물들을 모두 커버합니다.
 
-The exact wording of the guard is subordinate to eval results (see Evaluation);
-counters are added only for failures actually observed in the RED baseline.
+가드의 정확한 문구는 평가 결과에 따르며(평가 섹션 참조), 대응 문구(counters)는 RED 베이스라인에서 실제로 관찰된 실패에 대해서만 추가합니다.
 
-### 3. Workspace end-of-life (hygiene, not correctness)
+### 3. 워크스페이스 수명 종료 (정확성이 아닌 위생 관리 차원)
 
-When the final whole-branch review is clean and its fix wave (if any) is
-merged — immediately before handing off to
-`superpowers:finishing-a-development-branch` — the controller deletes its
-plan's workspace directory (`rm -rf "$WORKSPACE"`). The record of the work is
-the git history; the ledger's job (mid-plan compaction recovery) is over.
-Sibling directories are never touched: crashed or parallel plans own their own
-dirs, and deliberately parked cross-plan artifacts (observed pattern:
-`WAVE1-HANDOFF.md`) live directly under `.superpowers/sdd/` untouched by any
-plan's cleanup.
+최종 전체 브랜치 리뷰가 깔끔하게 통과하고 수정 웨이브(있는 경우)가 병합되면 — `superpowers:finishing-a-development-branch`로 넘기기 직전에 — 컨트롤러는 자신의 계획 워크스페이스 디렉터리를 삭제합니다(`rm -rf "$WORKSPACE"`). 작업 기록은 git 히스토리에 남아 있으며, 원장의 역할(계획 중간의 컨텍스트 압축 복구)은 끝났기 때문입니다. 형제 디렉터리는 절대 건드리지 않습니다: 크래시되었거나 병렬로 실행 중인 계획들은 각자의 디렉터리를 소유하며, 의도적으로 보관해 둔 계획 간 아티팩트(관찰된 패턴: `WAVE1-HANDOFF.md`)는 어떤 계획의 정리 작업에도 영향받지 않고 `.superpowers/sdd/` 바로 아래에 그대로 유지됩니다.
 
-### 4. SKILL.md touch points
+### 4. `SKILL.md` 수정 지점
 
-- **Durable Progress** section: workspace resolution via `sdd-workspace
-  PLAN_FILE`; ledger check scoped to the plan's own workspace; ledger-creation
-  format including the plan line; the mismatch guard; completion deletion; the
-  `git clean -fdx` hazard note updated to the new path.
-- **Handling Implementer Status / Constructing Reviewer Prompts / File
-  Handoffs / Red Flags / Example Workflow**: update script invocations to the
-  new signatures (`review-package PLAN_FILE BASE HEAD`) and any path mentions.
-  `implementer-prompt.md` and `task-reviewer-prompt.md` contain no workspace
-  paths (verified) and need no changes.
-- Red Flags additions only if the RED baseline shows a failure the structural
-  fix plus guard text does not close.
+- **Durable Progress** 섹션: `sdd-workspace PLAN_FILE`을 통한 워크스페이스 확인; 계획 자체의 워크스페이스로 범위가 지정된 원장 검사; 계획 라인을 포함한 원장 생성 포맷; 불일치 가드; 완료 시 삭제; 새 경로로 업데이트된 `git clean -fdx` 위험 주의 사항.
+- **Handling Implementer Status / Constructing Reviewer Prompts / File Handoffs / Red Flags / Example Workflow**: 스크립트 호출문을 새로운 시그니처(`review-package PLAN_FILE BASE HEAD`)로 업데이트하고 관련 경로 언급을 수정합니다. `implementer-prompt.md`와 `task-reviewer-prompt.md`에는 워크스페이스 경로가 포함되어 있지 않으므로(확인 완료) 변경할 필요가 없습니다.
+- Red Flags 항목 추가는 구조적 수정과 가드 텍스트만으로 해결되지 않는 실패가 RED 베이스라인에서 나타나는 경우에만 수행합니다.
 
-## Out of scope (deliberate)
+## 의도적 범위 외 (Out of scope) 항목
 
-- No changes to `finishing-a-development-branch` or any other skill.
-- No git-level guards against committing `.superpowers/` beyond the existing
-  parent `.gitignore`.
-- No retroactive cleanup of the serf repo (separate follow-up).
-- No legacy-layout migration or fallback reads.
+- `finishing-a-development-branch` 또는 기타 다른 스킬에 대한 변경 없음.
+- 기존의 상위 `.gitignore` 외에 `.superpowers/` 커밋을 막기 위한 추가적인 git 레벨 가드 없음.
+- serf 저장소에 대한 소급 정리 작업 없음 (별도의 후속 작업으로 처리).
+- 레거시 레이아웃 마이그레이션이나 폴백 읽기 없음.
 
-## Testing
+## 테스트
 
-### Deterministic shell tests (`tests/claude-code/test-sdd-workspace.sh`, extended)
+### 결정론적 셸 테스트 (`tests/claude-code/test-sdd-workspace.sh`, 확장)
 
-- `sdd-workspace PLAN` prints `<root>/.superpowers/sdd/<slug>` and creates it;
-  errors without a plan arg; errors on missing plan file.
-- Two different plan files resolve to two distinct directories; artifacts
-  written via `task-brief` land in their own plan's directory.
-- `review-package PLAN BASE HEAD` writes under the plan's directory.
-- Parent `.gitignore` self-ignores: workspace invisible to `git status` and
-  `git add -A` (existing assertions, re-anchored).
-- Linked-worktree distinctness (existing assertion, re-anchored).
-- Existing suites `test-subagent-driven-development.sh` /
-  `-integration.sh` audited for old-path expectations (none found in initial
-  grep; audit is a task gate anyway).
+- `sdd-workspace PLAN`이 `<root>/.superpowers/sdd/<slug>`를 출력하고 생성함; 계획 인자가 없으면 오류 반환; 계획 파일이 존재하지 않으면 오류 반환.
+- 서로 다른 두 계획 파일이 두 개의 고유한 디렉터리로 확인됨; `task-brief`를 통해 작성된 아티팩트가 각자의 계획 디렉터리에 저장됨.
+- `review-package PLAN BASE HEAD`가 해당 계획의 디렉터리 하위에 파일을 작성함.
+- 상위 `.gitignore`가 자체 무시 동작을 수행함: 워크스페이스가 `git status` 및 `git add -A`에 보이지 않음 (기존 단언문들을 새 구조에 맞게 재조정).
+- 연결된 워크트리(linked-worktree) 간 고유성 보장 (기존 단언문 재조정).
+- 기존 스위트인 `test-subagent-driven-development.sh` 및 `-integration.sh`에서 이전 경로를 기대하는 부분이 있는지 감사(초기 grep에서는 발견되지 않았으나 어쨌든 태스크 게이트로 감사를 수행함).
 
-### Evaluation (writing-skills RED → GREEN, re-scoped 2026-07-06)
+### 평가 (`writing-skills` RED → GREEN, 2026-07-06 범위 재조정)
 
-Pressure scenarios run as fresh sonnet subagent sessions against fixture repos
-in temp directories (never inside this worktree), compaction-resume framing,
-each rep hand-scored; the measured output is the controller's resume decision
-(no real implementer dispatches).
+압박 시나리오들은 임시 디렉터리(절대 이 워크트리 내부가 아님)의 픽스처 저장소를 대상으로 새로운 sonnet 서브에이전트 세션으로 실행되며, 컨텍스트 압축 후 재개(compaction-resume) 프레이밍을 사용하고, 각 반복 실행(rep)을 수작업으로 채점합니다. 측정 대상 출력은 컨트롤러의 재개 결정입니다(실제 구현자 디스패치는 수행하지 않음).
 
-**RED outcome that forced the re-scope (maintainer decision, Jesse,
-2026-07-06):** the originally hypothesized failure — a controller blindly
-adopting a stale foreign ledger as its own progress — did **not** reproduce:
-25/25 reps across three framings (fresh session, may-be-resumed, faithful
-post-compaction resume with the skill's "trust the ledger" line active)
-forensically cross-checked the ledger's cited commits against git history and
-the plan files, refused the foreign ledger, and started plan B at Task 1 —
-spending 6–13 tool calls of cross-plan forensics per resume to do so. Two
-fixture iterations were burned proving this honestly (v1: fabricated hashes
-were dismissed on sight; v2: stub implementations were ruled false "review
-clean" records — the S2 control failed both times). Full record in the
-committed eval docs.
+**범위 재조정을 강제한 RED 결과 (메인테이너 결정, Jesse, 2026-07-06):** 원래 가설로 세웠던 실패 — 컨트롤러가 오래된 외부 원장을 자신의 진행 상황으로 맹목적으로 채택하는 현상 — 는 재현되지 **않았습니다**: 세 가지 프레이밍(새로운 세션, 재개 가능성 있는 세션, 스킬의 "원장을 신뢰하라"는 문구가 활성화된 충실한 압축 후 재개 세션)에 걸친 25/25 실행 모두가 원장에 인용된 커밋들을 git 히스토리 및 계획 파일들과 포렌식 방식으로 교차 확인한 뒤 외부 원장을 거부하고 계획 B를 Task 1부터 시작했습니다 — 단, 이를 위해 재개할 때마다 6~13회의 도구 호출에 달하는 계획 간 포렌식 비용을 소비했습니다. 이 사실을 정직하게 입증하는 과정에서 두 번의 픽스처 반복이 소모되었습니다(v1: 조작된 해시는 보자마자 기각됨; v2: 스텁 구현은 거짓 "review clean" 기록으로 판정됨 — S2 대조군이 두 번 모두 실패함). 전체 기록은 커밋된 평가 문서에 있습니다.
 
-**Re-scoped claims and gates:**
+**재조정된 주장 및 게이트:**
 
-- The change ships on the structural record (collisions, improvised side-band
-  names, overwritten briefs, git contamination — serf repo) plus the measured
-  disambiguation tax, with explicit maintainer sign-off standing in for the
-  writing-skills failing-baseline requirement on the SKILL.md text.
-- **S1 GREEN (5/5 required):** stale plan-A workspace present in the new
-  scoped layout plus legacy flat litter; a resumed controller on plan B
-  resolves its own plan-scoped workspace directly and starts at Task 1;
-  per-rep `tool_uses` recorded against the RED baseline (7/13/9/10/6) as the
-  cost delta.
-- **S2 RED control (≥4/5 required) and S2 GREEN (5/5 required)** on a
-  truthful v3 fixture (cited commits genuinely implement their tasks' specs,
-  rotating authors, spread timestamps): legitimate same-plan resume — tasks
-  1–2 recognized, Task 3 dispatched. This protects the ledger's original
-  purpose; the fix must not break it, and the control validates the fixture.
+- 이 변경 사항은 구조적 기록(충돌, 임시방편으로 만든 별도 파일 이름들, 덮어써진 브리프, git 오염 — serf 저장소)과 측정된 포렌식 교차 검증 비용(disambiguation tax)을 근거로 출시되며, `SKILL.md` 텍스트에 대한 `writing-skills`의 실패 베이스라인 요구사항은 메인테이너의 명시적 승인으로 갈음합니다.
+- **S1 GREEN (5/5 필수):** 새로운 범위 지정 레이아웃에 존재하는 오래된 계획 A 워크스페이스와 레거시 단일 경로 잔여물이 함께 있는 상태에서, 계획 B로 재개된 컨트롤러가 자신의 계획 범위 워크스페이스를 직접 확인하고 Task 1부터 시작해야 합니다. 비용 차이(delta)로서 RED 베이스라인(7/13/9/10/6) 대비 실행당 `tool_uses`를 기록합니다.
+- 참된 v3 픽스처(인용된 커밋들이 실제로 태스크 사양을 구현하고, 작성자가 교차되며, 타임스탬프가 분산됨) 위에서의 **S2 RED 대조군(≥4/5 필수) 및 S2 GREEN(5/5 필수)**: 정당한 동일 계획 재개 — 태스크 1–2가 완료로 인식되고 Task 3이 디스패치되어야 합니다. 이는 원장의 원래 목적을 보호하기 위한 것으로, 수정 사항이 이를 깨뜨려서는 안 되며 대조군은 픽스처의 유효성을 검증합니다.
 
-Results land in `docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md`
-and are summarized in the PR.
+결과는 `docs/superpowers/specs/2026-07-06-sdd-plan-scoped-workspace-eval-results.md`에 기록되며 PR에 요약됩니다.
 
-## Risks
+## 위험 요소 (Risks)
 
-- **Slug collisions between distinct plans with identical basenames** in
-  different directories: accepted; plan filenames are date-prefixed by
-  convention, and same-basename means same plan in practice (resume is then the
-  desired behavior).
-- **Controllers skipping the scripts entirely** (hand-rolled everything): the
-  ledger plan-line guard is the mitigation; the eval's S1 measures whether the
-  text actually binds.
-- **Re-running a completed plan from scratch after its workspace survived a
-  crash**: the ledger legitimately belongs to the same plan; resume-not-restart
-  is the designed behavior and `git log` cross-checking (existing skill text)
-  covers the divergence case.
+- 서로 다른 디렉터리에 있지만 **동일한 기본 이름(basename)을 가진 별개의 계획 간 슬러그 충돌**: 수용함; 계획 파일 이름은 관례상 날짜 접두사가 붙으며, 기본 이름이 같다는 것은 실제로는 동일한 계획임을 의미합니다(따라서 재개하는 것이 원하는 동작임).
+- **컨트롤러가 스크립트를 완전히 건너뛰는 경우**(모든 것을 수동으로 처리): 원장의 계획 라인 가드가 완화책이며, 평가의 S1이 텍스트가 실제로 구속력을 발휘하는지 측정합니다.
+- **크래시 후 워크스페이스가 살아남은 상태에서 완료된 계획을 처음부터 다시 실행하는 경우**: 원장은 정당하게 동일한 계획에 속합니다. 처음부터 다시 시작하는 대신 재개(resume-not-restart)하는 것이 설계된 동작이며, 불일치 케이스는 `git log` 교차 확인(기존 스킬 텍스트)이 커버합니다.

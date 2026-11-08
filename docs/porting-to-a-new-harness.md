@@ -1,850 +1,383 @@
-# Porting Superpowers to a New Harness
+# 새로운 하네스로 Superpowers 포팅하기
 
-This guide explains how to add support for a new harness — an IDE, CLI, or
-agent runner that isn't Claude Code — so that Superpowers skills auto-trigger
-there the same way they do natively.
+이 가이드는 Claude Code가 아닌 새로운 하네스(IDE, CLI 또는 에이전트 러너)에 대한 지원을 추가하여, Superpowers 스킬이 네이티브 환경에서와 동일한 방식으로 자동 트리거되도록 만드는 방법을 설명합니다.
 
-It is written in two layers. **Part 1–3** explain how the system works and how
-to tell whether a harness can be supported at all; read these before you touch
-anything. **Part 4–8** are a prescriptive procedure for an agent (supervised by
-a human partner) to execute the port end to end, through distribution. An
-appendix indexes the current reference integrations so you can copy the closest
-one.
+이 문서는 두 개의 계층으로 구성되어 있습니다. **파트 1~3**은 시스템의 작동 방식과 특정 하네스가 지원 가능한지 판단하는 방법을 설명합니다. 무언가를 건드리기 전에 이 부분부터 읽으세요. **파트 4~8**은 (인간 파트너의 감독하에 있는) 에이전트가 배포까지 포함하여 포팅을 처음부터 끝까지 수행하기 위한 규범적 절차입니다. 부록에는 가장 유사한 구현체를 복사해 활용할 수 있도록 현재의 레퍼런스 통합 목록이 정리되어 있습니다.
 
-The integration mechanism differs across harnesses, and it will keep changing.
-This guide deliberately teaches the **invariants** — the things that must be
-true no matter the mechanism — and points you at a live reference implementation
-to copy. When this guide and the code disagree, the code wins; fix the guide.
+통합 메커니즘은 하네스마다 다르며 앞으로도 계속 변할 것입니다. 따라서 이 가이드는 의도적으로 메커니즘에 상관없이 반드시 참이어야 하는 **불변 조건(invariants)**을 가르치고, 복사해서 쓸 수 있는 실제 레퍼런스 구현체를 안내합니다. 이 가이드와 코드가 서로 다를 때는 코드가 우선합니다 — 가이드를 수정하세요.
 
-## Before you start
+## 시작하기 전에 (Before you start)
 
-Adding a harness is the highest-stakes contribution type in this repo. Before
-writing anything:
+새로운 하네스를 추가하는 것은 이 저장소에서 가장 중요도가 높은(high-stakes) 기여 유형입니다. 무언가를 작성하기 전에 다음을 수행하세요:
 
-- Read `CLAUDE.md` and `.github/PULL_REQUEST_TEMPLATE.md` in full — the
-  contributor rules and the new-harness PR requirements are not optional.
-- Search open **and closed** PRs for a prior attempt at this harness. If one
-  exists, understand why it stalled before starting your own.
+- `CLAUDE.md`와 `.github/PULL_REQUEST_TEMPLATE.md` 전체를 읽으세요 — 기여자 규칙과 신규 하네스 PR 요구사항은 선택 사항이 아닙니다.
+- 해당 하네스에 대한 이전 시도가 있었는지 열려 있는(open) PR과 **닫힌(closed) PR을 모두** 검색하세요. 이전 시도가 존재한다면, 직접 작업을 시작하기 전에 왜 그 시도가 중단되었는지 파악하세요.
 
 ---
 
-## Part 1 — How Superpowers works across harnesses
+## 파트 1 — 여러 하네스에 걸친 Superpowers의 작동 방식
 
-Superpowers is the same content everywhere. What changes per harness is the thin
-layer that delivers that content to the model and translates its instructions
-into the harness's native tools. Three components:
+Superpowers는 어디서나 동일한 콘텐츠를 사용합니다. 하네스마다 달라지는 것은 그 콘텐츠를 모델에 전달하고 지침을 하네스의 네이티브 도구로 변환하는 얇은 계층뿐입니다. 세 가지 구성 요소는 다음과 같습니다:
 
-1. **Skills (harness-agnostic).** Everything in `skills/` is the source of
-   truth, shared verbatim by every harness. Skills are written to describe
-   *actions* — "invoke a skill", "read a file", "dispatch a subagent", "create a
-   todo" — and never name a specific tool. This is what lets one skill body run
-   on Claude Code, Codex, Gemini, pi, and the rest without edits.
+1. **스킬 (하네스 독립적).** `skills/` 내의 모든 파일은 단일 진실 공급원(source of truth)이며 모든 하네스가 글자 그대로 공유합니다. 스킬은 특정 도구 이름을 직접 부르지 않고 "스킬 호출(invoke a skill)", "파일 읽기(read a file)", "서브에이전트 디스패치(dispatch a subagent)", "할 일 생성(create a todo)"과 같은 *동작(actions)*을 서술하도록 작성되어 있습니다. 덕분에 하나의 스킬 본문을 수정 없이 Claude Code, Codex, Gemini, pi 및 기타 환경에서 그대로 실행할 수 있습니다.
 
-2. **Tool mapping (per-harness).** Each harness needs the action vocabulary
-   translated into its real tool names. That translation lives in
-   `skills/using-superpowers/references/<harness>-tools.md` and/or inline in the
-   harness's bootstrap injector (see Part 5). It says, e.g., "*dispatch a
-   subagent* → call `task` with `subagent_type`."
+2. **도구 매핑 (하네스별).** 각 하네스는 동작 어휘(action vocabulary)를 실제 도구 이름으로 변환해야 합니다. 이 변환 정보는 `skills/using-superpowers/references/<harness>-tools.md` 및/또는 하네스의 부트스트랩 주입기(injector) 내부에 인라인으로 위치합니다(파트 5 참조). 예를 들어 "*서브에이전트 디스패치(dispatch a subagent)* → `subagent_type`과 함께 `task` 호출"과 같이 정의합니다.
 
-3. **Bootstrap (per-harness).** At the start of every session, the full
-   `skills/using-superpowers/SKILL.md` is injected into the model's context,
-   wrapped in `<EXTREMELY_IMPORTANT>` tags, with the tool mapping appended. That
-   injected skill is what teaches the model that skills exist and that it must
-   check for a relevant skill before acting. **The bootstrap is the entire
-   integration.** Without it, the skill files are inert — present on disk, never
-   invoked.
+3. **부트스트랩 (하네스별).** 모든 세션이 시작될 때 `skills/using-superpowers/SKILL.md` 전체가 `<EXTREMELY_IMPORTANT>` 태그로 감싸지고 도구 매핑이 덧붙여진 상태로 모델의 컨텍스트에 주입됩니다. 이렇게 주입된 스킬이 모델에게 스킬의 존재를 알려주고 행동하기 전에 관련 스킬이 있는지 반드시 확인하도록 가르칩니다. **부트스트랩이 곧 통합의 전부입니다.** 부트스트랩이 없으면 스킬 파일들은 디스크에 존재하기만 할 뿐 절대 호출되지 않는 무용지물(inert)이 됩니다.
 
-### Two rules that make this work
+### 이를 작동하게 만드는 두 가지 규칙
 
-**1. Skills name actions, not tools.** Do **not** edit skill bodies to fit your
-harness. Porting adds a tool-mapping reference and a bootstrap injector; it
-never reaches into `skills/*/SKILL.md` to swap tool names. (The project's
-contributor guidelines treat skill content as carefully-tuned behavior-shaping
-code; rewording it for "compliance" is rejected on sight.)
+**1. 스킬은 도구가 아니라 동작을 지칭합니다.** 하네스에 맞추기 위해 스킬 본문을 수정하지 **마세요**. 포팅 작업은 도구 매핑 레퍼런스와 부트스트랩 주입기를 추가하는 것이지, `skills/*/SKILL.md` 내부를 건드려 도구 이름을 바꾸는 것이 아닙니다. (프로젝트의 기여자 가이드라인은 스킬 콘텐츠를 정교하게 튜닝된 행동 형성 코드로 취급하며, "규격 준수(compliance)"를 위해 문구를 고치는 PR은 발견 즉시 거절됩니다.)
 
-**2. Everything ships through the harness's own install mechanism. Never edit the
-user's files.** The bootstrap, the skills, and the tool mapping all get delivered
-*as part of what the harness installs* — a plugin, an extension, a marketplace
-entry, an extension-bundled context file. A port **must not** reach into a user's
-global or personal config (`~/.gemini/config/AGENTS.md`, `settings.json`,
-`trustedFolders.json`, a hand-edited `~/.bashrc`, etc.) to inject anything. The
-harness owns what it loads; your install artifact is the only thing you get to
-write. If the install mechanism genuinely can't carry the bootstrap, that is a
-limitation to surface (Part 6) — never a license to hand-edit the user's config.
-(Shape C is *not* an exception: Gemini's context file is fine because it ships
-*inside the installed extension* and is declared by the manifest's
-`contextFileName` — the harness loads the extension's own file, not a file you
-edited in the user's home.)
+**2. 모든 것은 하네스 자체의 설치 메커니즘을 통해 배포됩니다. 사용자의 파일을 절대 편집하지 마세요.** 부트스트랩, 스킬, 도구 매핑은 모두 플러그인, 확장 프로그램, 마켓플레이스 항목, 확장 프로그램에 번들링된 컨텍스트 파일 등 *하네스가 설치하는 구성물의 일부로서* 전달되어야 합니다. 포팅 구현체가 무언가를 주입하기 위해 사용자의 전역 또는 개인 설정(`~/.gemini/config/AGENTS.md`, `settings.json`, `trustedFolders.json`, 수동 편집된 `~/.bashrc` 등)을 건드려서는 **절대 안 됩니다**. 무엇을 로드할지는 하네스가 소유하며, 당신이 작성할 수 있는 것은 오직 설치 아티팩트뿐입니다. 만약 설치 메커니즘이 정말로 부트스트랩을 전달할 수 없다면, 그것은 수면 위로 드러내야 할 한계점이지(파트 6) 사용자의 설정을 수동으로 편집해도 좋다는 면허가 아닙니다. (유형 C도 예외가 *아닙니다*: Gemini의 컨텍스트 파일이 허용되는 이유는 그것이 *설치된 확장 프로그램 내부에 포함되어 배포*되고 매니페스트의 `contextFileName`에 의해 선언되기 때문입니다 — 즉, 하네스는 사용자의 홈 디렉토리에서 편집된 파일이 아니라 확장 프로그램 자체의 파일을 로드합니다.)
 
 ---
 
-## Part 2 — Can this harness be supported?
+## 파트 2 — 이 하네스는 지원 가능한가?
 
-A harness can support Superpowers only if it can do all of the following. Check
-these before writing code — if the first one fails, stop.
+하네스가 다음 조건들을 모두 수행할 수 있어야만 Superpowers를 지원할 수 있습니다. 코드를 작성하기 전에 이 사항들을 확인하세요 — 첫 번째 조건이 실패하면 즉시 중단하세요.
 
-### Hard requirement: automatic session-start injection
+### 필수 요구사항: 세션 시작 시 자동 주입 (automatic session-start injection)
 
-The harness must let you inject text into the model's context **at the start of
-every session, with no per-session opt-in by your human partner.** This is the
-one non-negotiable capability. It can take any form:
+하네스는 **인간 파트너가 세션마다 별도로 선택(opt-in)하지 않아도 모든 세션이 시작될 때** 모델의 컨텍스트에 텍스트를 주입할 수 있어야 합니다. 이것은 타협할 수 없는 유일한 필수 기능입니다. 형태는 상관없습니다:
 
-- a **hook/event system** that runs a shell command at session start and reads
-  its stdout (Claude Code, Cursor, Copilot CLI), or
-- an **in-process plugin/extension** with a session-start or message lifecycle
-  callback that can mutate the message array (OpenCode, pi), or
-- an **instructions-file** convention where the harness loads a context file that
-  *your installed extension ships and declares* (e.g. Gemini's `contextFileName`
-  pointing at the extension's own `GEMINI.md`) — not a file you edit in the user's
-  home.
+- 세션 시작 시 셸 명령어를 실행하고 그 표준 출력(stdout)을 읽는 **훅/이벤트 시스템** (Claude Code, Cursor, Copilot CLI), 또는
+- 메시지 배열을 변경(mutate)할 수 있는 세션 시작 또는 메시지 생명주기 콜백을 가진 **인프로세스(in-process) 플러그인/확장 프로그램** (OpenCode, pi), 또는
+- *설치된 확장 프로그램이 배포하고 선언한* 컨텍스트 파일을 하네스가 로드하는 **지침 파일(instructions-file)** 규칙 (예: 확장 프로그램 자체의 `GEMINI.md`를 가리키는 Gemini의 `contextFileName`) — 사용자의 홈 디렉토리에서 편집하는 파일이 아닙니다.
 
-If the only way to get Superpowers in front of the model is for your human
-partner to opt in each session (paste a prompt, run a command, enable a mode),
-the harness
-**cannot** be properly supported. The acceptance test in Part 3 will fail, and
-the PR will be closed. This is the single most common reason a "port" isn't a
-real port.
+만약 모델에게 Superpowers를 전달하는 유일한 방법이 인간 파트너가 매 세션마다 직접 선택(프롬프트 붙여넣기, 명령어 실행, 모드 활성화 등)하는 것뿐이라면, 해당 하네스는 제대로 지원될 수 **없습니다**. 파트 3의 인수 테스트가 실패할 것이며 PR은 닫힐 것입니다. 이것이 수많은 "포팅"이 진정한 포팅으로 인정받지 못하는 가장 흔한 단일 이유입니다.
 
-### The rest of the capability checklist
+### 나머지 기능 체크리스트
 
-| Capability | Why it's needed | If absent |
+| 기능 | 필요한 이유 | 부재 시 대처 방법 |
 |---|---|---|
-| **Skill discovery + invocation** | The model must be able to load a skill's full content on demand | If there's no native skill tool, the sanctioned fallback is to `read` the relevant `SKILL.md` directly — see Part 5. A harness with neither a skill tool nor file-read cannot work. |
-| **File read / write / edit** | Nearly every skill manipulates files | Essential. No workaround. |
-| **Run shell commands** | TDD, verification, git workflows | Essential. |
-| **Subagent / task dispatch** | `dispatching-parallel-agents`, `subagent-driven-development` | Degradable: if unavailable, those specific skills tell the model to do the work inline or report the missing capability — *never* to invent a `Task` call. Some harnesses gate this behind a config flag (e.g. Codex needs multi-agent enabled). |
-| **Todo / task tracking** | Progress tracking in several skills | Degradable: fall back to a plan file or `TODO.md`. |
-| **Web fetch / search** | A few skills | Degradable. |
-| **Shell or polyglot script execution (Windows)** | Only for the shell-hook shape, only if you want Windows support | See Part 7. In-process-plugin harnesses sidestep this entirely. |
+| **스킬 탐색 + 호출** | 모델이 필요할 때(on demand) 스킬의 전체 내용을 로드할 수 있어야 함 | 네이티브 스킬 도구가 없다면, 승인된 폴백(fallback) 방식은 관련 `SKILL.md`를 직접 `read`하는 것입니다 — 파트 5 참조. 스킬 도구와 파일 읽기 도구가 둘 다 없는 하네스는 작동할 수 없습니다. |
+| **파일 읽기 / 쓰기 / 편집** | 거의 모든 스킬이 파일을 조작함 | 필수. 우회 방법 없음. |
+| **셸 명령어 실행** | TDD, 검증, git 워크플로우 | 필수. |
+| **서브에이전트 / 작업 디스패치** | `dispatching-parallel-agents`, `subagent-driven-development` | 기능 축소(degradable) 가능: 사용할 수 없는 경우, 해당 스킬들은 모델에게 작업을 인라인으로 수행하거나 기능 부재를 보고하도록 지시합니다 — 없는 `Task` 호출을 지어내서는 *절대* 안 됩니다. 일부 하네스는 이를 설정 플래그 뒤에 숨겨둡니다(예: Codex는 멀티 에이전트 활성화 필요). |
+| **할 일(Todo) / 작업 추적** | 여러 스킬에서의 진행 상황 추적 | 기능 축소 가능: 계획 파일이나 `TODO.md`로 대체합니다. |
+| **웹 가져오기(fetch) / 검색** | 일부 스킬에서 사용 | 기능 축소 가능. |
+| **셸 또는 폴리글랏 스크립트 실행 (Windows)** | 셸 훅 유형(Shape A)이면서 Windows 지원을 원하는 경우에만 해당 | 파트 7 참조. 인프로세스 플러그인 하네스는 이 문제를 완전히 우회합니다. |
 
-"Degradable" means: the skill already has fallback wording for the missing
-tool. Your job in the tool mapping is to point at the real tool when it exists
-and reuse that fallback wording when it doesn't.
+"기능 축소 가능(Degradable)"이란 누락된 도구에 대한 대체 문구가 스킬 내부에 이미 마련되어 있음을 의미합니다. 도구 매핑에서 당신이 해야 할 일은 실제 도구가 존재할 때는 그 도구를 가리키고, 존재하지 않을 때는 해당 대체 문구를 재사용하는 것입니다.
 
-### You may not need a new directory at all
+### 새로운 디렉토리가 아예 필요하지 않을 수도 있습니다
 
-Some "new harnesses" are really existing integrations under a different
-installer. Factory's Droid, for example, consumes the Claude Code plugin via its
-own `plugin install` command and needs no new files here. Before building,
-check whether the harness can simply load an existing manifest. A port that adds
-nothing to this repo but a paragraph in the README is a perfectly good outcome.
+일부 "새로운 하네스"는 실제로는 다른 설치 관리자 아래에서 돌아가는 기존 통합입니다. 예를 들어 Factory의 Droid는 자체 `plugin install` 명령어를 통해 Claude Code 플러그인을 그대로 소비하므로 이 저장소에 새로운 파일이 전혀 필요하지 않습니다. 무언가를 구축하기 전에, 해당 하네스가 기존 매니페스트를 단순히 로드할 수 있는지부터 확인하세요. 이 저장소에 코드 추가 없이 README에 단락 하나만 추가하는 포팅도 아주 훌륭한 결과입니다.
 
 ---
 
-## Part 3 — Definition of done
+## 파트 3 — 완료의 정의 (Definition of done)
 
-A port is finished when **all** of these are true:
+다음 조건이 **모두** 참일 때 포팅이 완료된 것입니다:
 
-1. The `using-superpowers` bootstrap loads at session start, every session, with
-   no per-session opt-in.
-2. A tool mapping exists for the harness (in
-   `references/<harness>-tools.md`, inline in the bootstrap, or both — per Part 5).
-3. Skills can actually be invoked — natively, or via the documented
-   read-`SKILL.md` fallback — and the model follows them.
-4. **The acceptance test passes.** In a clean session, the user message:
+1. 세션마다 별도의 선택(opt-in) 없이 모든 세션 시작 시 `using-superpowers` 부트스트랩이 로드됩니다.
+2. 해당 하네스를 위한 도구 매핑이 존재합니다 (`references/<harness>-tools.md`, 부트스트랩 내 인라인, 또는 둘 다 — 파트 5 기준).
+3. 스킬이 실제로 호출될 수 있으며 — 네이티브 방식이든 문서화된 `SKILL.md` 읽기 폴백 방식이든 — 모델이 그 지침을 따릅니다.
+4. **인수 테스트를 통과합니다.** 깨끗한 새 세션에서 다음 사용자 메시지를 보냈을 때:
 
    > Let's make a react todo list
 
-   auto-triggers the `brainstorming` skill *before any code is written*. Capture
-   the full transcript — the PR requires it.
-5. Tests cover the integration (Part 5) and pass.
-6. A real user can install it through the harness's own mechanism (not by
-   hand-copying files), and the version is tracked in `.version-bump.json` where
-   applicable (Part 6). Note that some installers rewrite or strip the manifest on
-   install (one drops it to just `{"name": …}`), so "the *installed* files report
-   the repo version" is not always achievable — track the version at the source
-   manifest and don't treat a rewritten installed manifest as a failure.
+   *어떠한 코드도 작성되기 전에* `brainstorming` 스킬이 자동으로 트리거됩니다. 전체 트랜스크립트를 캡처하세요 — PR 제출 시 필수입니다.
+5. 테스트가 해당 통합을 커버하며(파트 5) 모두 통과합니다.
+6. 실제 사용자가 (파일을 수동으로 복사하는 것이 아니라) 하네스 자체의 메커니즘을 통해 설치할 수 있으며, 해당되는 경우 `.version-bump.json`에서 버전이 추적됩니다(파트 6). 참고로 일부 설치 관리자는 설치 시 매니페스트를 다시 쓰거나 내용을 제거하므로(어떤 도구는 `{"name": …}`만 남김), "*설치된* 파일이 저장소 버전을 보고한다"는 조건은 항상 달성 가능한 것이 아닙니다 — 소스 매니페스트에서 버전을 추적하되, 설치된 매니페스트가 재작성되었다고 해서 실패로 간주하지 마세요.
 
-A quick smoke check before the full acceptance test: start a session and ask the
-model to describe its superpowers. If the bootstrap injected, it knows it has
-them. (OpenCode's install doc uses `opencode run --print-logs "hello" 2>&1 |
-grep -i superpowers` for the same goal via a different mechanism — log-grep
-rather than asking the model; the `2>&1` matters because logs go to stderr. Find
-your harness's equivalent.)
+전체 인수 테스트를 실행하기 전의 간단한 스모크 체크(smoke check): 세션을 시작하고 모델에게 자신이 가진 superpowers를 설명해 달라고 요청하세요. 부트스트랩이 주입되었다면 모델은 자신이 superpowers를 가지고 있음을 알고 있습니다. (OpenCode의 설치 문서는 모델에게 질문하는 대신 로그를 grep하는 다른 메커니즘을 통해 동일한 목적을 달성하기 위해 `opencode run --print-logs "hello" 2>&1 | grep -i superpowers`를 사용합니다. 로그가 stderr로 출력되므로 `2>&1`이 중요합니다. 여러분의 하네스에 맞는 동등한 방법을 찾으세요.)
 
 ---
 
-## Part 4 — Choose your integration shape
+## 파트 4 — 통합 유형(Shape) 선택하기
 
-There are three structural shapes, distinguished by *how you get the bootstrap
-in front of the model*. Pick the one that matches what your harness exposes,
-then copy that reference implementation. The shape determines almost everything
-in Part 5 — the steps below branch on it.
+*부트스트랩을 모델에게 어떻게 전달하는가*에 따라 구분되는 세 가지 구조적 유형(shape)이 있습니다. 하네스가 노출하는 기능과 일치하는 유형을 선택한 다음, 해당 레퍼런스 구현체를 복사하세요. 선택한 유형이 파트 5의 거의 모든 것을 결정하며, 아래 단계들은 이 유형에 따라 분기됩니다.
 
-### How to tell which shape you have
+### 어떤 유형인지 파악하는 방법
 
-Before routing, learn the harness's *actual* mechanism — and don't assume it's
-well documented or that it behaves like whatever harness it forked from.
+경로를 정하기 전에 하네스의 *실제* 메커니즘을 파악하세요 — 문서화가 잘 되어 있을 것이라고 가정하거나 포크해 온 원본 하네스와 똑같이 동작할 것이라고 가정하지 마세요.
 
-**Find the surface:**
+**표면(surface) 찾기:**
 
-- **Search the web for the harness's docs** (extension / plugin / hook / skill /
-  MCP / "context file" / "rules file"). Vendor tools change fast; search rather
-  than trust training knowledge.
-- **Find and read an existing third-party extension/plugin for the harness.** A
-  real working example beats docs — it shows the manifest shape, the install
-  command, and which components the harness actually loads.
-- Check what the harness loads at startup: a settings file? an extensions
-  directory? a per-project or global instructions file (`AGENTS.md`, `<NAME>.md`)?
+- **웹에서 하네스의 문서를 검색하세요** (extension / plugin / hook / skill / MCP / "context file" / "rules file"). 벤더 도구들은 빠르게 변하므로 사전 학습된 지식을 믿기보다 검색을 활용하세요.
+- **해당 하네스용으로 만들어진 기존 서드파티 확장 프로그램/플러그인을 찾아 읽어보세요.** 실제로 작동하는 예제는 문서보다 낫습니다 — 매니페스트 형태, 설치 명령어, 그리고 하네스가 실제로 어떤 컴포넌트를 로드하는지 보여줍니다.
+- 시작 시 하네스가 무엇을 로드하는지 확인하세요: 설정 파일입니까? 확장 프로그램 디렉토리입니까? 프로젝트별 또는 전역 지침 파일(`AGENTS.md`, `<NAME>.md`)입니까?
 
-**If it's underdocumented, reverse-engineer it empirically** (a real porter has
-had to do every one of these):
+**문서가 부족하다면 실험적으로 리버스 엔지니어링하세요** (실제 포팅 작업자들은 다음 과정들을 전부 거쳐야 했습니다):
 
-- `strings` the binary / grep the install tree for hook event names, config
-  paths, and the instructions file it reads.
-- **Ask the running model to enumerate its own tool names** — e.g. "list the
-  exact machine names of every tool you can call." This is the authoritative way
-  to get tool names without inventing them (see Step 4).
-- Prove every assumption with a **unique-marker test**: inject a nonsense token
-  through the mechanism you think works, start a fresh session, and confirm the
-  token actually reached the model.
+- 바이너리에 `strings`를 실행하거나 설치 트리를 grep하여 훅 이벤트 이름, 설정 경로 및 하네스가 읽는 지침 파일을 찾으세요.
+- **실행 중인 모델에게 자신이 사용할 수 있는 도구 이름을 직접 나열하라고 요청하세요** — 예: "호출할 수 있는 모든 도구의 정확한 머신 이름을 나열해 줘(list the exact machine names of every tool you can call)." 이것은 도구 이름을 지어내지 않고 신뢰할 수 있게 얻는 가장 확실한 방법입니다(단계 4 참조).
+- **고유 마커 테스트(unique-marker test)**로 모든 가정을 증명하세요: 작동한다고 생각하는 메커니즘을 통해 무의미한 고유 토큰을 주입하고, 새 세션을 시작한 뒤, 그 토큰이 실제로 모델에 도달했는지 확인하세요.
 
-**A fork does not inherit its parent's behavior.** A harness derived from another
-(e.g. a Gemini-derived CLI) may expose the parent's manifest fields and
-`@`-include syntax and *still not honor them the same way*. Verify with a marker;
-never assume the parent's recipe transfers.
+**포크(fork)는 부모의 동작을 그대로 물려받지 않습니다.** 다른 하네스에서 파생된 하네스(예: Gemini에서 파생된 CLI)는 부모의 매니페스트 필드와 `@`-include 문법을 노출하면서도 *실제로는 동일하게 처리하지 않을 수 있습니다*. 마커를 사용해 검증하세요. 부모의 레시피가 그대로 통할 것이라고 절대 가정하지 마세요.
 
-Then route to a shape:
+그런 다음 유형을 결정하세요:
 
-- Shell command at session start whose stdout is read → **Shape A**.
-- Plugin/extension module with lifecycle callbacks you run code in → **Shape B**.
-- Only ever an always-on instructions file, no hook and no code plugin →
-  **Shape C**.
+- 세션 시작 시 셸 명령어를 실행하고 그 stdout을 읽는 경우 → **유형 A (Shape A)**.
+- 내부에서 코드를 실행할 수 있는 생명주기 콜백을 가진 플러그인/확장 모듈인 경우 → **유형 B (Shape B)**.
+- 훅도 없고 코드 플러그인도 없으며 항상 켜져 있는 지침 파일만 존재하는 경우 → **유형 C (Shape C)**.
 
-**Shapes compose — they are not mutually exclusive.** The *skill-discovery*
-mechanism and the *bootstrap* mechanism need not be the same shape — but **both
-must still ride the install mechanism** (rule 2). Decide the two questions
-separately: *where do skills get discovered?* and *how does the bootstrap reach
-the model every session?* A harness might install skills via a plugin yet need
-the bootstrap delivered another install-shipped way (an extension-declared
-context file, or — see below — by the harness surfacing the installed
-`using-superpowers` skill's own description at session start). If more than one
-install-mechanism surface injects automatically, prefer the most reliable. What
-you may **not** do is bridge a gap by editing the user's global config.
+**유형들은 서로 조합될 수 있으며 상호 배타적이지 않습니다.** *스킬 탐색* 메커니즘과 *부트스트랩* 메커니즘이 반드시 같은 유형일 필요는 없습니다 — 하지만 **둘 다 반드시 설치 메커니즘을 통해 전달되어야 합니다**(규칙 2). 두 가지 질문을 별도로 결정하세요: *스킬은 어디에서 탐색되는가?* 그리고 *부트스트랩은 매 세션마다 어떻게 모델에 도달하는가?* 어떤 하네스는 플러그인을 통해 스킬을 설치하지만 부트스트랩은 설치 시 함께 배포되는 다른 방식(확장 프로그램이 선언한 컨텍스트 파일, 또는 아래에서 설명하듯 하네스가 세션 시작 시 설치된 `using-superpowers` 스킬 자체의 설명을 노출하는 방식)으로 전달해야 할 수도 있습니다. 두 개 이상의 설치 메커니즘 표면이 자동 주입을 지원한다면 가장 신뢰할 수 있는 것을 선택하세요. 단, 부족한 부분을 메우기 위해 사용자의 전역 설정을 편집하는 것은 **절대 허용되지 않습니다**.
 
-### Shape A — Shell-hook
+### 유형 A (Shape A) — 셸 훅 (Shell-hook)
 
-The harness has a hook system that runs a shell command at session start and
-reads JSON from its stdout. The configured command runs `run-hook.cmd`, a
-polyglot wrapper that just locates bash and dispatches the named script; the
-script (`hooks/session-start`, or a harness-specific variant) is what reads
-`using-superpowers/SKILL.md` and prints a JSON object whose **field name and
-nesting differ per harness**.
+하네스에 세션 시작 시 셸 명령어를 실행하고 그 stdout에서 JSON을 읽는 훅 시스템이 있는 경우입니다. 설정된 명령어는 bash를 찾아 지정된 스크립트를 디스패치하는 폴리글랏 래퍼인 `run-hook.cmd`를 실행합니다. 실제 스크립트(`hooks/session-start` 또는 하네스 전용 변형 스크립트)가 `using-superpowers/SKILL.md`를 읽고 **하네스마다 필드 이름과 중첩 구조가 다른** JSON 객체를 출력합니다.
 
-- Reference: `hooks/session-start`, `hooks/run-hook.cmd`, and the per-harness
-  hook config `hooks/hooks.json` (Claude Code) and `hooks/hooks-cursor.json`
-  (Cursor).
-- Manifests: `.cursor-plugin/plugin.json` is the Shape A manifest example that
-  points the harness at `./skills/` and the right `hooks-*.json`. Claude Code's
-  `.claude-plugin/plugin.json` sets neither field — it auto-discovers `skills/`
-  and `hooks/hooks.json` by convention. Do **not** copy Codex's
-  `.codex-plugin/plugin.json` for Shape A: it declares an empty `hooks` object
-  specifically to suppress Codex's `hooks/hooks.json` auto-discovery, because
-  Codex surfaces skills natively and runs no session-start hook.
+- 레퍼런스: `hooks/session-start`, `hooks/run-hook.cmd`, 그리고 하네스별 훅 설정인 `hooks/hooks.json`(Claude Code) 및 `hooks/hooks-cursor.json`(Cursor).
+- 매니페스트: `.cursor-plugin/plugin.json`은 하네스가 `./skills/`와 올바른 `hooks-*.json`을 가리키도록 하는 유형 A 매니페스트 예제입니다. Claude Code의 `.claude-plugin/plugin.json`은 두 필드를 모두 설정하지 않습니다 — 관례(convention)에 따라 `skills/`와 `hooks/hooks.json`을 자동으로 탐색하기 때문입니다. 유형 A를 구현할 때 Codex의 `.codex-plugin/plugin.json`을 복사하지 **마세요**: Codex는 스킬을 네이티브로 노출하고 세션 시작 훅을 실행하지 않기 때문에, Codex의 `hooks/hooks.json` 자동 탐색을 억제하려는 목적으로 빈 `hooks` 객체를 선언해 두었습니다.
 
-> **A hook *system* is not a session-start *event*.** A harness can have a
-> `hooks.json` mechanism — and even contain the literal string `SessionStart` in
-> its binary — while having no hook event that fires at session start and can
-> inject context. (One real harness only exposed pre/post-tool and stop events;
-> the `SessionStart` strings were telemetry.) Confirm the *specific event* you
-> need exists and can write to the model's context before committing to Shape A.
-> If it can't, the bootstrap belongs in an instructions file (Shape C) instead.
+> **훅 *시스템*이 있다고 해서 세션 시작 *이벤트*가 있는 것은 아닙니다.** 하네스에 `hooks.json` 메커니즘이 있고 심지어 바이너리 내에 리터럴 문자열 `SessionStart`가 포함되어 있더라도, 실제로 세션 시작 시 발생하여 컨텍스트를 주입할 수 있는 훅 이벤트는 없을 수 있습니다. (실제로 어떤 하네스는 도구 실행 전/후 및 중단 이벤트만 노출했고, `SessionStart` 문자열은 단순 텔레메트리용이었습니다.) 유형 A로 결정하기 전에 필요한 *특정 이벤트*가 실제로 존재하고 모델의 컨텍스트에 쓸 수 있는지 확인하세요. 불가능하다면 부트스트랩은 지침 파일(유형 C)에 속해야 합니다.
 
-### Shape B — In-process plugin / extension
+### 유형 B (Shape B) — 인프로세스 플러그인 / 확장 프로그램
 
-The harness loads a JS/TS module that exposes lifecycle callbacks. You register
-the skills directory through the harness's API and inject the bootstrap by
-mutating the message array in code.
+하네스가 생명주기 콜백을 노출하는 JS/TS 모듈을 로드하는 경우입니다. 하네스의 API를 통해 스킬 디렉토리를 등록하고, 코드에서 메시지 배열을 변경(mutate)하여 부트스트랩을 주입합니다.
 
-- Reference: `.opencode/plugins/superpowers.js` (JavaScript) and
-  `.pi/extensions/superpowers.ts` (TypeScript). pi is the closest reference for
-  any harness that has **no native skill tool**.
+- 레퍼런스: `.opencode/plugins/superpowers.js`(JavaScript) 및 `.pi/extensions/superpowers.ts`(TypeScript). pi는 **네이티브 스킬 도구가 없는** 모든 하네스에 가장 가까운 레퍼런스입니다.
 
-### Shape C — Instructions-file
+### 유형 C (Shape C) — 지침 파일 (Instructions-file)
 
-The harness has neither a shell hook nor a code plugin — its session-start
-surface is a context file that *your installed extension ships and the manifest
-declares* (e.g. Gemini's `contextFileName` → the extension's own `GEMINI.md`).
-You can't run code or mutate messages; the extension's context file points at the
-bootstrap. There is no injector to assemble a string or strip frontmatter — the
-harness loads the referenced content as-is. **This works only because the file is
-part of the installed extension** — never substitute "edit the user's global
-`GEMINI.md`/`AGENTS.md`" for shipping your own (rule 2).
+하네스에 셸 훅도 없고 코드 플러그인도 없으며, 세션 시작 표면이 *설치된 확장 프로그램이 배포하고 매니페스트가 선언하는* 컨텍스트 파일인 경우입니다(예: Gemini의 `contextFileName` → 확장 프로그램 자체의 `GEMINI.md`). 코드를 실행하거나 메시지를 변경할 수 없으므로 확장 프로그램의 컨텍스트 파일이 부트스트랩을 가리킵니다. 문자열을 조립하거나 프론트매터를 제거하는 주입기(injector)가 없으며, 하네스는 참조된 콘텐츠를 있는 그대로 로드합니다. **이 방식은 해당 파일이 설치된 확장 프로그램의 일부이기 때문에 작동하는 것입니다** — 직접 파일을 배포하는 대신 "사용자의 전역 `GEMINI.md`/`AGENTS.md`를 편집"하는 방식을 절대 사용하지 마세요(규칙 2).
 
-- Reference: `gemini-extension.json` (manifest, with `contextFileName`),
-  `GEMINI.md` (two `@`-includes — the bootstrap skill and the tool-mapping
-  reference), `skills/using-superpowers/references/gemini-tools.md`.
-- Note: `@`-include is a Gemini feature. If your harness loads an instructions
-  file but has no include syntax, you must inline the bootstrap content into the
-  file instead.
-- **Don't trust that an `@`-include is actually expanded — prove it.** A
-  Gemini-*derived* harness can accept `@./path` syntax yet treat it as a *hint
-  the model may choose to read* (it emits a file-read tool call) rather than a
-  guaranteed inline expansion. That's the difference between the bootstrap being
-  reliably present every session and the model maybe-reading it. Run a
-  unique-marker test: if the marker isn't in context *without* a tool call,
-  **inline the content** rather than `@`-include it.
+- 레퍼런스: `gemini-extension.json`(`contextFileName`이 포함된 매니페스트), `GEMINI.md`(부트스트랩 스킬과 도구 매핑 레퍼런스에 대한 두 개의 `@`-include), `skills/using-superpowers/references/gemini-tools.md`.
+- 참고: `@`-include는 Gemini의 기능입니다. 만약 하네스가 지침 파일은 로드하지만 include 문법이 없다면, 부트스트랩 콘텐츠를 해당 파일 안에 직접 인라인으로 넣어야 합니다.
+- **`@`-include가 실제로 확장되는지 맹신하지 말고 증명하세요.** Gemini에서 *파생된* 하네스는 `@./path` 문법을 허용하면서도, 이를 보장된 인라인 확장이 아니라 *모델이 선택적으로 읽을 수 있는 힌트*로 취급할 수 있습니다(이 경우 모델이 파일 읽기 도구 호출을 발생시킵니다). 이는 부트스트랩이 매 세션마다 확실하게 존재하는 것과 모델이 읽을 수도 있고 안 읽을 수도 있는 것 사이의 큰 차이를 만듭니다. 고유 마커 테스트를 실행하세요: 도구 호출 *없이* 마커가 컨텍스트에 들어오지 않는다면 `@`-include 대신 **콘텐츠를 인라인으로 직접 포함시키세요**.
 
-### Routing table
+### 라우팅 표 (Routing table)
 
-| If the harness… | Use shape | Copy from |
+| 하네스의 특성… | 사용할 유형 | 복사할 레퍼런스 |
 |---|---|---|
-| runs a shell command at session start and reads its stdout | A (shell-hook) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
-| is a JS/TS plugin host with session/message lifecycle callbacks | B (in-process) | OpenCode (`.opencode/`) — or pi (`.pi/`) if it has no native skill tool |
-| ships an extension-declared context file it always loads | C (instructions-file) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
-| lists each installed skill's description, with no session-start event and no context-file field | skill-index bootstrap (Part 5 Step 5, case 2 fallback) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/` only) |
+| 세션 시작 시 셸 명령어를 실행하고 그 stdout을 읽음 | A (셸 훅) | Cursor (`hooks/session-start` + `hooks/hooks-cursor.json` + `.cursor-plugin/`) |
+| 세션/메시지 생명주기 콜백을 가진 JS/TS 플러그인 호스트임 | B (인프로세스) | OpenCode (`.opencode/`) — 또는 네이티브 스킬 도구가 없다면 pi (`.pi/`) |
+| 항상 로드되는 확장 프로그램 선언 컨텍스트 파일을 배포함 | C (지침 파일) | Gemini (`gemini-extension.json` + `GEMINI.md` + `references/gemini-tools.md`) |
+| 세션 시작 이벤트나 컨텍스트 파일 필드는 없지만 설치된 각 스킬의 설명을 나열함 | 스킬 인덱스 부트스트랩 (파트 5 단계 5, 케이스 2 폴백) | Antigravity (`.antigravity-plugin/plugin.json` + `skills/`만 사용) |
 
-Most real harnesses fit one row cleanly; the last is the soft case — see Step 5's
-fallback caveats (rule 2 still holds — never a user-config edit).
+대부분의 실제 하네스는 위 행 중 하나에 깔끔하게 들어맞으며, 마지막 행은 소프트(soft) 케이스입니다 — 단계 5의 폴백 주의사항을 참조하세요(이 경우에도 규칙 2는 유지됩니다 — 사용자 설정 편집은 절대 불가).
 
 ---
 
-## Part 5 — The porting procedure
+## 파트 5 — 포팅 절차 (The porting procedure)
 
-### Step 1 — Study the closest reference implementation
+### 단계 1 — 가장 가까운 레퍼런스 구현체 학습하기
 
-Open the files named in Part 4 for your shape and read them end to end. The
-patterns below are summaries; the code is the spec.
+선택한 유형에 대해 파트 4에 명시된 파일들을 열고 처음부터 끝까지 읽으세요. 아래의 패턴들은 요약일 뿐이며, 코드가 곧 명세(spec)입니다.
 
-### Step 2 — Create the manifest / entry point
+### 단계 2 — 매니페스트 / 진입점(entry point) 생성하기
 
-Create whatever the harness uses to recognize the plugin. Match the existing
-ones in spirit:
+하네스가 플러그인을 인식하기 위해 사용하는 파일을 생성하세요. 기존 파일들의 취지에 맞게 구성합니다:
 
-- **Shape A:** a `*-plugin/plugin.json` (see `.cursor-plugin/plugin.json`) with
-  `name`, `version`, `description`, author/license/keywords, `"skills":
-  "./skills/"`, and `"hooks": "./hooks/hooks-<harness>.json"`. Plus the
-  `hooks-<harness>.json` itself, registering a session-start hook whose command
-  invokes `run-hook.cmd`.
-- **Shape B:** the module the harness loads (e.g. `.<harness>/plugins/*.js`) plus
-  whatever package metadata it needs to be discovered. The committed package
-  metadata is the **repo-root `package.json`**: `main` points at the OpenCode
-  plugin, the `pi` field (`pi.extensions`, `pi.skills`) plus the `pi-package`
-  keyword declare the pi extension. Per-harness local manifests and lockfiles are
-  kept out of git — `.opencode/.gitignore` excludes `node_modules`,
-  `package.json`, and lockfiles. Do the same for your harness's *local* install
-  artifacts so they don't pollute the repo — but never gitignore the repo-root
-  `package.json`, which is the tracked source of truth.
-  - **Build/dependency check.** Decide how the harness loads your module:
-    does it run the source directly (pi's `.ts` is referenced as-is from
-    `package.json`; OpenCode ships plain `.js`), or does it need a transpile/build
-    step? Superpowers is zero-runtime-dependency. pi's `import type
-    { ExtensionAPI }` works specifically because the harness runs the `.ts`
-    directly, supplies that type at load, and the repo never type-checks the file
-    in CI — the import isn't even declared as a dependency. If *your* harness
-    actually type-checks or bundles the plugin, that breaks: an undeclared type
-    import fails, and the PR rules only carve out *runtime* deps for new
-    harnesses, not dev/type packages. If you hit this, confirm the approach with
-    the maintainer rather than quietly adding a dependency. Keep any build output
-    out of git and document the command.
-- **Shape C (instructions-file):** a small manifest (see `gemini-extension.json`:
-  `name`, `description`, `version`, `contextFileName`) plus the context file
-  itself (`GEMINI.md` is just two `@`-includes: the bootstrap skill and the
-  tool-mapping reference). The Gemini manifest has no `skills` field — Gemini
-  auto-discovers the `skills/` directory bundled in the installed extension. If
-  your harness has a native skill tool but no manifest field to register the
-  directory, you must find its discovery convention (read its extension docs),
-  then verify empirically: after wiring, ask the model to list its available
-  skills — if the bundled skills don't appear, discovery isn't working yet.
+- **유형 A:** `name`, `version`, `description`, 작성자/라이선스/키워드, `"skills": "./skills/"`, 그리고 `"hooks": "./hooks/hooks-<harness>.json"`이 포함된 `*-plugin/plugin.json`(`.cursor-plugin/plugin.json` 참조). 여기에 더해 `run-hook.cmd`를 호출하는 명령어로 세션 시작 훅을 등록하는 `hooks-<harness>.json` 자체를 생성합니다.
+- **유형 B:** 하네스가 로드하는 모듈(예: `.<harness>/plugins/*.js`)과 해당 모듈이 탐색되기 위해 필요한 패키지 메타데이터. 커밋되는 패키지 메타데이터는 **저장소 루트의 `package.json`**입니다: `main`은 OpenCode 플러그인을 가리키고, `pi` 필드(`pi.extensions`, `pi.skills`)와 `pi-package` 키워드는 pi 확장 프로그램을 선언합니다. 하네스별 로컬 매니페스트와 락파일은 git에서 제외됩니다 — `.opencode/.gitignore`는 `node_modules`, `package.json`, 락파일을 제외합니다. 여러분의 하네스에서도 *로컬* 설치 아티팩트가 저장소를 오염시키지 않도록 동일하게 처리하되, 추적되는 진실 공급원인 저장소 루트의 `package.json`은 절대 gitignore에 추가하지 마세요.
+  - **빌드/의존성 확인.** 하네스가 모듈을 어떻게 로드하는지 결정하세요: 소스를 직접 실행합니까(pi의 `.ts`는 `package.json`에서 있는 그대로 참조되며, OpenCode는 순수 `.js`를 배포함), 아니면 트랜스파일/빌드 단계가 필요합니까? Superpowers는 런타임 의존성이 제로(zero-runtime-dependency)입니다. pi의 `import type { ExtensionAPI }`가 작동하는 이유는 하네스가 `.ts`를 직접 실행하고 로드 시점에 해당 타입을 제공하며, 저장소 CI에서 해당 파일을 타입 체크하지 않기 때문입니다 — 이 임포트는 의존성으로 선언되어 있지도 않습니다. 만약 *여러분의* 하네스가 실제로 플러그인을 타입 체크하거나 번들링한다면 이 방식은 깨집니다: 선언되지 않은 타입 임포트는 실패하며, PR 규칙은 신규 하네스에 대해 *런타임* 의존성만 예외로 허용할 뿐 dev/type 패키지는 허용하지 않습니다. 이 문제에 부딪히면 조용히 의존성을 추가하는 대신 메인테이너에게 접근 방식을 확인받으세요. 모든 빌드 결과물은 git 외부에 유지하고 명령어를 문서화하세요.
+- **유형 C (지침 파일):** 작은 매니페스트(`gemini-extension.json` 참조: `name`, `description`, `version`, `contextFileName`)와 컨텍스트 파일 자체(`GEMINI.md`는 부트스트랩 스킬과 도구 매핑 레퍼런스에 대한 두 개의 `@`-include로만 구성됨). Gemini 매니페스트에는 `skills` 필드가 없습니다 — Gemini는 설치된 확장 프로그램에 번들링된 `skills/` 디렉토리를 자동으로 탐색합니다. 만약 여러분의 하네스에 네이티브 스킬 도구는 있지만 디렉토리를 등록할 매니페스트 필드가 없다면, 해당 하네스의 탐색 규칙을 찾아낸 뒤(확장 프로그램 문서 참고) 실험적으로 검증해야 합니다: 연결 작업을 마친 후 모델에게 사용 가능한 스킬 목록을 나열해 달라고 요청하세요 — 번들링된 스킬들이 나타나지 않는다면 탐색이 아직 작동하지 않는 것입니다.
 
-### Step 3 — Wire the bootstrap injection
+### 단계 3 — 부트스트랩 주입 연결하기
 
-This is the heart of the port. The shared goal: at session start, get the
-`using-superpowers` skill content (wrapped in `<EXTREMELY_IMPORTANT>` tags) plus
-the harness's tool mapping in front of the model, with a note that the skill is
-already active so the model doesn't try to load it again. *How* you do that —
-and what you assemble vs. what the harness loads raw — depends entirely on your
-shape. Do **not** apply one shape's recipe to another.
+이 단계가 포팅의 핵심입니다. 공통의 목표는 세션 시작 시 (`<EXTREMELY_IMPORTANT>` 태그로 감싸진) `using-superpowers` 스킬 콘텐츠와 하네스의 도구 매핑을, 해당 스킬이 이미 활성화되어 있으므로 다시 로드하려고 시도하지 말라는 안내 문구와 함께 모델에게 전달하는 것입니다. 이를 *어떻게* 수행할지, 그리고 무엇을 직접 조립하고 무엇을 하네스가 원본 그대로 로드하게 할지는 전적으로 선택한 유형에 달려 있습니다. 한 유형의 레시피를 다른 유형에 적용하지 **마세요**.
 
-**Shape A — a script reads `SKILL.md` and prints the harness's JSON.** The
-dispatched script (`hooks/session-start`) `cat`s the whole `SKILL.md` (frontmatter
-included — that's fine; it's emitted verbatim), wraps it with the "You have
-superpowers… for all other skills use the Skill tool" preamble, escapes it, and
-prints the harness's JSON shape. The tool mapping for Shape A does **not** go
-inline here — it lives in `references/<harness>-tools.md` (Step 4). Get the JSON
-output shape exactly right. `hooks/session-start`
-detects the harness from environment variables and prints *one of three* shapes:
+**유형 A — 스크립트가 `SKILL.md`를 읽고 하네스의 JSON을 출력합니다.** 디스패치된 스크립트(`hooks/session-start`)는 전체 `SKILL.md`(프론트매터 포함 — 그대로 출력되어도 괜찮음)를 `cat`으로 읽고, "You have superpowers… for all other skills use the Skill tool" 서문(preamble)으로 감싼 뒤 이스케이프 처리하여 하네스의 JSON 형태로 출력합니다. 유형 A의 도구 매핑은 여기에 인라인으로 들어가지 **않으며** `references/<harness>-tools.md`에 위치합니다(단계 4). JSON 출력 형태를 정확히 맞추세요. `hooks/session-start`는 환경 변수로 하네스를 감지하여 *세 가지 형태 중 하나*를 출력합니다:
 
-- Cursor (`CURSOR_PLUGIN_ROOT` set): `{ "additional_context": "…" }`
-- Claude Code (`CLAUDE_PLUGIN_ROOT` set, `COPILOT_CLI` unset):
+- Cursor (`CURSOR_PLUGIN_ROOT` 설정됨): `{ "additional_context": "…" }`
+- Claude Code (`CLAUDE_PLUGIN_ROOT` 설정됨, `COPILOT_CLI` 미설정):
   `{ "hookSpecificOutput": { "hookEventName": "SessionStart", "additionalContext": "…" } }`
-- Copilot CLI / SDK standard (else): `{ "additionalContext": "…" }`
+- Copilot CLI / SDK 표준 (그 외): `{ "additionalContext": "…" }`
 
-This is a trap. Emitting the wrong field, or an extra one, means the bootstrap
-either never injects or injects twice (Claude Code reads both
-`additional_context` and `hookSpecificOutput` without de-duplicating, so emitting
-both double-injects). Find the
-exact field, nesting, and event-matcher values your harness expects. Then
-decide: add a fourth branch to `hooks/session-start`, or — if the harness needs
-a different bootstrap message or env contract — add a dedicated
-`hooks/session-start-<harness>` script. If you add a branch
-and your harness *also* sets an env var an earlier branch keys on (some harnesses
-set `CLAUDE_PLUGIN_ROOT` too), order your branch before the one that would
-otherwise shadow it. Match the harness's
-own event-matcher strings (Claude Code uses `startup|clear|compact`, Cursor
-`sessionStart`); wrong matchers mean the hook silently never fires.
+이 부분은 함정입니다. 잘못된 필드를 출력하거나 불필요한 필드를 추가로 출력하면 부트스트랩이 아예 주입되지 않거나 두 번 주입됩니다(Claude Code는 중복 제거 없이 `additional_context`와 `hookSpecificOutput`을 둘 다 읽으므로, 둘 다 출력하면 이중 주입됩니다). 하네스가 기대하는 정확한 필드, 중첩 구조, 이벤트 매처(event-matcher) 값을 찾으세요. 그런 다음 결정하세요: `hooks/session-start`에 네 번째 분기를 추가할지, 아니면 — 하네스에 다른 부트스트랩 메시지나 환경 변수 규약이 필요한 경우 — 전용 `hooks/session-start-<harness>` 스크립트를 추가할지 선택합니다. 만약 분기를 추가하는데 여러분의 하네스가 이전 분기에서 조건으로 확인하는 환경 변수도 *함께* 설정한다면(일부 하네스는 `CLAUDE_PLUGIN_ROOT`도 설정함), 가려지지 않도록 여러분의 분기를 기존 분기보다 앞에 배치하세요. 하네스 자체의 이벤트 매처 문자열을 정확히 맞추세요(Claude Code는 `startup|clear|compact`, Cursor는 `sessionStart` 사용). 매처가 틀리면 훅이 아무런 경고 없이 실행되지 않습니다.
 
-The **hook-config schema itself varies per harness** — don't assume the
-Claude Code shape is universal. Compare `hooks/hooks.json` and
-`hooks/hooks-cursor.json`: Cursor's uses
-`"version": 1`, a lowercase `sessionStart` key, a relative
-`./hooks/run-hook.cmd` command, and omits the `matcher`/`type`/`async` fields
-Claude Code uses. Match your `hooks-<harness>.json` to whichever existing file is
-closest, not to a single canonical template.
+**훅 설정 스키마 자체도 하네스마다 다릅니다** — Claude Code 형태가 보편적일 것이라고 가정하지 마세요. `hooks/hooks.json`과 `hooks/hooks-cursor.json`을 비교해 보세요: Cursor는 `"version": 1`, 소문자 `sessionStart` 키, 상대 경로인 `./hooks/run-hook.cmd` 명령어를 사용하며 Claude Code가 사용하는 `matcher`/`type`/`async` 필드를 생략합니다. 하나의 고정된 템플릿이 아니라 가장 가까운 기존 파일에 맞춰 `hooks-<harness>.json`을 작성하세요.
 
-The hook **command string references a harness-provided plugin-root variable**,
-and its name differs per harness: `hooks.json` uses `${CLAUDE_PLUGIN_ROOT}`,
-`hooks-cursor.json` uses a relative path. Use
-whatever your harness exports. (The `session-start` script re-derives the root
-itself via `dirname`, so the script body doesn't depend on this — but the
-command in the manifest does.)
+훅 **명령어 문자열은 하네스가 제공하는 플러그인 루트 변수를 참조하며**, 그 변수 이름도 하네스마다 다릅니다: `hooks.json`은 `${CLAUDE_PLUGIN_ROOT}`를 사용하고 `hooks-cursor.json`은 상대 경로를 사용합니다. 여러분의 하네스가 내보내는(export) 방식을 사용하세요. (`session-start` 스크립트는 내부적으로 `dirname`을 통해 루트를 다시 계산하므로 스크립트 본문은 이에 의존하지 않지만, 매니페스트의 명령어는 이에 의존합니다.)
 
-**Discovering the harness's contract.** The three facts above — env var, JSON
-field/nesting, matcher strings — are the harness's contract, not Superpowers',
-so you have to source them. Read the harness's hook docs, or find out
-empirically: register a throwaway session-start hook that dumps its environment
-and emits a marker, then observe which env var identifies the harness and
-whether/how the harness ingests your stdout. Pin these down before writing the
-real branch.
+**하네스의 규약(contract) 알아내기.** 위에서 언급한 세 가지 사실 — 환경 변수, JSON 필드/중첩 구조, 매처 문자열 — 은 Superpowers가 아니라 하네스의 규약이므로 직접 출처를 확인해야 합니다. 하네스의 훅 문서를 읽거나 실험적으로 알아내세요: 환경 변수를 덤프하고 마커를 출력하는 일회용 세션 시작 훅을 등록한 다음, 어떤 환경 변수가 하네스를 식별하는지 그리고 하네스가 stdout을 어떻게 수집하는지 관찰하세요. 실제 분기 코드를 작성하기 전에 이 사항들을 먼저 확정하세요.
 
-**Shape B — assemble the string in code, then inject as a user message.** Here
-you build the bootstrap yourself: read `SKILL.md`, strip its YAML frontmatter,
-and assemble `<EXTREMELY_IMPORTANT>` + a short preamble that the skill is already
-loaded and must not be re-invoked + the stripped body + the inline tool mapping +
-`</EXTREMELY_IMPORTANT>`. One subtlety the references disagree on: OpenCode's
-preamble says "do NOT use the skill tool…" (assumes a `skill` tool exists), while
-pi's just says "do not try to load using-superpowers again." If your harness has
-no skill tool, use pi's wording, not OpenCode's.
+**유형 B — 코드에서 문자열을 조립한 뒤 사용자(user) 메시지로 주입합니다.** 여기서는 부트스트랩을 직접 구축합니다: `SKILL.md`를 읽고, YAML 프론트매터를 제거한 뒤, `<EXTREMELY_IMPORTANT>` + 스킬이 이미 로드되었으므로 다시 호출하지 말라는 짧은 서문 + 프론트매터가 제거된 본문 + 인라인 도구 매핑 + `</EXTREMELY_IMPORTANT>`를 조립합니다. 레퍼런스들 사이에 미묘한 차이가 하나 있습니다: OpenCode의 서문은 "do NOT use the skill tool…"(`skill` 도구가 존재한다고 가정함)이라고 하는 반면, pi는 단순히 "do not try to load using-superpowers again"이라고만 합니다. 만약 하네스에 스킬 도구가 없다면 OpenCode가 아니라 pi의 문구를 사용하세요.
 
-Inject the result as a **user-role message, not a system message** — system
-messages bloat tokens when repeated every turn (#750) and multiple system
-messages break some models (#894). Three things you must replicate:
+결과물은 **시스템(system) 메시지가 아니라 사용자 역할(user-role) 메시지로** 주입하세요 — 시스템 메시지는 매 턴마다 반복될 때 토큰을 비대하게 만들고(#750), 여러 개의 시스템 메시지는 일부 모델을 깨뜨립니다(#894). 반드시 복제해야 할 세 가지 사항은 다음과 같습니다:
 
-- **Dedup guard.** The lifecycle callback can fire repeatedly (OpenCode's
-  transform runs on *every* agent step; pi's `context` fires per turn). Before
-  injecting, check whether a bootstrap marker is already present and skip if so.
-  (The references pick different markers — pi a custom string, OpenCode the
-  `EXTREMELY_IMPORTANT` tag; matching the tag is more robust since it needs no
-  harness-specific constant.) Cache the bootstrap content at module level so
-  you're not re-reading and re-parsing `SKILL.md` on every call (#1202).
-- **Compaction.** If the harness compacts/summarizes history, re-inject
-  afterward. pi re-injects on every `context` call and inserts the message
-  *after* any leading compaction-summary messages. OpenCode relies on its
-  per-step re-injection plus the dedup guard.
-- **Message-object shape is per-harness — discover yours, don't copy a literal.**
-  The two references use *incompatible* shapes: pi builds
-  `{ role, content: [{ type, text }], timestamp }`; OpenCode manipulates
-  `message.info.role` and `message.parts[]`. Find your harness's message shape
-  from its API; copying a reference's object literal verbatim will fail silently.
+- **중복 방지 가드 (Dedup guard).** 생명주기 콜백은 반복해서 실행될 수 있습니다(OpenCode의 변환 훅은 *모든* 에이전트 스텝마다 실행되며, pi의 `context`는 매 턴마다 발생함). 주입하기 전에 부트스트랩 마커가 이미 존재하는지 확인하고, 존재한다면 건너뛰세요. (레퍼런스마다 선택하는 마커가 다릅니다 — pi는 커스텀 문자열을, OpenCode는 `EXTREMELY_IMPORTANT` 태그를 사용합니다. 하네스별 상수가 필요 없는 태그 매칭 방식이 더 견고합니다.) 매 호출마다 `SKILL.md`를 다시 읽고 파싱하지 않도록 모듈 레벨에서 부트스트랩 콘텐츠를 캐시하세요(#1202).
+- **컴팩션 (Compaction).** 하네스가 대화 기록을 압축/요약한다면 그 이후에 다시 주입하세요. pi는 모든 `context` 호출 시 재주입하며, 선행하는 컴팩션 요약 메시지들 *뒤에* 부트스트랩 메시지를 삽입합니다. OpenCode는 스텝별 재주입과 중복 방지 가드의 조합에 의존합니다.
+- **메시지 객체 형태는 하네스마다 다릅니다 — 리터럴을 그대로 복사하지 말고 직접 확인하세요.** 두 레퍼런스는 *서로 호환되지 않는* 형태를 사용합니다: pi는 `{ role, content: [{ type, text }], timestamp }`를 생성하고, OpenCode는 `message.info.role`과 `message.parts[]`를 조작합니다. 하네스의 API에서 메시지 형태를 찾으세요. 레퍼런스의 객체 리터럴을 그대로 복사하면 조용히 실패합니다.
 
-**Shape C — point your extension's context file at the bootstrap; assemble
-nothing.** There is no injector, so you do *not* strip frontmatter or build a
-wrapped string. The context file your extension ships (declared by the manifest —
-*not* the user's own global file) pulls in two things: the `using-superpowers`
-skill and the harness's tool-mapping reference. `GEMINI.md`
-does this with two `@`-includes (`@./skills/using-superpowers/SKILL.md` and
-`@./skills/using-superpowers/references/<harness>-tools.md`); the harness loads
-them raw, frontmatter and all, and `SKILL.md` already carries its own
-`<EXTREMELY-IMPORTANT>` block internally. If your harness has no include syntax,
-inline the content into the instructions file instead. Gemini ships **no**
-"already loaded, don't re-invoke" preamble — for an `@`-include harness the
-content is the active instruction set, not a skill the model would re-load. If
-you find your harness does try to re-invoke, add that note as a literal line in
-the instructions file (you have no code to add it any other way).
+**유형 C — 확장 프로그램의 컨텍스트 파일이 부트스트랩을 가리키게 하고 아무것도 조립하지 않습니다.** 주입기(injector)가 없으므로 프론트매터를 제거하거나 래핑된 문자열을 만들지 *않습니다*. 확장 프로그램이 배포하는 컨텍스트 파일(사용자의 전역 파일이 아니라 매니페스트가 선언한 파일)이 두 가지를 가져옵니다: `using-superpowers` 스킬과 하네스의 도구 매핑 레퍼런스입니다. `GEMINI.md`는 두 개의 `@`-include(`@./skills/using-superpowers/SKILL.md` 및 `@./skills/using-superpowers/references/<harness>-tools.md`)로 이를 수행합니다. 하네스는 프론트매터를 포함한 원본 그대로 이 파일들을 로드하며, `SKILL.md`는 이미 내부적으로 자체 `<EXTREMELY-IMPORTANT>` 블록을 가지고 있습니다. 하네스에 include 문법이 없다면 콘텐츠를 지침 파일에 직접 인라인으로 넣으세요. Gemini는 "이미 로드되었으니 다시 호출하지 말라"는 서문을 배포하지 **않습니다** — `@`-include를 사용하는 하네스에서는 해당 콘텐츠 자체가 활성화된 지침 세트이므로 모델이 다시 로드할 스킬로 인식하지 않기 때문입니다. 만약 여러분의 하네스가 재호출을 시도한다면 해당 안내를 지침 파일에 리터럴 줄로 추가하세요(다른 방법으로 추가할 코드가 없습니다).
 
-### Step 4 — Write the tool mapping
+### 단계 4 — 도구 매핑 작성하기
 
-Translate the action vocabulary into the harness's real tools. Cover every one
-of these actions (omit only what genuinely doesn't apply):
+동작 어휘(action vocabulary)를 하네스의 실제 도구로 번역하세요. 다음의 모든 동작을 다루어야 합니다(정말로 해당되지 않는 것만 생략하세요):
 
-- read a file
-- create / edit / delete a file (one `apply_patch`-style tool, or separate
-  write/edit?)
-- run a shell command
-- search file contents / find files by name (grep, glob)
-- fetch a URL / web search
-- **dispatch a subagent**, including how to pass the agent type — and any config
-  flag needed to enable it
-- **create / update todos** (treat older `TodoWrite` references as this action)
-- **invoke a skill** — see Step 5
+- 파일 읽기 (read a file)
+- 파일 생성 / 편집 / 삭제 (하나의 `apply_patch` 스타일 도구인가, 아니면 분리된 write/edit 도구인가?)
+- 셸 명령어 실행 (run a shell command)
+- 파일 내용 검색 / 이름으로 파일 찾기 (grep, glob)
+- URL 가져오기 / 웹 검색 (fetch a URL / web search)
+- **서브에이전트 디스패치 (dispatch a subagent)** — 에이전트 타입을 전달하는 방법 및 이를 활성화하는 데 필요한 설정 플래그 포함
+- **할 일(todos) 생성 / 업데이트** (이전의 `TodoWrite` 참조도 이 동작으로 취급)
+- **스킬 호출 (invoke a skill)** — 단계 5 참조
 
-**Get the real tool names from the harness; never invent them.** If the docs
-don't list them, the authoritative source is the harness itself: in a live
-session, ask the model to "list the exact machine names of every tool you can
-call, one per line" and use what it reports.
+**실제 도구 이름은 하네스에서 직접 확인하고 절대 지어내지 마세요.** 문서에 나와 있지 않다면 가장 확실한 출처는 하네스 자체입니다: 라이브 세션에서 모델에게 "호출할 수 있는 모든 도구의 정확한 머신 이름을 한 줄에 하나씩 나열해 줘(list the exact machine names of every tool you can call, one per line)"라고 요청하고 모델이 보고한 이름을 사용하세요.
 
-**How the harness finds the `skills/` directory is itself per-harness** — confirm
-it, don't assume. Possibilities: a manifest `skills` path field (Codex's
-`"skills": "./skills/"`); a *co-located* `skills/` the harness auto-scans (where a
-path field is **ignored** — one real harness only scanned a `skills/` sitting next
-to `plugin.json`); an API/registration call (OpenCode, pi); or you stage an
-install dir that pairs the manifest with a **symlink to the repo's `skills/`** and
-point the installer at the staging dir (verify the installer *dereferences* the
-symlink and copies the real files — confirm with `agy plugin validate`/`install`
-or the equivalent before relying on it). A `skills` path field is *not* portable.
+**하네스가 `skills/` 디렉토리를 찾는 방식 자체도 하네스마다 다릅니다** — 가정하지 말고 확인하세요. 가능한 방식들: 매니페스트의 `skills` 경로 필드(Codex의 `"skills": "./skills/"`); 하네스가 자동으로 스캔하는 *같은 위치(co-located)의* `skills/` 디렉토리(이 경우 경로 필드는 **무시됩니다** — 실제로 어떤 하네스는 `plugin.json` 옆에 있는 `skills/`만 스캔했음); API/등록 호출(OpenCode, pi); 또는 매니페스트와 **저장소 `skills/`에 대한 심볼릭 링크**를 짝지어 스테이징 설치 디렉토리를 구성하고 설치 관리자가 해당 스테이징 디렉토리를 가리키게 하는 방식(설치 관리자가 심볼릭 링크를 *역참조(dereference)*하여 실제 파일을 복사하는지 확인하세요 — 이에 의존하기 전에 `agy plugin validate`/`install` 또는 동등한 명령어로 검증하세요). `skills` 경로 필드는 이식성이 보장되지 *않습니다*.
 
-Where the mapping lives depends on shape:
+매핑이 위치하는 곳은 유형에 따라 다릅니다:
 
-- **Shape A:** put it in `skills/using-superpowers/references/<harness>-tools.md`.
-  The agent reaches it from the bootstrap — `SKILL.md`'s "Platform Adaptation"
-  section links the per-harness references files. (Shape A harnesses have no
-  instructions file; the mapping is *not* inlined into the hook output.)
-- **Shape B:** the mapping is typically inlined into the bootstrap string you
-  inject (see the `toolMapping` constant in `superpowers.js`). pi keeps it in
-  *both* places — `piToolMapping()` inline **and** `references/pi-tools.md`. If
-  you maintain it in two places, update both, or the port is half-done.
-- **Shape C:** put it in `references/<harness>-tools.md` and pull it into the
-  always-loaded instructions file (e.g. `GEMINI.md` `@`-includes
-  `gemini-tools.md`).
+- **유형 A:** `skills/using-superpowers/references/<harness>-tools.md`에 작성합니다. 에이전트는 부트스트랩에서 이곳에 도달합니다 — `SKILL.md`의 "Platform Adaptation" 섹션이 하네스별 레퍼런스 파일들을 링크합니다. (유형 A 하네스에는 지침 파일이 없으며, 매핑은 훅 출력에 인라인으로 포함되지 *않습니다*.)
+- **유형 B:** 매핑은 일반적으로 주입하는 부트스트랩 문자열 안에 인라인으로 포함됩니다(`superpowers.js`의 `toolMapping` 상수 참조). pi는 *두 곳 모두*에 유지합니다 — 인라인 `piToolMapping()` **및** `references/pi-tools.md`. 두 곳에 유지하는 경우 두 곳을 모두 업데이트하세요. 그렇지 않으면 포팅이 절반만 완료된 것입니다.
+- **유형 C:** `references/<harness>-tools.md`에 작성하고 항상 로드되는 지침 파일에서 가져옵니다(예: `GEMINI.md`가 `gemini-tools.md`를 `@`-include함).
 
-You may also add a one-line pointer to your harness in `SKILL.md`'s "Platform
-Adaptation" section so an agent reading the bootstrap knows where its mapping
-lives. This is the one edit to a `SKILL.md` a port may make — and only because
-that section is a pointer list, not behavior-shaping content. It does not violate
-the "don't edit skill bodies" rule (Part 1); do not touch anything else in any
-skill. (The list is a convenience pointer, not an exhaustive registry — not every
-harness is listed.)
+또한 부트스트랩을 읽는 에이전트가 자신의 매핑이 어디에 있는지 알 수 있도록 `SKILL.md`의 "Platform Adaptation" 섹션에 하네스를 가리키는 한 줄짜리 포인터를 추가할 수도 있습니다. 이것은 포팅 작업에서 `SKILL.md`에 가할 수 있는 유일한 수정이며 — 그 섹션이 행동을 형성하는 콘텐츠가 아니라 포인터 목록이기 때문에 허용됩니다. 이는 "스킬 본문을 편집하지 말라"는 규칙(파트 1)을 위반하지 않습니다. 어떤 스킬의 다른 어떤 부분도 건드리지 마세요. (이 목록은 편의를 위한 포인터일 뿐 전체 레지스트리가 아니므로 모든 하네스가 나열되어 있지는 않습니다.)
 
-### Step 5 — Handle a harness with no native skill tool
+### 단계 5 — 네이티브 스킬 도구가 없는 하네스 처리하기
 
-`using-superpowers/SKILL.md` tells the model to *never read skill files manually
-with file tools — always use your platform's skill-loading mechanism.* The point
-is "don't bypass the mechanism," not "never use file-read." What counts as "your
-platform's mechanism" depends on the harness — and for a harness with no skill
-tool, the documented mechanism *is* reading `SKILL.md`. So reading it there
-honors the rule rather than breaking it. Distinguish three cases:
+`using-superpowers/SKILL.md`는 모델에게 *파일 도구로 스킬 파일을 수동으로 읽지 말고 항상 플랫폼의 스킬 로딩 메커니즘을 사용하라*고 지시합니다. 핵심은 "메커니즘을 우회하지 말라"는 것이지 "파일 읽기 도구를 절대 쓰지 말라"는 것이 아닙니다. 무엇이 "플랫폼의 메커니즘"에 해당하는지는 하네스에 따라 다르며 — 스킬 도구가 없는 하네스에서는 문서화된 메커니즘이 *곧* `SKILL.md`를 읽는 것입니다. 따라서 그러한 환경에서 파일을 읽는 것은 규칙을 어기는 것이 아니라 규칙을 준수하는 것입니다. 다음 세 가지 경우를 구분하세요:
 
-1. **Native `Skill`-style tool** (Claude Code, Copilot CLI, Gemini's
-   `activate_skill`): point the mapping at that tool.
-2. **Native skill *discovery* but no `Skill` tool** (pi, Antigravity): the harness
-   can find and list skills, but the model can't call a tool to load one. Get the
-   skills installed where the harness scans (pi declares them in the package
-   manifest's `pi.skills`; OpenCode via its `config` hook; `agy plugin install` copies
-   them in), and tell the model to load a skill by **reading its `SKILL.md` with
-   the file-read tool when the skill applies** — the sanctioned mechanism here,
-   the way `references/pi-tools.md` states it.
+1. **네이티브 `Skill` 스타일 도구** (Claude Code, Copilot CLI, Gemini의 `activate_skill`): 매핑이 해당 도구를 가리키도록 합니다.
+2. **네이티브 스킬 *탐색(discovery)*은 있지만 `Skill` 도구는 없는 경우** (pi, Antigravity): 하네스가 스킬을 찾아 나열할 수는 있지만, 모델이 스킬을 로드하기 위해 호출할 수 있는 전용 도구는 없습니다. 하네스가 스캔하는 위치에 스킬이 설치되도록 하고(pi는 패키지 매니페스트의 `pi.skills`에 선언하고, OpenCode는 `config` 훅을 통하며, `agy plugin install`은 스킬들을 복사해 넣음), 모델에게는 `references/pi-tools.md`가 명시하는 승인된 메커니즘처럼 **해당 스킬이 적용될 때 파일 읽기 도구로 `SKILL.md`를 읽어서** 스킬을 로드하라고 알려주세요.
 
-   **For the bootstrap itself, prefer something the harness loads every
-   session (Part 6)** — a declared context file where the manifest has a
-   `contextFileName`-style field. Antigravity has none, and its other options
-   cost more than they buy, so it uses the surfaced skill index below:
-   - Its hooks have no session-start event. `PreInvocation` runs before every
-     model call; an `ephemeralMessage` it injects is dropped on the next call,
-     and `invocationNum` resets on each user turn. A `userMessage` gated on
-     `invocationNum == 0` and `initialNumSteps == 1` injects exactly once per
-     conversation, but agy still starts the hook process on every model call.
-     `${PLUGIN_ROOT}` is not set in hooks (they run from the plugin root).
-     `hooks.json` must sit at the plugin root; no manifest field moves it.
-   - It loads `rules/*.md` from a plugin every session, but harnesses that
-     install from the git repo share its root, and Cursor is one of them: it
-     also loads any `rules/*.md` a plugin ships. A file in a shared plugin root
-     is visible to every harness that reads that root — check before adding
-     one.
+   **부트스트랩 자체의 경우, 하네스가 매 세션마다 로드하는 방식을 선호하세요(파트 6)** — 매니페스트에 `contextFileName` 스타일의 필드가 있다면 선언된 컨텍스트 파일을 사용합니다. Antigravity에는 그러한 필드가 없고 다른 옵션들은 실익보다 비용이 더 크므로 아래의 노출된 스킬 인덱스(surfaced skill index)를 사용합니다:
+   - Antigravity의 훅에는 세션 시작 이벤트가 없습니다. `PreInvocation`은 모든 모델 호출 전에 실행되며, 여기서 주입하는 `ephemeralMessage`는 다음 호출 시 삭제되고 `invocationNum`은 매 사용자 턴마다 초기화됩니다. `invocationNum == 0` 및 `initialNumSteps == 1` 조건으로 제어되는 `userMessage`는 대화당 정확히 한 번 주입되지만, agy는 여전히 모든 모델 호출마다 훅 프로세스를 시작합니다. 훅에서는 `${PLUGIN_ROOT}`가 설정되지 않습니다(플러그인 루트에서 실행됨). `hooks.json`은 반드시 플러그인 루트에 위치해야 하며 이를 변경할 수 있는 매니페스트 필드는 없습니다.
+   - Antigravity는 매 세션마다 플러그인에서 `rules/*.md`를 로드하지만, git 저장소에서 설치하는 하네스들은 루트를 공유하며 Cursor도 그중 하나입니다: Cursor 역시 플러그인이 배포하는 모든 `rules/*.md`를 로드합니다. 공유된 플러그인 루트에 있는 파일은 그 루트를 읽는 모든 하네스에 노출되므로 추가하기 전에 반드시 확인하세요.
 
-   **Fallback — the surfaced skill index.** If there's no context-file field but
-   the harness surfaces each installed skill's name + description at session start,
-   you need *neither* a built index nor a runtime-list instruction — the harness
-   is the index, and `using-superpowers`'s own surfaced description can be what
-   triggers the model to load it. This is softer than a declared context file;
-   two things it does **not** give you, versus a context file / hook / in-process
-   injector — account for both:
-   - **It bootstraps *triggering*, not the *tool mapping*.** An injector prepends
-     `<harness>-tools.md` alongside `using-superpowers` every session. Here nothing
-     injects the mapping — the model only sees skill *descriptions* and must *read*
-     your `references/<harness>-tools.md` when it needs tool names. It works
-     because skills name actions (the model reads the mapping when it acts), but
-     it's softer than injection. Make sure the mapping is reachable from what the
-     model loads — e.g. linked from `SKILL.md`'s Platform Adaptation section and
-     installed alongside the skills — not just sitting in the repo.
-   - **There's no structural guarantee the trigger fires.** No `<EXTREMELY_IMPORTANT>`
-     wrapper, no dedup, no re-injection after compaction — firing depends on the
-     model choosing to act on a description it sees in the index. This is exactly
-     why the acceptance test is mandatory here: it is the *only* guarantee, so run
-     it on the model(s) your users will actually use, not just the strongest one.
-3. **No skill system at all:** there is nothing to register, and the *only*
-   mechanism is the model reading `SKILL.md` on demand. But the model can't read
-   what it can't find: `using-superpowers/SKILL.md` does **not** enumerate the
-   available skills, so on its own the model won't know which skills exist or
-   their triggers. You must supply a discovery path. Two options, and they differ
-   in durability: (a) generate a skill index (each `skills/*/SKILL.md`'s `name` +
-   `description` frontmatter) and place it *inside* the `<EXTREMELY_IMPORTANT>`
-   wrapper alongside the tool mapping (Shape B recipe above) so it's covered by
-   the dedup guard — but a build-time index goes stale as skills are added; or
-   (b) instruct the model to list `skills/*/SKILL.md` at runtime and read their
-   frontmatter to find a match — slower but never stale. Prefer (b) unless you
-   have a reason not to. Without either, a no-skill-system port loads the
-   bootstrap but silently never triggers any other skill.
+   **폴백 — 노출된 스킬 인덱스(surfaced skill index).** 컨텍스트 파일 필드는 없지만 하네스가 세션 시작 시 설치된 각 스킬의 이름과 설명을 노출한다면, 빌드 타임 인덱스도 런타임 목록 조회 지침도 필요하지 *않습니다* — 하네스 자체가 인덱스이며, 노출된 `using-superpowers` 자체의 설명이 모델로 하여금 해당 스킬을 로드하도록 트리거할 수 있습니다. 이는 선언된 컨텍스트 파일보다 느슨한(softer) 방식이며, 컨텍스트 파일 / 훅 / 인프로세스 주입기 방식과 비교할 때 제공하지 **않는** 두 가지가 있으므로 둘 다 고려해야 합니다:
+   - **이 방식은 *도구 매핑*이 아니라 *트리거링*만 부트스트랩합니다.** 주입기는 매 세션마다 `using-superpowers`와 함께 `<harness>-tools.md`를 앞에 붙여 넣습니다. 반면 여기서는 매핑을 주입하는 것이 아무것도 없습니다 — 모델은 스킬 *설명*만 보게 되며, 도구 이름이 필요할 때 직접 `references/<harness>-tools.md`를 *읽어야* 합니다. 스킬이 동작(actions) 단위로 서술되어 있기 때문에(모델이 행동할 때 매핑을 읽음) 작동하긴 하지만, 직접 주입하는 것보다는 느슨합니다. 매핑이 단순히 저장소에만 놓여 있는 것이 아니라 모델이 로드하는 내용으로부터 도달할 수 있도록 하세요 — 예를 들어 `SKILL.md`의 Platform Adaptation 섹션에 링크되고 스킬들과 함께 설치되어야 합니다.
+   - **트리거가 작동한다는 구조적 보장이 없습니다.** `<EXTREMELY_IMPORTANT>` 래퍼도, 중복 방지도, 컴팩션 후 재주입도 없으며 — 작동 여부는 인덱스에서 본 설명에 따라 모델이 행동하기로 선택하느냐에 달려 있습니다. 바로 이 때문에 여기서는 인수 테스트가 필수적입니다: 인수 테스트가 *유일한* 보증 수단이므로, 가장 성능이 좋은 모델뿐만 아니라 사용자들이 실제로 사용할 모델(들)에서 테스트를 실행하세요.
+3. **스킬 시스템이 아예 없는 경우:** 등록할 대상 자체가 없으며, *유일한* 메커니즘은 모델이 필요할 때 `SKILL.md`를 직접 읽는 것입니다. 하지만 모델은 찾을 수 없는 것을 읽을 수 없습니다: `using-superpowers/SKILL.md`는 사용 가능한 스킬들을 나열하지 **않으므로**, 그 자체만으로는 모델이 어떤 스킬들이 존재하는지나 그 트리거 조건이 무엇인지 알지 못합니다. 따라서 탐색 경로를 직접 제공해야 합니다. 두 가지 옵션이 있으며 내구성(durability)에 차이가 있습니다: (a) 스킬 인덱스(각 `skills/*/SKILL.md`의 `name` + `description` 프론트매터)를 생성하여 중복 방지 가드의 적용을 받도록 도구 매핑과 함께 `<EXTREMELY_IMPORTANT>` 래퍼 *안쪽*에 배치하는 방식(위의 유형 B 레시피) — 단, 빌드 타임 인덱스는 스킬이 추가됨에 따라 오래된 정보(stale)가 됩니다; 또는 (b) 모델에게 런타임에 `skills/*/SKILL.md` 목록을 조회하고 프론트매터를 읽어 일치하는 스킬을 찾도록 지시하는 방식 — 조금 더 느리지만 절대 오래된 정보가 되지 않습니다. 특별한 이유가 없다면 (b)를 선호하세요. 둘 중 어느 것도 제공하지 않으면 스킬 시스템이 없는 포팅은 부트스트랩만 로드할 뿐 다른 어떤 스킬도 조용히 트리거하지 못합니다.
 
-In cases 2 and 3, say plainly in your tool mapping that reading `SKILL.md` is the
-blessed path, so the model doesn't think it's violating the "never read skill
-files" rule. Don't go hunting for a `skillPaths`-style registration API in a
-harness that has no skill system — case 3 has none.
+케이스 2와 3에서는 모델이 "절대 스킬 파일을 읽지 말라"는 규칙을 위반하고 있다고 생각하지 않도록, 도구 매핑에서 `SKILL.md`를 읽는 것이 공식적으로 승인된 경로(blessed path)임을 명확하게 밝히세요. 스킬 시스템이 없는 하네스에서 `skillPaths` 스타일의 등록 API를 찾으려고 애쓰지 마세요 — 케이스 3에는 그런 것이 없습니다.
 
-### Step 6 — Add tests
+### 단계 6 — 테스트 추가하기
 
-Match the existing per-harness test style:
+기존의 하네스별 테스트 스타일에 맞추세요:
 
-- **Shape A:** assert the hook's stdout has the exact JSON shape your harness
-  consumes, and that it contains the bootstrap. See `tests/hooks/test-session-start.sh`,
-  which validates each harness's output shape.
-- **Shape B:** a unit test that fakes the harness's plugin API and asserts the
-  lifecycle handlers register, the bootstrap injects once, the dedup guard
-  works, and (if relevant) compaction re-injection works. See
-  `tests/pi/test-pi-extension.mjs`. Add an isolated-install integration check in
-  the style of `tests/opencode/`.
-- If the bootstrap is cached, test that the cache behaves when the file is
-  missing (see the OpenCode caching tests).
+- **유형 A:** 훅의 stdout이 하네스가 소비하는 정확한 JSON 형태를 가지고 있는지, 그리고 그 안에 부트스트랩이 포함되어 있는지 검증(assert)합니다. 각 하네스의 출력 형태를 검증하는 `tests/hooks/test-session-start.sh`를 참조하세요.
+- **유형 B:** 하네스의 플러그인 API를 모킹(fake)하여 생명주기 핸들러가 등록되는지, 부트스트랩이 한 번 주입되는지, 중복 방지 가드가 작동하는지, 그리고 (해당되는 경우) 컴팩션 후 재주입이 작동하는지 검증하는 단위 테스트를 작성합니다. `tests/pi/test-pi-extension.mjs`를 참조하세요. 또한 `tests/opencode/` 스타일로 격리된 설치(isolated-install) 통합 검사를 추가하세요.
+- 부트스트랩이 캐시되는 경우, 파일이 누락되었을 때 캐시가 어떻게 동작하는지 테스트하세요(OpenCode 캐싱 테스트 참조).
 
-These automated tests cover the wiring; the live tmux run in Step 7 is what
-proves the integration actually triggers skills.
+이러한 자동화 테스트는 연결(wiring)을 검증하며, 통합이 실제로 스킬을 트리거하는지 증명하는 것은 단계 7의 라이브 tmux 실행입니다.
 
-### Step 7 — Install locally, then drive a live instance to verify
+### 단계 7 — 로컬에 설치한 뒤 라이브 인스턴스를 구동하여 검증하기
 
-You cannot confirm a port works by reading code. You have to run the harness with
-your in-progress port loaded and watch a real session — which is also how you
-produce the transcript the PR requires.
+코드를 읽는 것만으로는 포팅이 작동하는지 확인할 수 없습니다. 작업 중인 포팅이 로드된 상태로 하네스를 실행하고 실제 세션을 관찰해야 합니다 — 이는 PR에서 요구하는 트랜스크립트를 생성하는 방법이기도 합니다.
 
-**Install locally.** Point a *local* instance of the harness at your working
-tree, not a published build:
+**로컬에 설치하기.** 배포된 빌드가 아니라 작업 중인 트리(working tree)를 가리키도록 하네스의 *로컬* 인스턴스를 설정하세요:
 
-- **Shape A / C:** install the plugin/extension from this repo's local path (or
-  symlink its directory into wherever the harness looks). Find the harness's
-  "install from a local directory / git checkout" path in its docs.
-- **Shape B:** register the local module — e.g. an `opencode.json` `plugin`
-  entry pointing at the local path, or pi resolving the `package.json` fields
-  from the repo.
+- **유형 A / C:** 이 저장소의 로컬 경로에서 플러그인/확장 프로그램을 설치합니다(또는 하네스가 탐색하는 위치에 디렉토리 심볼릭 링크를 생성합니다). 하네스 문서에서 "로컬 디렉토리 / git 체크아웃에서 설치하기" 경로를 찾으세요.
+- **유형 B:** 로컬 모듈을 등록합니다 — 예: 로컬 경로를 가리키는 `opencode.json`의 `plugin` 항목, 또는 저장소에서 `package.json` 필드를 확인하는 pi 방식.
 
-Reinstall after each change and restart the harness, since the bootstrap loads at
-startup.
+부트스트랩은 시작 시점에 로드되므로 변경 후에는 매번 재설치하고 하네스를 재시작하세요.
 
-**Drive it with tmux.** Most harnesses are interactive REPLs/TUIs that can't be
-driven by piping stdin, so run the harness inside a detached tmux session and
-control it with `send-keys` / `capture-pane`. A harness may advertise a
-non-interactive "run one prompt" mode (e.g. `opencode run "..."`) — try it for the
-quick smoke check, but **don't depend on it**: these modes are frequently flaky,
-auth-gated, or trust-gated (one real harness's `--print` mode hung and timed out
-with no output every time). Be ready to do *everything*, including the smoke
-check, through tmux.
+**tmux로 구동하기.** 대부분의 하네스는 표준 입력(stdin) 파이핑으로는 구동할 수 없는 대화형 REPL/TUI이므로, 분리된(detached) tmux 세션 내부에서 하네스를 실행하고 `send-keys` / `capture-pane`으로 제어하세요. 하네스가 비대화형 "단일 프롬프트 실행" 모드(예: `opencode run "..."`)를 홍보할 수도 있습니다 — 빠른 스모크 체크용으로 시도해 볼 수는 있지만 **그것에 의존하지는 마세요**: 이러한 모드들은 종종 불안정하거나 인증 또는 신뢰 게이트에 막힙니다(실제로 어떤 하네스의 `--print` 모드는 매번 출력 없이 멈추고 타임아웃되었습니다). 스모크 체크를 포함한 *모든 작업*을 tmux를 통해 수행할 준비를 하세요.
 
-**Clear the gates first, or tmux stalls silently.** Many harnesses block on
-first-run onboarding, a "do you trust this folder?" prompt, a sandbox mode, or a
-permission gate — and a detached tmux session will just sit there with no error
-while it waits. Before the run, pre-trust your scratch directory (in the harness's
-settings/config) or be prepared to answer those prompts via `send-keys`, and
-account for the harness's startup time in your first `sleep`.
+**게이트를 먼저 통과하지 않으면 tmux가 조용히 멈춰 버립니다.** 많은 하네스들이 첫 실행 온보딩, "이 폴더를 신뢰하십니까?" 프롬프트, 샌드박스 모드 또는 권한 게이트에서 실행을 멈추며 — 분리된 tmux 세션은 대기하는 동안 아무런 에러 없이 그냥 멈춰 있게 됩니다. 실행 전에 스크래치 디렉토리를 (하네스의 설정에서) 미리 신뢰하도록 등록하거나 `send-keys`를 통해 해당 프롬프트에 응답할 준비를 하고, 첫 번째 `sleep` 시간에 하네스의 시작 시간을 충분히 반영하세요.
 
 ```bash
-# 1. Launch the harness detached, in a throwaway project dir
+# 1. 임시 프로젝트 디렉토리에서 분리된(detached) 상태로 하네스 실행
 mkdir -p /tmp/port-smoke
 tmux new-session -d -s port-test -c /tmp/port-smoke '<harness-launch-command>'
 
-# 2. Let it initialize — real TUIs take longer than you think (10s+ with a model
-#    handshake); tune this. THEN capture and clear any blocking modal before you
-#    type a prompt: first-run onboarding and "trust this folder?" are modal, so
-#    keystrokes sent during them select menu items instead of typing your prompt.
+# 2. 초기화 대기 — 실제 TUI는 생각보다 오래 걸립니다(모델 핸드셰이크 포함 시 10초 이상);
+#    이 시간을 조정하세요. 그런 다음 프롬프트를 입력하기 전에 화면을 캡처하고 실행을 막고 있는
+#    모달을 먼저 해소하세요: 첫 실행 온보딩과 "이 폴더를 신뢰하십니까?" 창은 모달이므로,
+#    이 상태에서 보낸 키 입력은 프롬프트 입력이 아니라 메뉴 항목 선택으로 처리됩니다.
 sleep 12
-tmux capture-pane -t port-test -p          # onboarding / trust prompt? answer it via send-keys first
-# (e.g. tmux send-keys -t port-test Enter   # to accept a trust prompt — inspect before assuming)
+tmux capture-pane -t port-test -p          # 온보딩 / 신뢰 프롬프트가 있나요? 먼저 send-keys로 응답하세요
+# (예: tmux send-keys -t port-test Enter   # 신뢰 프롬프트 수락 — 단정하지 말고 먼저 화면을 확인하세요)
 
-# 3. Smoke check: does the model know it has superpowers?
-#    Send the text and Enter as SEPARATE send-keys with a beat between them —
-#    sending them together races on some TUIs (Enter arrives before the text lands).
+# 3. 스모크 체크: 모델이 자신에게 superpowers가 있음을 알고 있는가?
+#    텍스트와 Enter는 사이에 짧은 간격을 두고 별도의 send-keys로 보내세요 —
+#    함께 보내면 일부 TUI에서 경쟁 상태(race condition)가 발생합니다(텍스트가 입력되기 전에 Enter가 먼저 도착함).
 tmux send-keys -t port-test 'What are your superpowers?'; sleep 0.4; tmux send-keys -t port-test Enter
 sleep 5
-tmux capture-pane -t port-test -p          # reply should show it knows its skills
+tmux capture-pane -t port-test -p          # 응답에서 자신의 스킬들을 인지하고 있음을 보여주어야 함
 
-# 4. Acceptance test: exact prompt (note the escaped apostrophe), fresh session
+# 4. 인수 테스트: 정확한 프롬프트(이스케이프된 작은따옴표에 주의), 새로운 세션
 tmux send-keys -t port-test 'Let'\''s make a react todo list'; sleep 0.4; tmux send-keys -t port-test Enter
-# poll until the turn finishes — re-capture every few seconds, don't capture once
+# 턴이 끝날 때까지 폴링 — 한 번만 캡처하지 말고 몇 초마다 다시 캡처하세요
 sleep 8
-tmux capture-pane -t port-test -p          # PASS = brainstorming triggers BEFORE any code
+tmux capture-pane -t port-test -p          # 통과(PASS) = 코드가 작성되기 전에 brainstorming이 트리거됨
 
-# 5. Save the transcript for the PR, then clean up
+# 5. PR을 위해 트랜스크립트를 저장한 뒤 정리
 tmux capture-pane -t port-test -p > /tmp/port-smoke/transcript.txt
 tmux kill-session -t port-test
 ```
 
-tmux gotchas that bite here: wait after launch before the first capture; send the
-prompt text and `Enter` as *separate* `send-keys` calls with a short `sleep`
-between them (sending them together races on some TUIs), and `Enter` is a key name
-not `\n`; the agent's turn takes time, so **poll `capture-pane` in a loop** rather
-than capturing once; `capture-pane` shows only the visible pane, so for a long
-conversation use the harness's own transcript/log file as the record of truth;
-always `kill-session` when done.
+여기서 자주 겪는 tmux 주의사항(gotchas): 실행 후 첫 번째 캡처 전에 충분히 대기하세요; 프롬프트 텍스트와 `Enter`는 사이에 짧은 `sleep`을 두고 *별도의* `send-keys` 호출로 보내세요(함께 보내면 일부 TUI에서 경쟁 상태가 발생함). 또한 `Enter`는 `\n`이 아니라 키 이름입니다; 에이전트의 턴은 시간이 걸리므로 한 번만 캡처하지 말고 **루프를 돌며 `capture-pane`을 폴링**하세요; `capture-pane`은 현재 보이는 화면(pane)만 보여주므로 대화가 길어질 때는 하네스 자체의 트랜스크립트/로그 파일을 진실 공급원으로 사용하세요; 작업이 끝나면 항상 `kill-session`을 수행하세요.
 
-If the smoke check shows the model *doesn't* know it has superpowers, the
-bootstrap isn't loading — fix that before bothering with the acceptance test.
+스모크 체크에서 모델이 자신에게 superpowers가 있다는 사실을 *모르는* 것으로 나타나면 부트스트랩이 로드되지 않는 것입니다 — 인수 테스트로 넘어가기 전에 그 문제부터 고치세요.
 
 ---
 
-## Part 6 — Distribution and release
+## 파트 6 — 배포 및 릴리스 (Distribution and release)
 
-A working integration in this repo isn't usable until a real user can install
-it. Distribution differs per harness ecosystem — find yours:
+이 저장소에서 작동하는 통합을 만들었더라도 실제 사용자가 설치할 수 없다면 쓸모가 없습니다. 배포 방식은 하네스 생태계마다 다릅니다 — 여러분의 하네스에 맞는 방식을 찾으세요:
 
-| Channel | Example | What you do |
+| 채널 | 예시 | 수행해야 할 작업 |
 |---|---|---|
-| Native plugin marketplace | Claude Code | Register in `.claude-plugin/marketplace.json`; users `/plugin install`. The external `superpowers-marketplace` repo is the source of truth users install from — see the release steps in `CLAUDE.md`. |
-| External marketplace fork, synced by script | Codex | `scripts/sync-to-codex-plugin.sh` rsyncs the tracked plugin files into a separate fork repo and opens a PR. Read its include/exclude list so you ship the right tree (it deliberately drops repo-internal dirs and other harnesses' dotdirs). |
-| Git-URL extension install | Gemini, Kimi Code, OpenCode | Users install from a git URL (`gemini extensions install …`; Kimi Code `/plugins install …`; an `opencode.json` `plugin` array entry). Document the exact command. |
-| Package-manifest fields | pi | Declared through fields in the repo-root `package.json`; users install via the harness's package command. |
-| Git-URL plugin install + marketplace | Antigravity (`agy`) | Users run `agy plugin install https://github.com/obra/superpowers`. agy reads `.antigravity-plugin/plugin.json`, whose Marketplace fields (`displayName`, `logo`, `suggestedPrompts`, `version`, `author`) also drive the Antigravity Marketplace listing. Without that manifest, agy falls back to importing `gemini-extension.json`. |
+| 네이티브 플러그인 마켓플레이스 | Claude Code | `.claude-plugin/marketplace.json`에 등록; 사용자는 `/plugin install`로 설치. 사용자가 실제로 설치하는 진실 공급원은 외부 `superpowers-marketplace` 저장소입니다 — `CLAUDE.md`의 릴리스 단계를 참조하세요. |
+| 스크립트로 동기화되는 외부 마켓플레이스 포크 | Codex | `scripts/sync-to-codex-plugin.sh`가 추적된 플러그인 파일들을 별도의 포크 저장소로 rsync하고 PR을 엽니다. 올바른 트리가 배포되도록 포함/제외(include/exclude) 목록을 확인하세요(저장소 내부 디렉토리와 다른 하네스의 숨김 디렉토리들은 의도적으로 제외됩니다). |
+| Git URL 확장 프로그램 설치 | Gemini, Kimi Code, OpenCode | 사용자가 git URL로부터 설치합니다 (`gemini extensions install …`; Kimi Code `/plugins install …`; `opencode.json`의 `plugin` 배열 항목). 정확한 명령어를 문서화하세요. |
+| 패키지 매니페스트 필드 | pi | 저장소 루트 `package.json`의 필드를 통해 선언됨; 사용자는 하네스의 패키지 명령어를 통해 설치합니다. |
+| Git URL 플러그인 설치 + 마켓플레이스 | Antigravity (`agy`) | 사용자가 `agy plugin install https://github.com/obra/superpowers`를 실행합니다. agy는 `.antigravity-plugin/plugin.json`을 읽으며, 그 안의 Marketplace 필드(`displayName`, `logo`, `suggestedPrompts`, `version`, `author`)는 Antigravity Marketplace 목록 표시에도 사용됩니다. 해당 매니페스트가 없으면 agy는 폴백으로 `gemini-extension.json`을 가져옵니다. |
 
-Then:
+그다음 확인할 사항:
 
-- **A plugin installer may silently strip *undeclared* files — so make the
-  bootstrap a file the installer *recognizes*, never a user-config edit.** A
-  `plugin install` typically copies only the components it knows about
-  (skills/agents/commands/mcp/hooks/context) and discards anything else, so a
-  context file the manifest doesn't declare just vanishes from the install. The
-  fix is **not** to give up and write into the user's config (**rule 2**) — it's
-  to declare the bootstrap as a recognized component. In escalation order:
-  - **Ship a context file the manifest declares.** If the harness has a
-    `contextFileName`-style field (an extension-declared file it loads every
-    session), that is the strongest clean bootstrap: declare it, and the installer
-    preserves it *and* the harness loads it. Generate it at install time from the
-    live `using-superpowers/SKILL.md` + the tool mapping (wrapped in
-    `<EXTREMELY_IMPORTANT>`) so the installed bootstrap never drifts.
-    **Verify with a marker** that the installer keeps the file and the
-    harness loads it: a file the manifest doesn't declare can be stripped as
-    unrecognized.
-  - **Otherwise lean on the installed `using-superpowers` skill itself.** If the
-    harness surfaces each installed skill's name + description at session start,
-    the `using-superpowers` description ("Use when starting any conversation…")
-    can prompt the model to load it — installing the skill *is* the bootstrap.
-    Softer (no guaranteed wrapper; it carries triggering but not the tool mapping
-    — see Step 5), so prefer the declared context file when available.
-  - If neither works, the harness cannot be cleanly supported yet — **say so**
-    and raise it, rather than hand-editing the user's config.
+- **플러그인 설치 관리자는 *선언되지 않은* 파일을 조용히 제거할 수 있습니다 — 따라서 부트스트랩은 절대 사용자 설정 편집이 아니라 설치 관리자가 *인식하는* 파일로 만드세요.** `plugin install`은 일반적으로 자신이 알고 있는 컴포넌트(skills/agents/commands/mcp/hooks/context)만 복사하고 나머지는 버리므로, 매니페스트가 선언하지 않은 컨텍스트 파일은 설치 과정에서 그냥 사라져 버립니다. 해결책은 포기하고 사용자의 설정에 직접 쓰는 것이 **아니라**(규칙 2), 부트스트랩을 인식 가능한 컴포넌트로 선언하는 것입니다. 우선순위는 다음과 같습니다:
+  - **매니페스트가 선언하는 컨텍스트 파일을 배포하세요.** 하네스에 `contextFileName` 스타일의 필드(확장 프로그램이 선언하고 매 세션마다 로드하는 파일)가 있다면 그것이 가장 강력하고 깔끔한 부트스트랩입니다: 이를 선언하면 설치 관리자가 파일을 보존할 *뿐만 아니라* 하네스가 매번 로드합니다. 설치된 부트스트랩이 원본과 어긋나지 않도록 설치 시점에 실제 `using-superpowers/SKILL.md` + 도구 매핑(`<EXTREMELY_IMPORTANT>`로 감싸짐)으로부터 생성하세요. 설치 관리자가 해당 파일을 유지하고 하네스가 이를 로드하는지 **마커로 검증하세요**: 매니페스트가 선언하지 않은 파일은 인식되지 않는 파일로 간주되어 제거될 수 있습니다.
+  - **그렇지 않다면 설치된 `using-superpowers` 스킬 자체에 의지하세요.** 하네스가 세션 시작 시 설치된 각 스킬의 이름과 설명을 노출한다면, `using-superpowers`의 설명("Use when starting any conversation…")이 모델로 하여금 해당 스킬을 로드하도록 유도할 수 있습니다 — 즉, 스킬을 설치하는 것 *자체가* 부트스트랩이 됩니다. 이 방식은 더 느슨하므로(보장된 래퍼가 없고, 트리거링은 전달하지만 도구 매핑은 전달하지 않음 — 단계 5 참조), 사용 가능하다면 선언된 컨텍스트 파일 방식을 선호하세요.
+  - 두 방식 모두 작동하지 않는다면 해당 하네스는 아직 깔끔하게 지원될 수 없는 상태입니다 — 사용자의 설정을 수동으로 편집하는 대신 **그렇다고 명시하고** 문제를 제기하세요.
 
-- **Packagers can strip executable bits — skill prose invokes bundled scripts
-  through their interpreter.** Some marketplace packaging and install paths
-  lose Unix file modes: the Codex marketplace cache delivered the SDD helpers
-  as `0644` (#2040, #2134), and the MiniMax Code marketplace ships every file
-  as mode `600`. A bare `scripts/foo.sh` or `./foo.js` in a skill then fails
-  with `Permission denied` on that harness even though the repo's tree records
-  `100755`. So every script invocation in `skills/**/*.md` is spelled through
-  its interpreter — `bash scripts/start-server.sh …`, `bash
-  scripts/review-package …`, `node ./render-graphs.js …` — and a script that
-  runs a sibling script needs the same treatment (#2134). Don't "tidy" the
-  prefixes away, and don't reach for a packaging-side `chmod`: the mode loss
-  happens on the consumer's side, so only the invocation form survives it.
-- **Write install docs.** A `docs/README.<harness>.md` and/or a
-  `.<harness>/INSTALL.md` (see `docs/README.opencode.md` and
-  `.opencode/INSTALL.md`), plus an install section in the top-level `README.md`.
-  The only supported install action is **running the harness's own install
-  command** (`agy plugin install`, `gemini extensions install`, `/plugin
-  install`, etc.). Hand-copying skill files and editing the user's global/personal
-  config are *both* off-limits (rule 2 / the PR rules). If the harness has no
-  install command at all — its only surface is a user-owned config file — then it
-  fails the "deliver via install mechanism" rule, and you should raise that rather
-  than ship an installer that edits the user's files.
-- **Register the version.** If your harness introduces a *new* versioned
-  manifest, add its path and version field to `.version-bump.json` so
-  `scripts/bump-version.sh` keeps it in lockstep (read that file to see what's
-  currently tracked). A new manifest that isn't registered there will ship a
-  stale version. If your harness instead rides an already-tracked file — pi
-  declares itself in the repo-root `package.json`, which is already listed —
-  there's nothing new to add.
-- **If no existing channel fits, you're standing up a new one.** None of the four
-  rows may match your harness. If it needs a Codex-style external fork sync,
-  `scripts/sync-to-codex-plugin.sh` is the template to clone (note its anchored
-  include/exclude list and its PR automation). And whenever you add a new
-  per-harness directory, add it to the *other* harnesses' sync excludes (e.g. the
-  EXCLUDES list in `sync-to-codex-plugin.sh`) so your dotdir doesn't leak into
-  their distributions.
+- **패키저는 실행 권한 비트(executable bits)를 제거할 수 있으므로 — 스킬 본문에서는 번들링된 스크립트를 인터프리터를 통해 호출합니다.** 일부 마켓플레이스 패키징 및 설치 경로는 Unix 파일 모드를 잃어버립니다: Codex 마켓플레이스 캐시는 SDD 헬퍼 파일들을 `0644`로 전달했고(#2040, #2134), MiniMax Code 마켓플레이스는 모든 파일을 모드 `600`으로 배포합니다. 그러면 저장소 트리에는 `100755`로 기록되어 있더라도 스킬 내의 단순 `scripts/foo.sh`나 `./foo.js` 호출은 해당 하네스에서 `Permission denied`로 실패하게 됩니다. 따라서 `skills/**/*.md` 내의 모든 스크립트 호출은 인터프리터를 명시하여 작성되며 — `bash scripts/start-server.sh …`, `bash scripts/review-package …`, `node ./render-graphs.js …` — 형제(sibling) 스크립트를 실행하는 스크립트도 동일하게 처리해야 합니다(#2134). 이 접두사들을 "깔끔하게 정리"하려고 지우지 마시고, 패키징 측에서 `chmod`로 해결하려고 하지도 마세요: 파일 모드 손실은 소비자(consumer) 측에서 발생하므로 오직 인터프리터를 명시한 호출 형태만이 살아남습니다.
+- **설치 문서를 작성하세요.** `docs/README.<harness>.md` 및/또는 `.<harness>/INSTALL.md`(`docs/README.opencode.md` 및 `.opencode/INSTALL.md` 참조)를 작성하고, 최상위 `README.md`에도 설치 섹션을 추가하세요. 지원되는 유일한 설치 동작은 **하네스 자체의 설치 명령어를 실행하는 것**(`agy plugin install`, `gemini extensions install`, `/plugin install` 등)입니다. 스킬 파일을 수동으로 복사하는 것과 사용자의 전역/개인 설정을 편집하는 것은 *둘 다* 금지되어 있습니다(규칙 2 / PR 규칙). 만약 하네스에 설치 명령어가 아예 없고 유일한 표면이 사용자 소유의 설정뿐이라면, 해당 하네스는 "설치 메커니즘을 통해 전달하라"는 규칙을 충족하지 못하는 것이므로 사용자의 파일을 편집하는 설치 스크립트를 배포하는 대신 이 문제를 제기해야 합니다.
+- **버전을 등록하세요.** 새로운 하네스가 *새로운* 버전 관리 대상 매니페스트를 도입하는 경우, `scripts/bump-version.sh`가 버전을 일괄 동기화할 수 있도록 `.version-bump.json`에 해당 경로와 버전 필드를 추가하세요(현재 어떤 파일들이 추적되고 있는지 보려면 해당 파일을 읽어보세요). 여기에 등록되지 않은 신규 매니페스트는 오래된 버전 번호로 배포될 것입니다. 반면 이미 추적 중인 파일을 그대로 활용한다면 — 예를 들어 pi는 이미 목록에 있는 저장소 루트의 `package.json`에 자신을 선언함 — 새로 추가할 항목은 없습니다.
+- **기존 채널 중 맞는 것이 없다면 새로운 채널을 구축해야 합니다.** 위 표의 행 중 어느 것도 여러분의 하네스와 맞지 않을 수 있습니다. 만약 Codex 스타일의 외부 포크 동기화가 필요하다면 `scripts/sync-to-codex-plugin.sh`를 템플릿 삼아 복제하세요(고정된 include/exclude 목록과 PR 자동화 방식을 참고하세요). 그리고 새로운 하네스별 디렉토리를 추가할 때마다 *다른* 하네스들의 동기화 제외 목록(예: `sync-to-codex-plugin.sh`의 EXCLUDES 목록)에 해당 디렉토리를 추가하여, 여러분의 숨김 디렉토리가 다른 배포판에 유출되지 않도록 하세요.
 
 ---
 
-## Part 7 — Cross-platform / Windows
+## 파트 7 — 크로스 플랫폼 / Windows
 
-Only relevant to the shell-hook shape. `hooks/run-hook.cmd` is a polyglot: a
-single file that's valid as both a Windows batch script and a Unix shell script.
-On Windows, `cmd.exe` runs the batch portion, which locates `bash` (Git for
-Windows, then `bash` on PATH) and runs the named hook script; if no bash is
-found it exits cleanly so the harness still works, just without injection. On
-Unix, the leading `:` makes the batch block a no-op and the shell runs the
-script directly.
+셸 훅 유형(Shape A)에만 해당됩니다. `hooks/run-hook.cmd`는 폴리글랏(polyglot)입니다: 하나의 파일이 Windows 배치 스크립트와 Unix 셸 스크립트 양쪽 모두로서 유효합니다. Windows에서는 `cmd.exe`가 배치 부분을 실행하여 `bash`(Git for Windows 우선, 그다음 PATH의 `bash`)를 찾고 지정된 훅 스크립트를 실행합니다. 만약 bash를 찾지 못하면 주입만 건너뛴 채 하네스는 계속 작동할 수 있도록 깔끔하게 종료합니다. Unix에서는 선행 `:` 명령어 덕분에 배치 블록이 아무 동작도 하지 않는 블록(no-op)이 되고 셸이 스크립트를 직접 실행합니다.
 
-Two rules this enforces, which you must respect:
+이로 인해 강제되는 두 가지 규칙이 있으며, 반드시 준수해야 합니다:
 
-- **Hook scripts are extensionless** (`session-start`, not `session-start.sh`).
-  Claude Code's Windows handling prepends `bash` to any command containing
-  `.sh`, which would double-invoke. Name your hook script without an extension.
-- Don't write per-OS variants of the hook script. One extensionless bash script
-  plus the polyglot wrapper covers all three platforms.
+- **훅 스크립트는 확장자가 없어야 합니다** (`session-start.sh`가 아니라 `session-start`). Claude Code의 Windows 처리 로직은 `.sh`가 포함된 모든 명령어 앞에 `bash`를 덧붙이므로 이중 호출이 발생하게 됩니다. 훅 스크립트 이름은 확장자 없이 지으세요.
+- OS별 훅 스크립트 변형을 따로 작성하지 마세요. 확장자 없는 bash 스크립트 하나와 폴리글랏 래퍼 조합으로 세 플랫폼을 모두 커버할 수 있습니다.
 
-`hooks/run-hook.cmd` itself is the authoritative implementation — read it. See
-`docs/windows/polyglot-hooks.md` for the background and rationale behind the
-dispatcher pattern.
+`hooks/run-hook.cmd` 자체가 공식 구현체입니다 — 직접 읽어보세요. 디스패처 패턴의 배경과 설계 근거에 대해서는 `docs/windows/polyglot-hooks.md`를 참조하세요.
 
 ---
 
-## Part 8 — Submitting the PR
+## 파트 8 — PR 제출하기 (Submitting the PR)
 
-- Target the **`dev`** branch. One harness per PR.
-- Fill in the PR template's **"New harness support"** section and paste the
-  complete acceptance-test transcript (the "Let's make a react todo list"
-  session showing `brainstorming` auto-triggering). A PR without this proof will
-  be closed.
-- Superpowers is a zero-dependency plugin. Don't add a third-party runtime
-  dependency. Adding a new harness is the one carve-out the contributor rules
-  allow, and even then keep it to what the integration strictly requires —
-  type-only imports that compile away are fine; runtime packages are not.
-- Don't touch skill bodies (Part 1). If you found yourself editing a `SKILL.md`
-  to make the port work, the fix belongs in your tool mapping instead.
+- **`dev`** 브랜치를 타겟으로 지정하세요. PR당 하나의 하네스만 다룹니다.
+- PR 템플릿의 **"New harness support"** 섹션을 작성하고 전체 인수 테스트 트랜스크립트(`brainstorming`이 자동 트리거되는 것을 보여주는 "Let's make a react todo list" 세션)를 붙여넣으세요. 이 증명이 없는 PR은 닫힙니다.
+- Superpowers는 제로 의존성 플러그인입니다. 서드파티 런타임 의존성을 추가하지 마세요. 새로운 하네스를 추가하는 경우는 기여자 규칙이 허용하는 유일한 예외이지만, 그 경우에도 통합에 절대적으로 필요한 것만 최소한으로 유지해야 합니다 — 컴파일 시 사라지는 타입 전용 임포트는 괜찮지만 런타임 패키지는 안 됩니다.
+- 스킬 본문을 건드리지 마세요(파트 1). 포팅을 작동시키기 위해 `SKILL.md`를 편집하고 있는 자신을 발견했다면, 그 수정 사항은 스킬이 아니라 도구 매핑에 들어가야 합니다.
 
 ---
 
-## Appendix A — Reference integrations (current)
+## 부록 A — 현재 레퍼런스 통합 목록 (Reference integrations)
 
-Use this as the live index; when in doubt, read the files, not this table.
+이 표를 실시간 인덱스로 활용하되, 의문점이 있을 때는 이 표가 아니라 실제 파일들을 읽으세요.
 
-| Harness | Entry point | Bootstrap mechanism | Tool mapping | Tests | Distribution |
+| 하네스 | 진입점 (Entry point) | 부트스트랩 메커니즘 | 도구 매핑 | 테스트 | 배포 방식 |
 |---|---|---|---|---|---|
-| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | surfaced skill index: `using-superpowers`' description triggers it (no session-start hook event exists) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
-| Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | shell hook → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | native `Skill` tool; no adapter file needed | `tests/hooks/` | marketplace |
-| Codex | `.codex-plugin/plugin.json` (declares empty `hooks`) | native skill discovery (no session-start hook) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | fork sync (`scripts/sync-to-codex-plugin.sh`) |
-| Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | shell hook → `hooks/session-start` (`additional_context`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | hand-authored |
-| Copilot CLI | (shares Claude Code hook path; `COPILOT_CLI` env) | shell hook → `hooks/session-start` (`additionalContext`) | none needed (Claude Code–compatible tool surface) | `tests/hooks/` | — |
-| Gemini CLI | `gemini-extension.json` + `GEMINI.md` | instructions file `@`-includes bootstrap + mapping | `references/gemini-tools.md` | — | `gemini extensions install` |
-| Kimi Code | `.kimi-plugin/plugin.json` | manifest `sessionStart.skill` loads `using-superpowers` | inline `skillInstructions` in manifest | `tests/kimi/` | marketplace or `/plugins install` GitHub URL |
-| OpenCode | `.opencode/plugins/superpowers.js` (root `package.json` `main` for package installs; root `index.js` re-export for the V2 directory form) | in-process: `config` hook registers skills dir; `experimental.chat.messages.transform` (V1) / `session.hook` on `context`/`compaction`/`generate` (V2) injects user message | inline in `superpowers.js` | `tests/opencode/` | `opencode.json` `plugin` (V1) / `plugins` (V2) git URL |
-| pi | `.pi/extensions/superpowers.ts` | in-process: package manifest registers skills; `context` event injects user message; lifecycle-flag + compaction-aware | `piToolMapping()` inline **and** `references/pi-tools.md` | `tests/pi/` | repo-root `package.json` fields |
+| Antigravity (`agy`) | `.antigravity-plugin/plugin.json` | 노출된 스킬 인덱스: `using-superpowers`의 설명이 트리거함 (세션 시작 훅 이벤트 없음) | `references/antigravity-tools.md` | `tests/antigravity/` | `agy plugin install` git URL; Antigravity Marketplace |
+| Claude Code | `.claude-plugin/plugin.json` + `hooks/hooks.json` | 셸 훅 → `hooks/session-start` (`hookSpecificOutput.additionalContext`) | 네이티브 `Skill` 도구; 별도 어댑터 파일 불필요 | `tests/hooks/` | 마켓플레이스 |
+| Codex | `.codex-plugin/plugin.json` (빈 `hooks` 선언) | 네이티브 스킬 탐색 (세션 시작 훅 없음) | `references/codex-tools.md` | `tests/codex/`, `tests/codex-plugin-sync/` | 포크 동기화 (`scripts/sync-to-codex-plugin.sh`) |
+| Cursor | `.cursor-plugin/plugin.json` + `hooks/hooks-cursor.json` | 셸 훅 → `hooks/session-start` (`additional_context`) | 불필요 (Claude Code 호환 도구 표면) | `tests/hooks/` | 수동 작성 (hand-authored) |
+| Copilot CLI | (Claude Code 훅 경로 공유; `COPILOT_CLI` 환경 변수) | 셸 훅 → `hooks/session-start` (`additionalContext`) | 불필요 (Claude Code 호환 도구 표면) | `tests/hooks/` | — |
+| Gemini CLI | `gemini-extension.json` + `GEMINI.md` | 지침 파일이 부트스트랩 + 매핑을 `@`-include함 | `references/gemini-tools.md` | — | `gemini extensions install` |
+| Kimi Code | `.kimi-plugin/plugin.json` | 매니페스트의 `sessionStart.skill`이 `using-superpowers`를 로드함 | 매니페스트 내 인라인 `skillInstructions` | `tests/kimi/` | 마켓플레이스 또는 `/plugins install` GitHub URL |
+| OpenCode | `.opencode/plugins/superpowers.js` (패키지 설치용 루트 `package.json` `main`; V2 디렉토리 형태용 루트 `index.js` 재내보내기) | 인프로세스: `config` 훅이 스킬 디렉토리 등록; `experimental.chat.messages.transform`(V1) / `context`/`compaction`/`generate`에 대한 `session.hook`(V2)이 사용자 메시지 주입 | `superpowers.js` 내 인라인 | `tests/opencode/` | `opencode.json` `plugin`(V1) / `plugins`(V2) git URL |
+| pi | `.pi/extensions/superpowers.ts` | 인프로세스: 패키지 매니페스트가 스킬 등록; `context` 이벤트가 사용자 메시지 주입; 생명주기 플래그 + 컴팩션 인지 | 인라인 `piToolMapping()` **및** `references/pi-tools.md` | `tests/pi/` | 저장소 루트 `package.json` 필드 |
 
-## Appendix B — Gotchas that have bitten porters
+## 부록 B — 포팅 작업자들이 자주 겪은 함정들 (Gotchas)
 
-- **Opt-in isn't a port.** If your human partner has to do anything per session
-  to get Superpowers, the acceptance test fails. Re-read Part 2.
-- **Wrong JSON field → silent failure or double injection.** Shape A only.
-  Confirm the exact field/nesting; Claude Code reads two fields without dedup.
-- **Hook-config schema varies per harness.** Shape A. Cursor's `hooks-cursor.json`
-  looks nothing like the Claude Code one (`version`, lowercase `sessionStart`,
-  relative command, no `matcher`/`type`/`async`). Match the closest existing file.
-- **Plugin-root env var differs per harness.** Shape A. The hook command uses
-  `${CLAUDE_PLUGIN_ROOT}` (Claude) or a relative path
-  (Cursor). Use what your harness exports; the script re-derives the root itself.
-- **System-message injection.** Shape B injects a *user* message on purpose
-  (#750, #894). Don't "fix" it to a system message.
-- **Disarming injection after the first prompt.** If your harness's transform
-  output is not saved to session history (pi's `context` result is not), the
-  bootstrap must be injected into every provider request. A flag cleared on a
-  per-prompt event such as pi's `agent_end` drops the bootstrap after the first
-  prompt (#2083).
-- **Message-object shape is per-harness.** Shape B. pi and OpenCode use
-  incompatible shapes; discover yours, don't copy a reference's object literal.
-- **Hunting for a skill-registration API that doesn't exist.** A harness with no
-  skill system (not just no `Skill` tool) has nothing to register — the model
-  reads `SKILL.md` on demand. Don't assume a `skillPaths` equivalent exists.
-- **Mapping in two places.** For in-process plugins the mapping may live both
-  inline and in a `references/` file (pi). Update both.
-- **The "never read skill files" line.** It means "don't bypass your platform's
-  skill-loading mechanism," not "never use file-read." On a no-skill-tool harness
-  that mechanism *is* reading `SKILL.md` — say so explicitly in the mapping
-  (Part 5).
-- **`.sh` on Windows.** Keep hook scripts extensionless (Part 7).
-- **Bare `scripts/foo.sh` in skill prose.** Packagers can strip exec bits
-  (Part 6). Invoke bundled scripts as `bash scripts/foo.sh` / `node scripts/foo.js`.
-- **Unregistered version.** A new manifest not added to `.version-bump.json`
-  ships stale (Part 6).
-- **Editing skills to fit the harness.** Never. The fix goes in the tool mapping.
+- **사용자 선택(Opt-in) 방식은 포팅이 아닙니다.** 인간 파트너가 Superpowers를 사용하기 위해 매 세션마다 무언가를 해야 한다면 인수 테스트는 실패합니다. 파트 2를 다시 읽으세요.
+- **잘못된 JSON 필드 → 조용한 실패 또는 이중 주입.** 유형 A에만 해당. 정확한 필드와 중첩 구조를 확인하세요. Claude Code는 중복 제거 없이 두 필드를 모두 읽습니다.
+- **훅 설정 스키마는 하네스마다 다릅니다.** 유형 A. Cursor의 `hooks-cursor.json`은 Claude Code의 것과 전혀 다르게 생겼습니다(`version`, 소문자 `sessionStart`, 상대 경로 명령어, `matcher`/`type`/`async` 없음). 가장 가까운 기존 파일에 맞추세요.
+- **플러그인 루트 환경 변수는 하네스마다 다릅니다.** 유형 A. 훅 명령어는 `${CLAUDE_PLUGIN_ROOT}`(Claude) 또는 상대 경로(Cursor)를 사용합니다. 하네스가 내보내는 것을 사용하세요. 스크립트 자체는 루트를 다시 계산합니다.
+- **시스템 메시지 주입.** 유형 B는 의도적으로 *사용자(user)* 메시지를 주입합니다(#750, #894). 이를 시스템 메시지로 "수정"하지 마세요.
+- **첫 번째 프롬프트 이후 주입이 해제되는 문제.** 하네스의 변환 출력이 세션 히스토리에 저장되지 않는 경우(pi의 `context` 결과가 그러함), 부트스트랩은 모든 프로바이더 요청마다 주입되어야 합니다. pi의 `agent_end`와 같은 프롬프트별 이벤트에서 플래그를 초기화하면 첫 번째 프롬프트 이후에 부트스트랩이 누락됩니다(#2083).
+- **메시지 객체 형태는 하네스마다 다릅니다.** 유형 B. pi와 OpenCode는 호환되지 않는 형태를 사용합니다. 레퍼런스의 객체 리터럴을 복사하지 말고 직접 형태를 확인하세요.
+- **존재하지 않는 스킬 등록 API를 찾아 헤매는 것.** (`Skill` 도구만 없는 것이 아니라) 스킬 시스템 자체가 없는 하네스에는 등록할 대상이 없습니다 — 모델이 필요할 때 `SKILL.md`를 직접 읽습니다. `skillPaths`에 상응하는 기능이 있을 것이라고 가정하지 마세요.
+- **두 곳에 존재하는 매핑.** 인프로세스 플러그인의 경우 매핑이 인라인과 `references/` 파일 두 곳 모두에 위치할 수 있습니다(pi). 두 곳 모두 업데이트하세요.
+- **"절대 스킬 파일을 읽지 말라"는 문구.** 이는 "플랫폼의 스킬 로딩 메커니즘을 우회하지 말라"는 뜻이지 "파일 읽기 도구를 절대 쓰지 말라"는 뜻이 아닙니다. 스킬 도구가 없는 하네스에서는 그 메커니즘이 *곧* `SKILL.md`를 읽는 것입니다 — 매핑에 이 사실을 명시적으로 적으세요(파트 5).
+- **Windows에서의 `.sh` 확장자.** 훅 스크립트는 확장자 없이 유지하세요(파트 7).
+- **스킬 본문 내의 단순 `scripts/foo.sh` 표기.** 패키저가 실행 권한 비트를 제거할 수 있습니다(파트 6). 번들링된 스크립트는 `bash scripts/foo.sh` / `node scripts/foo.js` 형태로 호출하세요.
+- **등록되지 않은 버전.** `.version-bump.json`에 추가되지 않은 신규 매니페스트는 오래된 버전으로 배포됩니다(파트 6).
+- **하네스에 맞추기 위해 스킬을 편집하는 것.** 절대 금지입니다. 수정 사항은 도구 매핑에 들어가야 합니다.
